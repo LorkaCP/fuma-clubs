@@ -1,6 +1,24 @@
 document.addEventListener('DOMContentLoaded', () => {
     let allClubs = [];
     
+    // --- DÉBOGAGE : Afficher toutes les infos de l'URL ---
+    console.log("=== DÉBOGAGE URL ===");
+    console.log("URL complète:", window.location.href);
+    console.log("Pathname:", window.location.pathname);
+    console.log("Search:", window.location.search);
+    console.log("Hash:", window.location.hash);
+    
+    const params = new URLSearchParams(window.location.search);
+    console.log("Paramètres trouvés:");
+    for (let [key, value] of params.entries()) {
+        console.log(`  ${key}: ${value}`);
+    }
+    
+    // Vérifier spécifiquement id et username
+    console.log("ID depuis params:", params.get('id'));
+    console.log("Username depuis params:", params.get('username'));
+    console.log("=== FIN DÉBOGAGE ===\n");
+    
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
     
@@ -52,8 +70,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 3. LOGIQUE PAGE PROFIL (Réception des données Discord) ---
     function handleProfilePage() {
         // Sécurité : vérifier qu'on est sur la bonne page
-        if (!window.location.pathname.includes('profile.html')) return;
+        if (!window.location.pathname.includes('profile.html')) {
+            console.log("Pas sur la page profile, on ignore");
+            return;
+        }
 
+        console.log("🔄 handleProfilePage exécuté");
         console.log("URL actuelle:", window.location.href);
         console.log("Search params:", window.location.search);
 
@@ -61,40 +83,62 @@ document.addEventListener('DOMContentLoaded', () => {
         const discordUsername = params.get('username');
         const discordId = params.get('id');
 
-        console.log("Données Discord extraites:", { discordUsername, discordId });
+        console.log("Données Discord extraites:", { 
+            discordUsername, 
+            discordId,
+            typeUsername: typeof discordUsername,
+            typeId: typeof discordId
+        });
 
         if (discordUsername || discordId) {
+            console.log("✅ Données Discord trouvées, tentative de remplissage...");
+            
             // Fonction pour remplir les champs quand ils seront disponibles
             function fillDiscordFields() {
+                console.log("Recherche des champs...");
                 const nameInput = document.getElementById('discord-name');
                 const idInput = document.getElementById('id-discord');
 
+                console.log("Champs trouvés:", { 
+                    nameInput: !!nameInput, 
+                    idInput: !!idInput 
+                });
+
                 if (nameInput && idInput) {
                     if (discordUsername && discordUsername !== "undefined" && discordUsername !== "null") {
-                        nameInput.value = decodeURIComponent(discordUsername);
-                        console.log("✅ Nom Discord rempli:", nameInput.value);
+                        const decodedName = decodeURIComponent(discordUsername);
+                        nameInput.value = decodedName;
+                        console.log("✅ Nom Discord rempli:", decodedName);
                     }
                     if (discordId && discordId !== "undefined" && discordId !== "null") {
                         idInput.value = discordId;
-                        console.log("✅ ID Discord rempli:", idInput.value);
+                        console.log("✅ ID Discord rempli:", discordId);
                     }
                     
                     // Nettoyer l'URL après avoir récupéré les données
                     if (window.history.replaceState) {
                         const cleanUrl = window.location.pathname;
                         window.history.replaceState({}, document.title, cleanUrl);
+                        console.log("URL nettoyée");
                     }
                 } else {
-                    // Si les inputs n'existent pas encore, on réessaie
-                    console.log("Champs Discord non trouvés, nouvelle tentative dans 100ms...");
-                    setTimeout(fillDiscordFields, 100);
+                    console.log("❌ Champs Discord non trouvés, nouvelle tentative...");
+                    setTimeout(fillDiscordFields, 200);
                 }
             }
             
             // Lancer la tentative de remplissage
-            fillDiscordFields();
+            setTimeout(fillDiscordFields, 500);
         } else {
-            console.log("Aucune donnée Discord dans l'URL");
+            console.log("❌ Aucune donnée Discord dans l'URL");
+            
+            // Vérifier si on a des paramètres mais avec des noms différents
+            console.log("Vérification d'autres noms de paramètres possibles...");
+            const allParams = [];
+            for (let [key, value] of params.entries()) {
+                allParams.push({key, value});
+            }
+            console.log("Tous les paramètres:", allParams);
         }
     }
 
@@ -268,10 +312,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Lancement
     injectNavigation();
     
-    // Petit délai pour s'assurer que le DOM est bien chargé
+    // Appeler handleProfilePage avec un délai plus long pour être sûr
     setTimeout(() => {
+        console.log("Appel de handleProfilePage après délai");
         handleProfilePage();
-    }, 100);
+    }, 1000);
 
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
