@@ -51,18 +51,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. LOGIQUE PAGE PROFIL (Réception des données Discord) ---
     function handleProfilePage() {
-        // Cette fonction s'exécute uniquement sur profile.html
         if (!window.location.pathname.includes('profile.html')) return;
 
         const params = new URLSearchParams(window.location.search);
+        
+        // Utilisation de decodeURIComponent pour éviter le "undefined" ou les erreurs de caractères
         const discordUsername = params.get('username');
         const discordId = params.get('id');
 
-        if (discordUsername) {
-            const nameInput = document.getElementById('discord-name');
-            if (nameInput) nameInput.value = discordUsername;
-            // On peut stocker l'ID dans une variable globale ou un champ caché si besoin
-            console.log("Connecté en tant que:", discordUsername, "ID:", discordId);
+        if (discordUsername && discordUsername !== "undefined") {
+            // On attend un tout petit peu que le DOM soit bien stable
+            setTimeout(() => {
+                const nameInput = document.getElementById('discord-name');
+                const idInput = document.getElementById('id-discord');
+
+                if (nameInput) nameInput.value = decodeURIComponent(discordUsername);
+                if (idInput) idInput.value = discordId;
+                
+                console.log("Données injectées :", discordUsername);
+            }, 100);
+        } else if (params.has('username') && params.get('username') === "undefined") {
+            console.error("L'API Discord n'a pas renvoyé de username. Vérifiez vos Scopes.");
         }
     }
 
@@ -240,3 +249,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
