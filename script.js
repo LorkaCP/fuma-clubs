@@ -228,3 +228,17 @@ document.addEventListener('DOMContentLoaded', () => {
         loadClubProfile();
     }
 });
+
+// Remplace par tes vraies infos du portail Discord
+const CLIENT_ID = '1473807551329079408'; 
+const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
+
+// Cette URL dit à Discord : "Je veux identifier ce joueur"
+const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify`;
+
+// On applique cette URL au lien "Profile"
+const profileLink = document.querySelector('a[href="#profile"]'); // Adapte le sélecteur si besoin
+if (profileLink) {
+    profileLink.href = authUrl;
+}
+
