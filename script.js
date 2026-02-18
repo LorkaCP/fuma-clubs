@@ -1,24 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     let allClubs = [];
     
-    // --- DÉBOGAGE : Afficher toutes les infos de l'URL ---
-    console.log("=== DÉBOGAGE URL ===");
-    console.log("URL complète:", window.location.href);
-    console.log("Pathname:", window.location.pathname);
-    console.log("Search:", window.location.search);
-    console.log("Hash:", window.location.hash);
-    
-    const params = new URLSearchParams(window.location.search);
-    console.log("Paramètres trouvés:");
-    for (let [key, value] of params.entries()) {
-        console.log(`  ${key}: ${value}`);
-    }
-    
-    // Vérifier spécifiquement id et username
-    console.log("ID depuis params:", params.get('id'));
-    console.log("Username depuis params:", params.get('username'));
-    console.log("=== FIN DÉBOGAGE ===\n");
-    
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
     
@@ -67,78 +49,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 3. LOGIQUE PAGE PROFIL (Réception des données Discord) ---
+    // --- 3. LOGIQUE PAGE PROFIL (Solution anti-undefined) ---
     function handleProfilePage() {
-        // Sécurité : vérifier qu'on est sur la bonne page
-        if (!window.location.pathname.includes('profile.html')) {
-            console.log("Pas sur la page profile, on ignore");
-            return;
-        }
-
-        console.log("🔄 handleProfilePage exécuté");
-        console.log("URL actuelle:", window.location.href);
-        console.log("Search params:", window.location.search);
+        if (!window.location.pathname.includes('profile.html')) return;
 
         const params = new URLSearchParams(window.location.search);
         const discordUsername = params.get('username');
         const discordId = params.get('id');
 
-        console.log("Données Discord extraites:", { 
-            discordUsername, 
-            discordId,
-            typeUsername: typeof discordUsername,
-            typeId: typeof discordId
-        });
-
-        if (discordUsername || discordId) {
-            console.log("✅ Données Discord trouvées, tentative de remplissage...");
+        // On vérifie que les données sont PRÉSENTES et ne sont pas la chaîne "undefined"
+        if (discordUsername && discordUsername !== "undefined" && discordId && discordId !== "undefined") {
             
-            // Fonction pour remplir les champs quand ils seront disponibles
-            function fillDiscordFields() {
-                console.log("Recherche des champs...");
-                const nameInput = document.getElementById('discord-name');
-                const idInput = document.getElementById('id-discord');
+            const nameInput = document.getElementById('discord-name');
+            const idInput = document.getElementById('id-discord');
 
-                console.log("Champs trouvés:", { 
-                    nameInput: !!nameInput, 
-                    idInput: !!idInput 
-                });
+            if (nameInput && idInput) {
+                // Remplissage des champs
+                nameInput.value = decodeURIComponent(discordUsername);
+                idInput.value = discordId;
+                
+                console.log("✅ Champs remplis :", discordUsername);
 
-                if (nameInput && idInput) {
-                    if (discordUsername && discordUsername !== "undefined" && discordUsername !== "null") {
-                        const decodedName = decodeURIComponent(discordUsername);
-                        nameInput.value = decodedName;
-                        console.log("✅ Nom Discord rempli:", decodedName);
-                    }
-                    if (discordId && discordId !== "undefined" && discordId !== "null") {
-                        idInput.value = discordId;
-                        console.log("✅ ID Discord rempli:", discordId);
-                    }
-                    
-                    // Nettoyer l'URL après avoir récupéré les données
-                    if (window.history.replaceState) {
-                        const cleanUrl = window.location.pathname;
-                        window.history.replaceState({}, document.title, cleanUrl);
-                        console.log("URL nettoyée");
-                    }
-                } else {
-                    console.log("❌ Champs Discord non trouvés, nouvelle tentative...");
-                    setTimeout(fillDiscordFields, 200);
-                }
+                // NETTOYAGE URL : On ne le fait qu'ici, une fois le remplissage réussi
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                // Si les champs HTML ne sont pas encore créés, on retente vite
+                setTimeout(handleProfilePage, 100);
             }
-            
-            // Lancer la tentative de remplissage
-            setTimeout(fillDiscordFields, 500);
         } else {
-            console.log("❌ Aucune donnée Discord dans l'URL");
-            
-            // Vérifier si on a des paramètres mais avec des noms différents
-            console.log("Vérification d'autres noms de paramètres possibles...");
-            const allParams = [];
-            for (let [key, value] of params.entries()) {
-                allParams.push({key, value});
-            }
-            console.log("Tous les paramètres:", allParams);
+            console.log("⚠️ Aucune donnée Discord valide à injecter (ou valeurs 'undefined')");
         }
     }
 
@@ -195,10 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const params = new URLSearchParams(window.location.search);
         const clubName = params.get('name');
-        if (!clubName) {
-            detailContainer.innerHTML = "<p>Club non spécifié.</p>";
-            return;
-        }
+        if (!clubName) return;
 
         try {
             const resp = await fetch(SHEET_URL);
@@ -228,73 +164,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (clubData) {
                 const v = clubData.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(s => s.replace(/^"|"$/g,'')) || [];
-                const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "Aucun historique disponible.";
-                const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "Effectif non renseigné.";
-
-                const trophiesRaw = v[idx.trophies];
-                let trophiesHTML = '';
-                if (trophiesRaw && trophiesRaw.toLowerCase() !== 'none' && trophiesRaw.trim() !== '') {
-                    const trophyArray = trophiesRaw.split(',');
-                    trophiesHTML = `
-                        <div class="trophy-shelf" style="margin-bottom: 30px;">
-                            <h3 class="sidebar-title">HONOURS</h3>
-                            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                                ${trophyArray.map(t => `<span class="trophy-badge">${t.trim()}</span>`).join('')}
-                            </div>
-                        </div>
-                    `;
-                }
+                const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "Aucun historique.";
+                const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "Effectif vide.";
 
                 detailContainer.innerHTML = `
                     <div class="club-profile-header" style="text-align: center; margin-bottom: 50px;">
-                        <img src="${v[idx.crest]}" style="width: 180px; margin-bottom: 20px;" alt="Logo ${v[idx.team]}">
+                        <img src="${v[idx.crest]}" style="width: 180px; margin-bottom: 20px;">
                         <h1 style="font-size: 3rem; color: var(--fuma-primary);">${v[idx.team]}</h1>
-                        <div style="display:flex; justify-content:center; gap:15px; align-items:center;">
-                             <span class="status-badge">${v[idx.active] === 'YES' ? '● ACTIVE' : '○ INACTIVE'}</span>
-                             ${(v[idx.stream] && v[idx.stream] !== 'None') ? `<a href="${v[idx.stream]}" target="_blank" style="color:#ff0000; text-decoration:none; font-weight:bold;"><i class="fab fa-youtube"></i> LIVE</a>` : ''}
-                        </div>
                     </div>
-
                     <div class="club-grid-layout">
                         <div class="club-main-info">
-                            ${trophiesHTML}
-                            <section style="margin-bottom: 40px;">
-                                <h2 style="color:var(--fuma-primary); border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px;">HISTORY</h2>
-                                <div style="font-style: italic; color: var(--fuma-text-dim); line-height: 1.8; text-align: justify;">
-                                    ${formattedHistory}
-                                </div>
+                            <section>
+                                <h2 style="color:var(--fuma-primary); border-bottom: 1px solid #333; padding-bottom: 10px;">HISTORY</h2>
+                                <div style="font-style: italic; color: var(--fuma-text-dim);">${formattedHistory}</div>
                             </section>
-
                             <div class="stats-bar">
-                                <div class="stat-item"><strong>${v[idx.gp] || 0}</strong><span>GAMES</span></div>
-                                <div class="stat-item" style="color:#4caf50;"><strong>${v[idx.win] || 0}</strong><span>WIN</span></div>
-                                <div class="stat-item" style="color:#ffeb3b;"><strong>${v[idx.draw] || 0}</strong><span>DRAW</span></div>
-                                <div class="stat-item" style="color:#f44336;"><strong>${v[idx.lost] || 0}</strong><span>LOST</span></div>
+                                <div class="stat-item"><strong>${v[idx.gp] || 0}</strong><br>GAMES</div>
+                                <div class="stat-item" style="color:#4caf50;"><strong>${v[idx.win] || 0}</strong><br>WIN</div>
+                                <div class="stat-item" style="color:#f44336;"><strong>${v[idx.lost] || 0}</strong><br>LOST</div>
                             </div>
                         </div>
-
                         <div class="club-sidebar">
                             <div class="sidebar-box">
                                 <h3 class="sidebar-title">MANAGER</h3>
-                                <p style="font-size: 1.1rem; font-weight: bold;">${v[idx.manager] || 'N/A'}</p>
-                            </div>
-                            <div class="sidebar-box">
+                                <p>${v[idx.manager] || 'N/A'}</p>
                                 <h3 class="sidebar-title">ROSTER</h3>
                                 <ul class="roster-list">${playersList}</ul>
                             </div>
                         </div>
                     </div>
                 `;
-            } else {
-                detailContainer.innerHTML = "<p>Club introuvable dans la base de données.</p>";
             }
-        } catch (e) {
-            console.error(e);
-            detailContainer.innerHTML = "<p>Erreur lors de la récupération des données.</p>";
-        }
+        } catch (e) { console.error(e); }
     }
 
-    // --- 6. ÉVÉNEMENTS & INITIALISATION ---
+    // --- 6. INITIALISATION & ÉVÉNEMENTS ---
+    injectNavigation();
+    handleProfilePage(); // Appel direct au chargement
+
     const searchInput = document.getElementById('fuma-search');
     searchInput?.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
@@ -307,16 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.scrollY > 400) backBtn?.classList.add('visible');
         else backBtn?.classList.remove('visible');
     });
-    backBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-
-    // Lancement
-    injectNavigation();
-    
-    // Appeler handleProfilePage avec un délai plus long pour être sûr
-    setTimeout(() => {
-        console.log("Appel de handleProfilePage après délai");
-        handleProfilePage();
-    }, 1000);
 
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
