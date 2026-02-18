@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
 
-    // --- 2. INJECTION DU MENU (Source unique pour tout le site) ---
+    // --- 2. INJECTION DU MENU (Source unique) ---
     function injectNavigation() {
         const navElement = document.getElementById('main-nav');
         if (!navElement) return;
@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <a href="index.html" class="${page === 'index.html' ? 'active' : ''}">Home</a>
                     <a href="clubs.html" class="${page === 'clubs.html' ? 'active' : ''}">Clubs</a>
                     <a href="#">League</a>
-                    <a href="#">Cup</a>
                     <a href="#">Rules</a>
                     <a href="https://discord.gg/xPz9FBkdtm" target="_blank">
                         <i class="fab fa-discord"></i> Discord
@@ -45,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 3. FONCTIONS POUR LES PAGES LISTE (INDEX & CLUBS) ---
+    // --- 3. LOGIQUE LISTE DES CLUBS (Index & Clubs.html) ---
     async function fetchFumaClubs() {
         const clubContainer = document.getElementById('fuma-js-clubs');
         if (!clubContainer) return;
@@ -69,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             renderClubs(allClubs);
         } catch (e) {
-            clubContainer.innerHTML = "<div class='fuma-loading-wrapper'>Error loading clubs.</div>";
+            clubContainer.innerHTML = "<div class='fuma-loading-wrapper'>Erreur de chargement des clubs.</div>";
             console.error(e);
         }
     }
@@ -91,13 +90,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 4. FONCTION POUR LA PAGE PROFIL (CLUB.HTML) ---
+    // --- 4. LOGIQUE PAGE PROFIL (Club.html) ---
     async function loadClubProfile() {
         const detailContainer = document.getElementById('club-details');
         if (!detailContainer) return;
 
         const params = new URLSearchParams(window.location.search);
         const clubName = params.get('name');
+        if (!clubName) {
+            detailContainer.innerHTML = "<p>Club non spécifié.</p>";
+            return;
+        }
 
         try {
             const resp = await fetch(SHEET_URL);
@@ -128,31 +131,55 @@ document.addEventListener('DOMContentLoaded', () => {
             if (clubData) {
                 const v = clubData.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(s => s.replace(/^"|"$/g,'')) || [];
                 
-                const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "No history available.";
-                const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "No roster.";
+                // Formater l'historique (gestion des paragraphes)
+                const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "Aucun historique disponible.";
+                
+                // Formater la liste des joueurs
+                const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "Effectif non renseigné.";
+
+                // Formater les trophées
+                const trophiesRaw = v[idx.trophies];
+                let trophiesHTML = '';
+                if (trophiesRaw && trophiesRaw.toLowerCase() !== 'none' && trophiesRaw.trim() !== '') {
+                    const trophyArray = trophiesRaw.split(',');
+                    trophiesHTML = `
+                        <div class="trophy-shelf" style="margin-bottom: 30px;">
+                            <h3 class="sidebar-title">HONOURS</h3>
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                ${trophyArray.map(t => `<span class="trophy-badge">${t.trim()}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
 
                 detailContainer.innerHTML = `
                     <div class="club-profile-header" style="text-align: center; margin-bottom: 50px;">
-                        <img src="${v[idx.crest]}" style="width: 180px; margin-bottom: 20px;">
+                        <img src="${v[idx.crest]}" style="width: 180px; margin-bottom: 20px;" alt="Logo ${v[idx.team]}">
                         <h1 style="font-size: 3rem; color: var(--fuma-primary);">${v[idx.team]}</h1>
                         <div style="display:flex; justify-content:center; gap:15px; align-items:center;">
                              <span class="status-badge">${v[idx.active] === 'YES' ? '● ACTIVE' : '○ INACTIVE'}</span>
-                             ${(v[idx.stream] && v[idx.stream] !== 'None') ? `<a href="${v[idx.stream]}" target="_blank" style="color:#ff0000; text-decoration:none;"><i class="fab fa-youtube"></i> LIVE</a>` : ''}
+                             ${(v[idx.stream] && v[idx.stream] !== 'None') ? `<a href="${v[idx.stream]}" target="_blank" style="color:#ff0000; text-decoration:none; font-weight:bold;"><i class="fab fa-youtube"></i> LIVE</a>` : ''}
                         </div>
                     </div>
+
                     <div class="club-grid-layout">
                         <div class="club-main-info">
+                            ${trophiesHTML}
                             <section style="margin-bottom: 40px;">
                                 <h2 style="color:var(--fuma-primary); border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px;">HISTORY</h2>
-                                <div style="font-style: italic; color: var(--fuma-text-dim); line-height: 1.8; text-align: justify;">${formattedHistory}</div>
+                                <div style="font-style: italic; color: var(--fuma-text-dim); line-height: 1.8; text-align: justify;">
+                                    ${formattedHistory}
+                                </div>
                             </section>
+
                             <div class="stats-bar">
-                                <div class="stat-item"><strong>${v[idx.gp]}</strong><span>GAMES</span></div>
-                                <div class="stat-item" style="color:#4caf50;"><strong>${v[idx.win]}</strong><span>WIN</span></div>
-                                <div class="stat-item" style="color:#ffeb3b;"><strong>${v[idx.draw]}</strong><span>DRAW</span></div>
-                                <div class="stat-item" style="color:#f44336;"><strong>${v[idx.lost]}</strong><span>LOST</span></div>
+                                <div class="stat-item"><strong>${v[idx.gp] || 0}</strong><span>GAMES</span></div>
+                                <div class="stat-item" style="color:#4caf50;"><strong>${v[idx.win] || 0}</strong><span>WIN</span></div>
+                                <div class="stat-item" style="color:#ffeb3b;"><strong>${v[idx.draw] || 0}</strong><span>DRAW</span></div>
+                                <div class="stat-item" style="color:#f44336;"><strong>${v[idx.lost] || 0}</strong><span>LOST</span></div>
                             </div>
                         </div>
+
                         <div class="club-sidebar">
                             <div class="sidebar-box">
                                 <h3 class="sidebar-title">MANAGER</h3>
@@ -166,15 +193,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
             } else {
-                detailContainer.innerHTML = "<p>Club not found.</p>";
+                detailContainer.innerHTML = "<p>Club introuvable dans la base de données.</p>";
             }
         } catch (e) {
             console.error(e);
-            detailContainer.innerHTML = "<p>Error.</p>";
+            detailContainer.innerHTML = "<p>Erreur lors de la récupération des données.</p>";
         }
     }
 
-    // --- 5. RECHERCHE ---
+    // --- 5. ÉVÉNEMENTS & RECHERCHE ---
     const searchInput = document.getElementById('fuma-search');
     searchInput?.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
@@ -182,7 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderClubs(filtered);
     });
 
-    // --- 6. SCROLL TOP ---
     const backBtn = document.getElementById('backTop');
     window.addEventListener('scroll', () => {
         if (window.scrollY > 400) backBtn?.classList.add('visible');
@@ -190,15 +216,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     backBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-    // --- 7. INITIALISATION (Lancement intelligent) ---
+    // --- 6. INITIALISATION ---
     injectNavigation();
 
+    // Lancement selon l'élément présent dans la page
     if (document.getElementById('fuma-js-clubs')) {
-        fetchFumaClubs(); // On est sur Accueil ou Liste
+        fetchFumaClubs();
     } 
     
     if (document.getElementById('club-details')) {
-        loadClubProfile(); // On est sur la page Profil
+        loadClubProfile();
     }
 });
-
