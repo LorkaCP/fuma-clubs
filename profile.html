@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FUMA CLUBS - MON PROFIL</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="fuma-wrapper">
+        <nav class="fuma-nav" id="main-nav"></nav>
+
+        <div class="fuma-container" style="margin-top: 50px;">
+            <h2 class="fuma-section-title">Compléter mon Profil</h2>
+            
+            <form id="profile-form" class="sidebar-box" style="max-width: 500px; margin: 0 auto;">
+                <div style="margin-bottom: 20px;">
+                    <label class="sidebar-title">Pseudo Discord</label>
+                    <input type="text" id="discord-name" class="fuma-search-input" readonly style="opacity: 0.7;">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label class="sidebar-title">Nom de Joueur (en jeu)</label>
+                    <input type="text" id="player-name" class="fuma-search-input" placeholder="Ex: Capi_10" required>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label class="sidebar-title">Nationalité</label>
+                    <select id="nationality" class="fuma-search-input" style="width: 115%;">
+                        <option value="France">France</option>
+                        <option value="Belgium">Belgique</option>
+                        <option value="Switzerland">Suisse</option>
+                        <option value="Other">Autre</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label class="sidebar-title">Position (Attribué par Staff)</label>
+                    <input type="text" id="position" class="fuma-search-input" value="Non défini" readonly style="opacity: 0.7;">
+                </div>
+
+                <button type="submit" class="fuma-cta" style="width: 100%;">Enregistrer mon profil</button>
+            </form>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
