@@ -166,11 +166,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
             } else {
-                detailContainer.innerHTML = "<p>Club introuvable.</p>";
+                detailContainer.innerHTML = "<p>Club not found.</p>";
             }
         } catch (e) {
             console.error(e);
-            detailContainer.innerHTML = "<p>Erreur de chargement.</p>";
+            detailContainer.innerHTML = "<p>Error.</p>";
         }
     }
 
@@ -201,3 +201,4 @@ document.addEventListener('DOMContentLoaded', () => {
         loadClubProfile(); // On est sur la page Profil
     }
 });
+
