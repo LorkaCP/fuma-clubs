@@ -145,6 +145,18 @@ body, .fuma-wrapper {
     max-width: 100px;
 }
 
+.fuma-about {
+    text-align: center; /* Centre le texte à l'intérieur */
+    max-width: 800px;   /* Limite la largeur pour une meilleure lecture */
+    margin: 0 auto;     /* Centre le bloc horizontalement dans la page */
+    padding: 40px 20px; /* Ajoute un peu d'espace autour */
+}
+
+.fuma-about p {
+    color: var(--fuma-text-dim); /* Optionnel : utilise la couleur tamisée pour le texte */
+    font-size: 1rem;
+}
+
 /* --- VIDEO --- */
 .fuma-video-container {
     position: relative;
@@ -358,3 +370,4 @@ body, .fuma-wrapper {
     
     .stat-item strong { font-size: 1.4rem; }
 }
+
