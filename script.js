@@ -117,8 +117,75 @@ document.addEventListener('DOMContentLoaded', () => {
         renderClubs(filtered);
     });
 
+    // --- 6. PAGE PROFIL CLUB DYNAMIQUE ---
+    async function loadClubProfile() {
+        const detailContainer = document.getElementById('club-details');
+        if (!detailContainer) return;
+
+        // Récupérer le nom du club dans l'URL
+        const params = new URLSearchParams(window.location.search);
+        const clubName = params.get('name');
+
+        if (!clubName) {
+            detailContainer.innerHTML = "<p>Club non trouvé.</p>";
+            return;
+        }
+
+        const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
+
+        try {
+            const resp = await fetch(url);
+            const text = await resp.text();
+            const lines = text.trim().split("\n");
+            const headers = lines[0].split(",");
+            
+            // Trouver les index des colonnes
+            const teamIdx = headers.indexOf('TEAMS');
+            const crestIdx = headers.indexOf('CREST');
+            const managerIdx = headers.indexOf('MANAGER'); // Exemple si vous avez cette colonne
+
+            // Chercher le club spécifique
+            const clubData = lines.slice(1).find(line => {
+                const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(s => s.replace(/^"|"$/g,'')) || [];
+                return values[teamIdx]?.trim() === clubName;
+            });
+
+            if (clubData) {
+                const v = clubData.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(s => s.replace(/^"|"$/g,'')) || [];
+                
+                detailContainer.innerHTML = `
+                    <div style="text-align: center; animation: fadeIn 0.8s ease;">
+                        <img src="${v[crestIdx]}" alt="${v[teamIdx]}" style="width: 150px; height: 150px; object-fit: contain; margin-bottom: 20px;">
+                        <h1 style="font-size: 2.5rem; color: var(--fuma-primary); text-transform: uppercase; letter-spacing: 4px;">${v[teamIdx]}</h1>
+                        <p style="color: var(--fuma-text-dim);">Official FUMA Pro League Member</p>
+                        
+                        <div style="margin-top: 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                            <div style="background: var(--fuma-bg-card); padding: 20px; border-radius: 10px; border: var(--fuma-border);">
+                                <h3 style="color: var(--fuma-primary); font-size: 0.8rem; text-transform: uppercase;">Manager</h3>
+                                <p>${v[managerIdx] || 'Non renseigné'}</p>
+                            </div>
+                            <div style="background: var(--fuma-bg-card); padding: 20px; border-radius: 10px; border: var(--fuma-border);">
+                                <h3 style="color: var(--fuma-primary); font-size: 0.8rem; text-transform: uppercase;">Statut</h3>
+                                <p>Actif</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                detailContainer.innerHTML = "<p>Détails du club introuvables.</p>";
+            }
+        } catch (e) {
+            console.error(e);
+            detailContainer.innerHTML = "<p>Erreur lors du chargement des données.</p>";
+        }
+    }
+
+    // Appeler la fonction au chargement
+    loadClubProfile();
+
     // --- INITIALISATION ---
     injectNavigation();
     fetchFumaClubs();
 });
+
 
