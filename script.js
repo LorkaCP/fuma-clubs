@@ -166,13 +166,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "No history available.";
                 const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "Roster is empty.";
 
-                // --- LOGIQUE DE SUPPRESSION ACHIEVEMENTS ---
-                const trophyRaw = v[idx.trophies] ? v[idx.trophies].trim() : "";
-                let trophiesHTML = ''; // Par défaut, rien n'est affiché
+                // --- LOGIQUE DE SUPPRESSION ACHIEVEMENTS (Version stricte) ---
+                const trophyValue = v[idx.trophies] ? v[idx.trophies].trim() : "";
+                let trophiesHTML = ''; 
                 
-                // On vérifie si la cellule contient du texte et n'est pas juste un "0"
-                if (trophyRaw !== "" && trophyRaw !== "0") {
-                    const trophyData = trophyRaw.split(',');
+                // On vérifie si ce n'est pas vide, pas "0" et pas "None"
+                const isInvalid = trophyValue === "" || trophyValue === "0" || trophyValue.toLowerCase() === "none";
+
+                if (!isInvalid) {
+                    const trophyData = trophyValue.split(',');
                     trophiesHTML = `
                         <div class="trophy-section">
                             <h3 class="sidebar-title" style="border:none; margin-bottom:0;"><i class="fas fa-trophy" style="color:var(--fuma-primary)"></i> ACHIEVEMENTS</h3>
@@ -246,6 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
