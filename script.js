@@ -1,22 +1,52 @@
 document.addEventListener('DOMContentLoaded', () => {
     let allClubs = [];
     
-    // --- ÉLÉMENTS DOM ---
-    const burger = document.getElementById('burger');
-    const navLinks = document.getElementById('navLinks');
-    const backBtn = document.getElementById('backTop');
-    const searchInput = document.getElementById('fuma-search');
-    const clubContainer = document.getElementById('fuma-js-clubs');
+    // --- 1. INJECTION DU MENU ---
+    function injectNavigation() {
+        const navElement = document.getElementById('main-nav');
+        if (!navElement) return;
 
-    // --- NAVIGATION ---
-    if (burger) {
-        burger.addEventListener('click', () => {
-            burger.classList.toggle('active');
-            navLinks.classList.toggle('active');
-        });
+        // Détecte le nom du fichier actuel pour mettre le lien en surbrillance
+        const path = window.location.pathname;
+        const page = path.split("/").pop() || 'index.html';
+
+        navElement.innerHTML = `
+            <div class="nav-container">
+                <a href="index.html" class="nav-logo">FUMA CLUBS</a>
+                <button class="fuma-burger" id="burger">
+                    <span></span><span></span><span></span>
+                </button>
+                <div class="nav-links" id="navLinks">
+                    <a href="index.html" class="${page === 'index.html' ? 'active' : ''}">Home</a>
+                    <a href="clubs.html" class="${page === 'clubs.html' ? 'active' : ''}">Clubs</a>
+                    <a href="#">League</a>
+                    <a href="#">Rules</a>
+                    <a href="https://discord.gg/xPz9FBkdtm" target="_blank">
+                        <i class="fab fa-discord"></i> Discord
+                    </a>
+                    <a href="#" style="color:var(--fuma-primary)">Profile</a>
+                </div>
+            </div>
+        `;
+
+        // Active le menu burger après l'injection
+        setupBurger();
     }
 
-    // --- SCROLL & BACK TO TOP ---
+    // --- 2. GESTION DU BURGER MENU ---
+    function setupBurger() {
+        const burger = document.getElementById('burger');
+        const navLinks = document.getElementById('navLinks');
+        if (burger && navLinks) {
+            burger.addEventListener('click', () => {
+                burger.classList.toggle('active');
+                navLinks.classList.toggle('active');
+            });
+        }
+    }
+
+    // --- 3. SCROLL & BACK TO TOP ---
+    const backBtn = document.getElementById('backTop');
     window.addEventListener('scroll', () => {
         if (window.scrollY > 400) backBtn?.classList.add('visible');
         else backBtn?.classList.remove('visible');
@@ -26,8 +56,9 @@ document.addEventListener('DOMContentLoaded', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    // --- FETCH CLUBS (Google Sheets) ---
+    // --- 4. FETCH CLUBS (Google Sheets) ---
     async function fetchFumaClubs() {
+        const clubContainer = document.getElementById('fuma-js-clubs');
         if (!clubContainer) return;
 
         const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
@@ -56,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderClubs(clubsList) {
+        const clubContainer = document.getElementById('fuma-js-clubs');
         if (!clubContainer) return;
         clubContainer.innerHTML = '';
 
@@ -68,7 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = document.createElement('a');
             card.href = `club.html?name=${encodeURIComponent(club.name)}`;
             card.className = 'club-card';
-            
             card.innerHTML = `
                 <img src="${club.logo}" alt="${club.name}" loading="lazy" onerror="this.parentElement.remove()">
                 <span class="club-name">${club.name}</span>
@@ -77,13 +108,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- RECHERCHE ---
+    // --- 5. RECHERCHE ---
+    const searchInput = document.getElementById('fuma-search');
     searchInput?.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
         const filtered = allClubs.filter(c => c.name.toLowerCase().includes(term));
         renderClubs(filtered);
     });
 
-    // Initialisation
+    // --- INITIALISATION ---
+    injectNavigation();
     fetchFumaClubs();
 });
