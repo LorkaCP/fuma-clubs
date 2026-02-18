@@ -51,27 +51,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. LOGIQUE PAGE PROFIL (Réception des données Discord) ---
     function handleProfilePage() {
+        // Sécurité : vérifier qu'on est sur la bonne page
         if (!window.location.pathname.includes('profile.html')) return;
 
         const params = new URLSearchParams(window.location.search);
-        
-        // Utilisation de decodeURIComponent pour éviter le "undefined" ou les erreurs de caractères
         const discordUsername = params.get('username');
         const discordId = params.get('id');
 
-        if (discordUsername && discordUsername !== "undefined") {
-            // On attend un tout petit peu que le DOM soit bien stable
-            setTimeout(() => {
-                const nameInput = document.getElementById('discord-name');
-                const idInput = document.getElementById('id-discord');
+        // Debug console pour voir si l'URL contient bien les infos
+        console.log("Tentative d'injection Discord:", { discordUsername, discordId });
 
-                if (nameInput) nameInput.value = decodeURIComponent(discordUsername);
-                if (idInput) idInput.value = discordId;
-                
-                console.log("Données injectées :", discordUsername);
-            }, 100);
-        } else if (params.has('username') && params.get('username') === "undefined") {
-            console.error("L'API Discord n'a pas renvoyé de username. Vérifiez vos Scopes.");
+        if (discordUsername || discordId) {
+            // On utilise une fonction qui attend que l'élément soit disponible
+            const nameInput = document.getElementById('discord-name');
+            const idInput = document.getElementById('id-discord');
+
+            if (nameInput && idInput) {
+                if (discordUsername && discordUsername !== "undefined") {
+                    nameInput.value = decodeURIComponent(discordUsername);
+                }
+                if (discordId && discordId !== "undefined") {
+                    idInput.value = discordId;
+                }
+                console.log("✅ Champs Discord remplis avec succès.");
+            } else {
+                // Si les inputs n'existent pas encore, on réessaie dans 50ms
+                setTimeout(handleProfilePage, 50);
+            }
         }
     }
 
@@ -249,4 +255,5 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
