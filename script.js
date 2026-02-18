@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <a href="index.html" class="${page === 'index.html' ? 'active' : ''}">Home</a>
                     <a href="clubs.html" class="${page === 'clubs.html' ? 'active' : ''}">Clubs</a>
                     <a href="#">League</a>
+                    <a href="#">Cup</a>
                     <a href="#">Rules</a>
                     <a href="https://discord.gg/xPz9FBkdtm" target="_blank">
                         <i class="fab fa-discord"></i> Discord
@@ -120,3 +121,4 @@ document.addEventListener('DOMContentLoaded', () => {
     injectNavigation();
     fetchFumaClubs();
 });
+
