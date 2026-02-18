@@ -358,3 +358,23 @@ body, .fuma-wrapper {
     
     .stat-item strong { font-size: 1.4rem; }
 }
+
+/* Style des badges de trophées */
+.trophy-badge {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(0,0,0,0) 100%);
+    border: 1px solid var(--fuma-primary);
+    color: #fff;
+    padding: 6px 15px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
