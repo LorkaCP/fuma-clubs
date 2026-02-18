@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
 
-    // --- 2. INJECTION DU MENU (Source unique) ---
+    // --- 2. INJECTION DU MENU ---
     function injectNavigation() {
         const navElement = document.getElementById('main-nav');
         if (!navElement) return;
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 3. LOGIQUE LISTE DES CLUBS (Index & Clubs.html) ---
+    // --- 3. LOGIQUE LISTE DES CLUBS ---
     async function fetchFumaClubs() {
         const clubContainer = document.getElementById('fuma-js-clubs');
         if (!clubContainer) return;
@@ -119,7 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 draw: headers.indexOf('DRAW'),
                 lost: headers.indexOf('LOST'),
                 trophies: headers.indexOf('TROPHIES'),
-                manager: headers.indexOf('MANAGER'),
                 players: headers.indexOf('PLAYERS')
             };
 
@@ -131,26 +130,34 @@ document.addEventListener('DOMContentLoaded', () => {
             if (clubData) {
                 const v = clubData.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(s => s.replace(/^"|"$/g,'')) || [];
                 
-                // Formater l'historique (gestion des paragraphes)
+                [cite_start]// Formater l'historique [cite: 1, 4, 13]
                 const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "Aucun historique disponible.";
                 
-                // Formater la liste des joueurs
+                [cite_start]// Formater la liste des joueurs [cite: 1]
                 const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "Effectif non renseigné.";
 
-                // Formater les trophées
+                [cite_start]// Formater les trophées (Honours) [cite: 1]
                 const trophiesRaw = v[idx.trophies];
                 let trophiesHTML = '';
-                if (trophiesRaw && trophiesRaw.toLowerCase() !== 'none' && trophiesRaw.trim() !== '') {
+                if (trophiesRaw && !['none', '0', ''].includes(trophiesRaw.toLowerCase().trim())) {
                     const trophyArray = trophiesRaw.split(',');
                     trophiesHTML = `
-                        <div class="trophy-shelf" style="margin-bottom: 30px;">
-                            <h3 class="sidebar-title">HONOURS</h3>
-                            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                                ${trophyArray.map(t => `<span class="trophy-badge">${t.trim()}</span>`).join('')}
+                        <div class="trophy-section">
+                            <h3 class="sidebar-title"><i class="fas fa-trophy"></i> HONOURS</h3>
+                            <div class="trophy-grid">
+                                ${trophyArray.map(t => `
+                                    <div class="trophy-badge">
+                                        <span class="trophy-icon">🏆</span>
+                                        <span class="trophy-text">${t.trim()}</span>
+                                    </div>
+                                `).join('')}
                             </div>
                         </div>
                     `;
                 }
+
+                [cite_start]// Récupération du Manager (Premier nom de la liste avec (C)) [cite: 1]
+                const managerName = v[idx.players] ? v[idx.players].split(',')[0].trim() : 'N/A';
 
                 detailContainer.innerHTML = `
                     <div class="club-profile-header" style="text-align: center; margin-bottom: 50px;">
@@ -183,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="club-sidebar">
                             <div class="sidebar-box">
                                 <h3 class="sidebar-title">MANAGER</h3>
-                                <p style="font-size: 1.1rem; font-weight: bold;">${v[idx.manager] || 'N/A'}</p>
+                                <p style="font-size: 1.1rem; font-weight: bold;">${managerName}</p>
                             </div>
                             <div class="sidebar-box">
                                 <h3 class="sidebar-title">ROSTER</h3>
@@ -219,7 +226,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 6. INITIALISATION ---
     injectNavigation();
 
-    // Lancement selon l'élément présent dans la page
     if (document.getElementById('fuma-js-clubs')) {
         fetchFumaClubs();
     } 
@@ -228,4 +234,3 @@ document.addEventListener('DOMContentLoaded', () => {
         loadClubProfile();
     }
 });
-
