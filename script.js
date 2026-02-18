@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <a href="https://discord.gg/xPz9FBkdtm" target="_blank">
                         <i class="fab fa-discord"></i> Discord
                     </a>
-                    <a href="#" style="color:var(--fuma-primary)">Profile</a>
+                    <a href="profile.html" class="${page === 'profile.html' ? 'active' : ''}">Profile</a>
                 </div>
             </div>
         `;
@@ -241,4 +241,5 @@ const profileLink = document.querySelector('a[href="#profile"]'); // Adapte le s
 if (profileLink) {
     profileLink.href = authUrl;
 }
+
 
