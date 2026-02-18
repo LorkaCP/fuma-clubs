@@ -3,8 +3,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
+    
+    // Configuration Discord
+    const CLIENT_ID = '1473807551329079408'; 
+    const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
+    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify`;
 
-    // --- 2. INJECTION DU MENU (Source unique) ---
+    // --- 2. INJECTION DU MENU ---
     function injectNavigation() {
         const navElement = document.getElementById('main-nav');
         if (!navElement) return;
@@ -26,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <a href="https://discord.gg/xPz9FBkdtm" target="_blank">
                         <i class="fab fa-discord"></i> Discord
                     </a>
-                    <a href="profile.html" class="${page === 'profile.html' ? 'active' : ''}">Profile</a>
+                    <a href="${authUrl}" class="${page === 'profile.html' ? 'active' : ''}">Profile</a>
                 </div>
             </div>
         `;
@@ -44,7 +49,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 3. LOGIQUE LISTE DES CLUBS (Index & Clubs.html) ---
+    // --- 3. LOGIQUE PAGE PROFIL (Réception des données Discord) ---
+    function handleProfilePage() {
+        // Cette fonction s'exécute uniquement sur profile.html
+        if (!window.location.pathname.includes('profile.html')) return;
+
+        const params = new URLSearchParams(window.location.search);
+        const discordUsername = params.get('username');
+        const discordId = params.get('id');
+
+        if (discordUsername) {
+            const nameInput = document.getElementById('discord-name');
+            if (nameInput) nameInput.value = discordUsername;
+            // On peut stocker l'ID dans une variable globale ou un champ caché si besoin
+            console.log("Connecté en tant que:", discordUsername, "ID:", discordId);
+        }
+    }
+
+    // --- 4. LOGIQUE LISTE DES CLUBS ---
     async function fetchFumaClubs() {
         const clubContainer = document.getElementById('fuma-js-clubs');
         if (!clubContainer) return;
@@ -90,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 4. LOGIQUE PAGE PROFIL (Club.html) ---
+    // --- 5. LOGIQUE DÉTAILS CLUB ---
     async function loadClubProfile() {
         const detailContainer = document.getElementById('club-details');
         if (!detailContainer) return;
@@ -130,14 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (clubData) {
                 const v = clubData.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(s => s.replace(/^"|"$/g,'')) || [];
-                
-                // Formater l'historique (gestion des paragraphes)
                 const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "Aucun historique disponible.";
-                
-                // Formater la liste des joueurs
                 const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "Effectif non renseigné.";
 
-                // Formater les trophées
                 const trophiesRaw = v[idx.trophies];
                 let trophiesHTML = '';
                 if (trophiesRaw && trophiesRaw.toLowerCase() !== 'none' && trophiesRaw.trim() !== '') {
@@ -201,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 5. ÉVÉNEMENTS & RECHERCHE ---
+    // --- 6. ÉVÉNEMENTS & INITIALISATION ---
     const searchInput = document.getElementById('fuma-search');
     searchInput?.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
@@ -216,30 +233,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     backBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-    // --- 6. INITIALISATION ---
+    // Lancement
     injectNavigation();
+    handleProfilePage(); // Vérifie si on revient d'une connexion Discord
 
-    // Lancement selon l'élément présent dans la page
-    if (document.getElementById('fuma-js-clubs')) {
-        fetchFumaClubs();
-    } 
-    
-    if (document.getElementById('club-details')) {
-        loadClubProfile();
-    }
+    if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
+    if (document.getElementById('club-details')) loadClubProfile();
 });
-
-// Remplace par tes vraies infos du portail Discord
-const CLIENT_ID = '1473807551329079408'; 
-const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
-
-// Cette URL dit à Discord : "Je veux identifier ce joueur"
-const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify`;
-
-// On applique cette URL au lien "Profile"
-const profileLink = document.querySelector('a[href="#profile"]'); // Adapte le sélecteur si besoin
-if (profileLink) {
-    profileLink.href = authUrl;
-}
-
-
