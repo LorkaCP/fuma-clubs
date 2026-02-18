@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 5. LOGIQUE DÉTAILS CLUB ---
-    async function loadClubProfile() {
+   async function loadClubProfile() {
         const detailContainer = document.getElementById('club-details');
         if (!detailContainer) return;
 
@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 history: headers.indexOf('HISTORY'),
                 gp: headers.indexOf('GAMES PLAYED'),
                 win: headers.indexOf('WIN'),
-                draw: headers.indexOf('DRAW'), // Ajout de l'index Draw
+                draw: headers.indexOf('DRAW'),
                 lost: headers.indexOf('LOST'),
                 trophies: headers.indexOf('TROPHIES'),
                 manager: headers.indexOf('MANAGER'),
@@ -166,10 +166,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "No history available.";
                 const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "Roster is empty.";
 
-                // LOGIQUE TROPHÉES : On n'affiche rien si vide ou "0"
+                // --- LOGIQUE DE SUPPRESSION ACHIEVEMENTS ---
                 const trophyRaw = v[idx.trophies] ? v[idx.trophies].trim() : "";
-                let trophiesHTML = '';
+                let trophiesHTML = ''; // Par défaut, rien n'est affiché
                 
+                // On vérifie si la cellule contient du texte et n'est pas juste un "0"
                 if (trophyRaw !== "" && trophyRaw !== "0") {
                     const trophyData = trophyRaw.split(',');
                     trophiesHTML = `
@@ -245,5 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
