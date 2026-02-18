@@ -177,6 +177,7 @@ body, .fuma-wrapper {
 /* --- SEARCH & CLUB CARDS (GRID) --- */
 .fuma-search-container {
     text-align: center;
+    margin-top: 60px;
     margin-bottom: 35px;
 }
 
@@ -414,3 +415,4 @@ body, .fuma-wrapper {
     text-transform: uppercase;
     letter-spacing: 1px;
 }
+
