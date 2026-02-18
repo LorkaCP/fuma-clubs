@@ -148,8 +148,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 history: headers.indexOf('HISTORY'),
                 gp: headers.indexOf('GAMES PLAYED'),
                 win: headers.indexOf('WIN'),
+                draw: headers.indexOf('DRAW'), // Ajout de l'index Draw
                 lost: headers.indexOf('LOST'),
-                trophies: headers.indexOf('TROPHIES'), // Index important ici
+                trophies: headers.indexOf('TROPHIES'),
                 manager: headers.indexOf('MANAGER'),
                 players: headers.indexOf('PLAYERS')
             };
@@ -162,20 +163,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (clubData) {
                 const v = clubData.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(s => s.replace(/^"|"$/g,'')) || [];
                 
-                // Formater l'historique
-                const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "Aucun historique.";
-                
-                // Formater les joueurs
-                const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "Effectif vide.";
+                const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "No history available.";
+                const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "Roster is empty.";
 
-                // LOGIQUE TROPHÉES : On sépare par des virgules dans la cellule Google Sheet
-                const trophyData = v[idx.trophies] ? v[idx.trophies].split(',') : [];
+                // LOGIQUE TROPHÉES : On n'affiche rien si vide ou "0"
+                const trophyRaw = v[idx.trophies] ? v[idx.trophies].trim() : "";
                 let trophiesHTML = '';
                 
-                if (trophyData.length > 0 && trophyData[0].trim() !== "") {
+                if (trophyRaw !== "" && trophyRaw !== "0") {
+                    const trophyData = trophyRaw.split(',');
                     trophiesHTML = `
                         <div class="trophy-section">
-                            <h3 class="sidebar-title" style="border:none; margin-bottom:0;"><i class="fas fa-trophy" style="color:var(--fuma-primary)"></i> PALMARÈS</h3>
+                            <h3 class="sidebar-title" style="border:none; margin-bottom:0;"><i class="fas fa-trophy" style="color:var(--fuma-primary)"></i> ACHIEVEMENTS</h3>
                             <div class="trophy-grid">
                                 ${trophyData.map(t => `
                                     <div class="trophy-badge">
@@ -190,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 detailContainer.innerHTML = `
                     <div class="club-profile-header" style="text-align: center; margin-bottom: 50px;">
-                        <img src="${v[idx.crest]}" style="width: 180px; margin-bottom: 20px;">
+                        <img src="${v[idx.crest]}" style="width: 180px; margin-bottom: 20px;" alt="Crest">
                         <h1 style="font-size: 3rem; color: var(--fuma-primary);">${v[idx.team]}</h1>
                     </div>
                     
@@ -206,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="stats-bar">
                                 <div class="stat-item"><strong>${v[idx.gp] || 0}</strong><br><span>GAMES</span></div>
                                 <div class="stat-item" style="color:#4caf50;"><strong>${v[idx.win] || 0}</strong><br><span>WIN</span></div>
+                                <div class="stat-item" style="color:#ffeb3b;"><strong>${v[idx.draw] || 0}</strong><br><span>DRAW</span></div>
                                 <div class="stat-item" style="color:#f44336;"><strong>${v[idx.lost] || 0}</strong><br><span>LOST</span></div>
                             </div>
                         </div>
@@ -245,4 +245,5 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
