@@ -54,30 +54,47 @@ document.addEventListener('DOMContentLoaded', () => {
         // Sécurité : vérifier qu'on est sur la bonne page
         if (!window.location.pathname.includes('profile.html')) return;
 
+        console.log("URL actuelle:", window.location.href);
+        console.log("Search params:", window.location.search);
+
         const params = new URLSearchParams(window.location.search);
         const discordUsername = params.get('username');
         const discordId = params.get('id');
 
-        // Debug console pour voir si l'URL contient bien les infos
-        console.log("Tentative d'injection Discord:", { discordUsername, discordId });
+        console.log("Données Discord extraites:", { discordUsername, discordId });
 
         if (discordUsername || discordId) {
-            // On utilise une fonction qui attend que l'élément soit disponible
-            const nameInput = document.getElementById('discord-name');
-            const idInput = document.getElementById('id-discord');
+            // Fonction pour remplir les champs quand ils seront disponibles
+            function fillDiscordFields() {
+                const nameInput = document.getElementById('discord-name');
+                const idInput = document.getElementById('id-discord');
 
-            if (nameInput && idInput) {
-                if (discordUsername && discordUsername !== "undefined") {
-                    nameInput.value = decodeURIComponent(discordUsername);
+                if (nameInput && idInput) {
+                    if (discordUsername && discordUsername !== "undefined" && discordUsername !== "null") {
+                        nameInput.value = decodeURIComponent(discordUsername);
+                        console.log("✅ Nom Discord rempli:", nameInput.value);
+                    }
+                    if (discordId && discordId !== "undefined" && discordId !== "null") {
+                        idInput.value = discordId;
+                        console.log("✅ ID Discord rempli:", idInput.value);
+                    }
+                    
+                    // Nettoyer l'URL après avoir récupéré les données
+                    if (window.history.replaceState) {
+                        const cleanUrl = window.location.pathname;
+                        window.history.replaceState({}, document.title, cleanUrl);
+                    }
+                } else {
+                    // Si les inputs n'existent pas encore, on réessaie
+                    console.log("Champs Discord non trouvés, nouvelle tentative dans 100ms...");
+                    setTimeout(fillDiscordFields, 100);
                 }
-                if (discordId && discordId !== "undefined") {
-                    idInput.value = discordId;
-                }
-                console.log("✅ Champs Discord remplis avec succès.");
-            } else {
-                // Si les inputs n'existent pas encore, on réessaie dans 50ms
-                setTimeout(handleProfilePage, 50);
             }
+            
+            // Lancer la tentative de remplissage
+            fillDiscordFields();
+        } else {
+            console.log("Aucune donnée Discord dans l'URL");
         }
     }
 
@@ -250,10 +267,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Lancement
     injectNavigation();
-    handleProfilePage(); // Vérifie si on revient d'une connexion Discord
+    
+    // Petit délai pour s'assurer que le DOM est bien chargé
+    setTimeout(() => {
+        handleProfilePage();
+    }, 100);
 
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
-
-
