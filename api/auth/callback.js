@@ -1,17 +1,16 @@
 export default async function handler(req, res) {
-    const { code } = req.query; // Récupère le code envoyé par Discord
+    const { code } = req.query;
 
     if (!code) {
         return res.status(400).send('Code de connexion manquant.');
     }
 
-    // Tes identifiants (on va configurer les "env" sur Vercel juste après)
     const clientID = process.env.DISCORD_CLIENT_ID;
     const clientSecret = process.env.DISCORD_CLIENT_SECRET;
     const redirectUri = 'https://fuma-clubs-official.vercel.app/api/auth/callback';
 
     try {
-        // 1. Échanger le CODE contre un TOKEN d'accès
+        // 1. Échange du CODE contre un TOKEN
         const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
             method: 'POST',
             body: new URLSearchParams({
@@ -27,21 +26,28 @@ export default async function handler(req, res) {
 
         const tokenData = await tokenResponse.json();
 
-        // 2. Utiliser le TOKEN pour demander les infos du joueur
+        if (!tokenData.access_token) {
+            console.error("Erreur Token Discord:", tokenData);
+            return res.status(500).send("Impossible d'obtenir le token d'accès.");
+        }
+
+        // 2. Récupération des infos de l'utilisateur
         const userResponse = await fetch('https://discord.com/api/users/@me', {
             headers: { Authorization: `Bearer ${tokenData.access_token}` },
         });
 
         const userData = await userResponse.json();
 
-        // userData contient maintenant : userData.id, userData.username, etc.
-        
-        // 3. Rediriger le joueur vers sa page profil avec ses infos
-        // On passe l'ID et le nom dans l'URL pour que le script.js puisse les lire
-        res.redirect(`/profile.html?id=${userData.id}&username=${encodeURIComponent(userData.username)}`);
+        // Sécurité sur les variables pour éviter le "undefined"
+        const discordId = userData.id || "";
+        const discordName = userData.username || userData.global_name || "Joueur";
+
+        // 3. Redirection vers le profil
+        // On utilise encodeURIComponent pour protéger les caractères spéciaux du pseudo
+        res.redirect(`/profile.html?id=${discordId}&username=${encodeURIComponent(discordName)}`);
 
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Erreur lors de la connexion avec Discord');
+        console.error("Erreur Callback:", error);
+        res.status(500).send('Erreur lors de la communication avec Discord');
     }
 }
