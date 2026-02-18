@@ -371,3 +371,46 @@ body, .fuma-wrapper {
     .stat-item strong { font-size: 1.4rem; }
 }
 
+/* --- SECTION TROPHÉES --- */
+.trophy-section {
+    margin-bottom: 40px;
+    padding: 20px;
+    background: rgba(212, 175, 55, 0.03); /* Rappel léger du doré */
+    border-radius: 12px;
+    border: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+.trophy-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.trophy-badge {
+    background: var(--fuma-bg-card);
+    border: 1px solid var(--fuma-primary);
+    padding: 8px 15px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: transform 0.3s ease;
+}
+
+.trophy-badge:hover {
+    transform: scale(1.05);
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.trophy-icon {
+    font-size: 1.2rem;
+}
+
+.trophy-text {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--fuma-text-main);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
