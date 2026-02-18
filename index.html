@@ -16,15 +16,20 @@
     <nav class="fuma-nav">
         <div class="nav-container">
             <a href="index.html" class="nav-logo">FUMA CLUBS</a>
+            
             <button class="fuma-burger" id="burger">
                 <span></span><span></span><span></span>
             </button>
+
             <div class="nav-links" id="navLinks">
                 <a href="index.html" class="active">Home</a>
                 <a href="#">Clubs</a>
                 <a href="#">League</a>
+                <a href="#">Cup</a> 
                 <a href="#">Rules</a>
-                <a href="https://discord.gg/xPz9FBkdtm" target="_blank"><i class="fab fa-discord"></i> Discord</a>
+                <a href="https://discord.gg/xPz9FBkdtm" target="_blank">
+                    <i class="fab fa-discord" style="margin-right: 5px;"></i> Discord
+                </a>
                 <a href="#" style="color:var(--fuma-primary)">Profile</a>
             </div>
         </div>
@@ -38,27 +43,46 @@
     <div class="fuma-container">
         <section class="fuma-about">
             <h2 class="fuma-section-title">The Purest Way to Play</h2>
-            <p>Welcome to the Community of Full Manual Players dedicated to 11v11.</p>
+            <p>
+                Welcome to the Community of Full Manual Players dedicated to 11v11. No assistance, just Pure Skill and Football Intelligence. 
+                Join now a passionate community and represent your club !
+            </p>
+        </section>
+
+        <section class="fuma-section">
+            <h2 class="fuma-section-title">Official Trailer</h2>
+            <div class="fuma-video-container">
+                <iframe src="https://www.youtube.com/embed/_ENk4k53lOw" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                </iframe>
+            </div>
         </section>
 
         <section class="fuma-section" id="clubs-section">
             <h2 class="fuma-section-title">Engaged Clubs</h2>
+            
             <div class="fuma-search-container">
                 <input type="text" id="fuma-search" class="fuma-search-input" placeholder="Search a club...">
             </div>
+
             <div class="fuma-club-grid" id="fuma-js-clubs">
-                <div class="fuma-spinner" style="margin: 0 auto;"></div>
+                <div class="fuma-loading-wrapper">
+                    <div class="fuma-spinner"></div>
+                    <div style="color:var(--fuma-primary); font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase;">Loading clubs...</div>
+                </div>
             </div>
         </section>
-
+        
         <footer class="fuma-credits">
             &copy; 2026 FC MANUAL PRO LEAGUE | ALL RIGHTS RESERVED
         </footer>
     </div>
 </div>
 
-<button class="back-to-top" id="backTop">↑</button>
+<button class="back-to-top" id="backTop" title="Go to top">↑</button>
 
 <script src="script.js"></script>
 </body>
+
 </html>
