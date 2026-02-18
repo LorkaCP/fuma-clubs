@@ -145,14 +145,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const idx = {
                 team: headers.indexOf('TEAMS'),
                 crest: headers.indexOf('CREST'),
-                active: headers.indexOf('ACTIVE'),
                 history: headers.indexOf('HISTORY'),
-                stream: headers.indexOf('STREAM'),
                 gp: headers.indexOf('GAMES PLAYED'),
                 win: headers.indexOf('WIN'),
-                draw: headers.indexOf('DRAW'),
                 lost: headers.indexOf('LOST'),
-                trophies: headers.indexOf('TROPHIES'),
+                trophies: headers.indexOf('TROPHIES'), // Index important ici
                 manager: headers.indexOf('MANAGER'),
                 players: headers.indexOf('PLAYERS')
             };
@@ -164,30 +161,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (clubData) {
                 const v = clubData.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(s => s.replace(/^"|"$/g,'')) || [];
+                
+                // Formater l'historique
                 const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "Aucun historique.";
+                
+                // Formater les joueurs
                 const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "Effectif vide.";
+
+                // LOGIQUE TROPHÉES : On sépare par des virgules dans la cellule Google Sheet
+                const trophyData = v[idx.trophies] ? v[idx.trophies].split(',') : [];
+                let trophiesHTML = '';
+                
+                if (trophyData.length > 0 && trophyData[0].trim() !== "") {
+                    trophiesHTML = `
+                        <div class="trophy-section">
+                            <h3 class="sidebar-title" style="border:none; margin-bottom:0;"><i class="fas fa-trophy" style="color:var(--fuma-primary)"></i> PALMARÈS</h3>
+                            <div class="trophy-grid">
+                                ${trophyData.map(t => `
+                                    <div class="trophy-badge">
+                                        <span class="trophy-icon">🏆</span>
+                                        <span class="trophy-text">${t.trim()}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
 
                 detailContainer.innerHTML = `
                     <div class="club-profile-header" style="text-align: center; margin-bottom: 50px;">
                         <img src="${v[idx.crest]}" style="width: 180px; margin-bottom: 20px;">
                         <h1 style="font-size: 3rem; color: var(--fuma-primary);">${v[idx.team]}</h1>
                     </div>
+                    
                     <div class="club-grid-layout">
                         <div class="club-main-info">
+                            ${trophiesHTML}
+
                             <section>
                                 <h2 style="color:var(--fuma-primary); border-bottom: 1px solid #333; padding-bottom: 10px;">HISTORY</h2>
                                 <div style="font-style: italic; color: var(--fuma-text-dim);">${formattedHistory}</div>
                             </section>
+
                             <div class="stats-bar">
-                                <div class="stat-item"><strong>${v[idx.gp] || 0}</strong><br>GAMES</div>
-                                <div class="stat-item" style="color:#4caf50;"><strong>${v[idx.win] || 0}</strong><br>WIN</div>
-                                <div class="stat-item" style="color:#f44336;"><strong>${v[idx.lost] || 0}</strong><br>LOST</div>
+                                <div class="stat-item"><strong>${v[idx.gp] || 0}</strong><br><span>GAMES</span></div>
+                                <div class="stat-item" style="color:#4caf50;"><strong>${v[idx.win] || 0}</strong><br><span>WIN</span></div>
+                                <div class="stat-item" style="color:#f44336;"><strong>${v[idx.lost] || 0}</strong><br><span>LOST</span></div>
                             </div>
                         </div>
+
                         <div class="club-sidebar">
                             <div class="sidebar-box">
                                 <h3 class="sidebar-title">MANAGER</h3>
-                                <p>${v[idx.manager] || 'N/A'}</p>
+                                <p style="margin-bottom:20px;">${v[idx.manager] || 'N/A'}</p>
+                                
                                 <h3 class="sidebar-title">ROSTER</h3>
                                 <ul class="roster-list">${playersList}</ul>
                             </div>
@@ -218,3 +245,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
