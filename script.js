@@ -122,10 +122,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const detailContainer = document.getElementById('club-details');
         if (!detailContainer) return;
 
-        // Récupérer le nom du club dans l'URL
         const params = new URLSearchParams(window.location.search);
         const clubName = params.get('name');
-
         if (!clubName) {
             detailContainer.innerHTML = "<p>Club non trouvé.</p>";
             return;
@@ -139,53 +137,87 @@ document.addEventListener('DOMContentLoaded', () => {
             const lines = text.trim().split("\n");
             const headers = lines[0].split(",");
             
-            // Trouver les index des colonnes
-            const teamIdx = headers.indexOf('TEAMS');
-            const crestIdx = headers.indexOf('CREST');
-            const managerIdx = headers.indexOf('MANAGER'); // Exemple si vous avez cette colonne
+            // Indexation dynamique selon tes colonnes
+            const idx = {
+                team: headers.indexOf('TEAMS'),
+                crest: headers.indexOf('CREST'),
+                active: headers.indexOf('ACTIVE'),
+                history: headers.indexOf('HISTORY'),
+                stream: headers.indexOf('STREAM'),
+                gp: headers.indexOf('GAMES PLAYED'),
+                win: headers.indexOf('WIN'),
+                draw: headers.indexOf('DRAW'),
+                lost: headers.indexOf('LOST'),
+                trophies: headers.indexOf('TROPHIES'),
+                manager: headers.indexOf('MANAGER'),
+                players: headers.indexOf('PLAYERS')
+            };
 
-            // Chercher le club spécifique
             const clubData = lines.slice(1).find(line => {
                 const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(s => s.replace(/^"|"$/g,'')) || [];
-                return values[teamIdx]?.trim() === clubName;
+                return values[idx.team]?.trim() === clubName;
             });
 
             if (clubData) {
                 const v = clubData.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(s => s.replace(/^"|"$/g,'')) || [];
                 
+                // Formater l'historique (remplace les retours à la ligne ou crée des paragraphes)
+                const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "No history available.";
+                
+                // Formater la liste des joueurs
+                const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "No roster.";
+
                 detailContainer.innerHTML = `
-                    <div style="text-align: center; animation: fadeIn 0.8s ease;">
-                        <img src="${v[crestIdx]}" alt="${v[teamIdx]}" style="width: 150px; height: 150px; object-fit: contain; margin-bottom: 20px;">
-                        <h1 style="font-size: 2.5rem; color: var(--fuma-primary); text-transform: uppercase; letter-spacing: 4px;">${v[teamIdx]}</h1>
-                        <p style="color: var(--fuma-text-dim);">Official FUMA Pro League Member</p>
+                    <div class="club-profile-header" style="text-align: center; margin-bottom: 50px;">
+                        <img src="${v[idx.crest]}" style="width: 180px; margin-bottom: 20px;">
+                        <h1 style="font-size: 3rem; color: var(--fuma-primary);">${v[idx.team]}</h1>
+                        <div style="display:flex; justify-content:center; gap:15px; align-items:center;">
+                             <span class="status-badge">${v[idx.active] === 'YES' ? '● ACTIVE' : '○ INACTIVE'}</span>
+                             ${v[idx.stream] !== 'None' ? `<a href="${v[idx.stream]}" target="_blank" style="color:#ff0000; text-decoration:none;"><i class="fab fa-youtube"></i> LIVE</a>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="club-grid-layout" style="display: grid; grid-template-columns: 2fr 1fr; gap: 40px;">
                         
-                        <div style="margin-top: 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                            <div style="background: var(--fuma-bg-card); padding: 20px; border-radius: 10px; border: var(--fuma-border);">
-                                <h3 style="color: var(--fuma-primary); font-size: 0.8rem; text-transform: uppercase;">Manager</h3>
-                                <p>${v[managerIdx] || 'Non renseigné'}</p>
+                        <div class="club-main-info">
+                            <section style="margin-bottom: 40px;">
+                                <h2 style="color:var(--fuma-primary); border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px;">HISTORY</h2>
+                                <div style="font-style: italic; color: var(--fuma-text-dim); line-height: 1.8; text-align: justify;">
+                                    ${formattedHistory}
+                                </div>
+                            </section>
+
+                            <div class="stats-bar" style="display: flex; justify-content: space-between; background: var(--fuma-bg-card); padding: 20px; border-radius: 10px; border: var(--fuma-border);">
+                                <div class="stat-item"><strong>${v[idx.gp]}</strong><span>GAMES</span></div>
+                                <div class="stat-item" style="color:#4caf50;"><strong>${v[idx.win]}</strong><span>WIN</span></div>
+                                <div class="stat-item" style="color:#ffeb3b;"><strong>${v[idx.draw]}</strong><span>DRAW</span></div>
+                                <div class="stat-item" style="color:#f44336;"><strong>${v[idx.lost]}</strong><span>LOST</span></div>
                             </div>
+                        </div>
+
+                        <div class="club-sidebar">
+                            <div style="background: var(--fuma-bg-card); padding: 20px; border-radius: 10px; border: var(--fuma-border); margin-bottom: 20px;">
+                                <h3 style="font-size: 0.7rem; color: var(--fuma-primary); margin-bottom: 5px;">MANAGER</h3>
+                                <p style="font-size: 1.1rem; font-weight: bold;">${v[idx.manager] || 'N/A'}</p>
+                            </div>
+
                             <div style="background: var(--fuma-bg-card); padding: 20px; border-radius: 10px; border: var(--fuma-border);">
-                                <h3 style="color: var(--fuma-primary); font-size: 0.8rem; text-transform: uppercase;">Statut</h3>
-                                <p>Actif</p>
+                                <h3 style="font-size: 0.7rem; color: var(--fuma-primary); margin-bottom: 15px;">ROSTER</h3>
+                                <ul style="list-style: none; padding: 0; font-size: 0.9rem; color: var(--fuma-text-dim); line-height: 2;">
+                                    ${playersList}
+                                </ul>
                             </div>
                         </div>
                     </div>
                 `;
-            } else {
-                detailContainer.innerHTML = "<p>Détails du club introuvables.</p>";
             }
-        } catch (e) {
-            console.error(e);
-            detailContainer.innerHTML = "<p>Erreur lors du chargement des données.</p>";
-        }
+        } catch (e) { console.error(e); }
     }
-
-    // Appeler la fonction au chargement
-    loadClubProfile();
 
     // --- INITIALISATION ---
     injectNavigation();
     fetchFumaClubs();
 });
+
 
 
