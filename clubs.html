@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FUMA CLUBS - TOUS LES CLUBS</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="fuma-wrapper">
+    <nav class="fuma-nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">FUMA CLUBS</a>
+            <button class="fuma-burger" id="burger">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="index.html">Home</a>
+                <a href="clubs.html" class="active">Clubs</a>
+                <a href="#">League</a>
+                <a href="#">Rules</a>
+                <a href="https://discord.gg/xPz9FBkdtm" target="_blank"><i class="fab fa-discord"></i> Discord</a>
+                <a href="#" style="color:var(--fuma-primary)">Profile</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="fuma-hero" style="padding: 40px 20px;">
+        <h1 class="fuma-hero-subtitle">Official Clubs</h1>
+        <p style="color: var(--fuma-text-dim); max-width: 600px; margin: 0 auto;">
+            Browse all the teams participating in the FUMA Pro League. 
+            Select a club to view their roster and statistics.
+        </p>
+    </header>
+
+    <div class="fuma-container">
+        <section class="fuma-section">
+            <div class="fuma-search-container">
+                <input type="text" id="fuma-search" class="fuma-search-input" placeholder="Find your club...">
+            </div>
+
+            <div class="fuma-club-grid" id="fuma-js-clubs">
+                <div class="fuma-loading-wrapper" style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                    <div class="fuma-spinner" style="margin: 0 auto 15px;"></div>
+                    <p style="color: var(--fuma-primary); letter-spacing: 2px;">SYNCHRONIZING CLUBS...</p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="fuma-credits">
+            &copy; 2026 FC MANUAL PRO LEAGUE | ALL RIGHTS RESERVED
+        </footer>
+    </div>
+</div>
+
+<button class="back-to-top" id="backTop">↑</button>
+
+<script src="script.js"></script>
+</body>
+</html>

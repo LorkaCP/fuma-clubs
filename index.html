@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FUMA CLUBS - HOME</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="fuma-wrapper">
+    <nav class="fuma-nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">FUMA CLUBS</a>
+            <button class="fuma-burger" id="burger">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="index.html" class="active">Home</a>
+                <a href="#">Clubs</a>
+                <a href="#">League</a>
+                <a href="#">Rules</a>
+                <a href="https://discord.gg/xPz9FBkdtm" target="_blank"><i class="fab fa-discord"></i> Discord</a>
+                <a href="#" style="color:var(--fuma-primary)">Profile</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="fuma-hero">
+        <p class="fuma-hero-subtitle">11 vs 11 Football game <br> Full Manual Community</p>
+        <a href="https://discord.gg/xPz9FBkdtm" target="_blank" class="fuma-cta">Register Now</a>
+    </header>
+
+    <div class="fuma-container">
+        <section class="fuma-about">
+            <h2 class="fuma-section-title">The Purest Way to Play</h2>
+            <p>Welcome to the Community of Full Manual Players dedicated to 11v11.</p>
+        </section>
+
+        <section class="fuma-section" id="clubs-section">
+            <h2 class="fuma-section-title">Engaged Clubs</h2>
+            <div class="fuma-search-container">
+                <input type="text" id="fuma-search" class="fuma-search-input" placeholder="Search a club...">
+            </div>
+            <div class="fuma-club-grid" id="fuma-js-clubs">
+                <div class="fuma-spinner" style="margin: 0 auto;"></div>
+            </div>
+        </section>
+
+        <footer class="fuma-credits">
+            &copy; 2026 FC MANUAL PRO LEAGUE | ALL RIGHTS RESERVED
+        </footer>
+    </div>
+</div>
+
+<button class="back-to-top" id="backTop">↑</button>
+
+<script src="script.js"></script>
+</body>
+</html>
