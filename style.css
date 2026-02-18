@@ -262,3 +262,36 @@ body, .fuma-wrapper {
 
 }
 
+/* Styles spécifiques au profil club */
+.status-badge {
+    background: rgba(212, 175, 55, 0.1);
+    color: var(--fuma-primary);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.stat-item {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-item strong {
+    font-size: 1.5rem;
+    display: block;
+}
+
+.stat-item span {
+    font-size: 0.6rem;
+    opacity: 0.6;
+}
+
+/* Responsive pour mobile */
+@media (max-width: 768px) {
+    .club-grid-layout {
+        grid-template-columns: 1fr !important;
+    }
+}
