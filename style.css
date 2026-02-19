@@ -179,6 +179,7 @@ body, .fuma-wrapper {
     text-align: center;
     margin-top: 20px;
     margin-bottom: 35px;
+    max-width: 400px;
 }
 
 .fuma-search-input {
@@ -551,3 +552,4 @@ input[list] {
         padding: 20px 15px; /* On gagne un peu de place sur les côtés */
     }
 }
+
