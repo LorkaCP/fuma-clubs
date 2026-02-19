@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
-    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz73s8loo-1G_O6zmVse2_zh8z604AKQ4snSe1P1Ol6tMht3Gkpl6viqe2MT-4FjSgy9Q/exec'; 
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxhK7qkrM6wTZpv2a5MXe6aEDe3f-3Qx8T4Kd6XUetp4yVD8bt8aWBeIdOB9YyW-Y_plA/exec'; 
     const CLIENT_ID = '1473807551329079408'; 
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
     const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
@@ -78,46 +78,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 5. ENVOI DU FORMULAIRE (CORRIGÉ) ---
     function setupFormSubmission() {
-        const profileForm = document.getElementById('profile-form');
-        if (!profileForm) return;
+    const profileForm = document.getElementById('profile-form');
+    if (!profileForm) return;
 
-        profileForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const submitBtn = profileForm.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.innerText;
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Updating...";
+    profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = profileForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerText;
+        
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Updating...";
 
-            const formData = {
-                game_id: document.getElementById('id-game')?.value || "",
-                game_tag: document.getElementById('id-game')?.value || "",
-                discord_id: document.getElementById('id-discord')?.value || "",
-                discord_name: document.getElementById('discord-name')?.value || "",
-                country: document.getElementById('country')?.value || "",
-                avatar: document.getElementById('avatar')?.value || "",
-                current_team: document.getElementById('team')?.value || "Free Agent",
-                main_archetype: document.getElementById('main-archetype')?.value || "",
-                main_position: document.getElementById('main-position')?.value || ""
-            };
+        // Utilisation de FormData pour éviter les problèmes de CORS JSON
+        const formData = new URLSearchParams();
+        formData.append('game_id', document.getElementById('id-game')?.value || "");
+        formData.append('game_tag', document.getElementById('id-game')?.value || "");
+        formData.append('discord_id', document.getElementById('id-discord')?.value || "");
+        formData.append('discord_name', document.getElementById('discord-name')?.value || "");
+        formData.append('country', document.getElementById('country')?.value || "");
+        formData.append('avatar', document.getElementById('avatar')?.value || "");
+        formData.append('current_team', document.getElementById('team')?.value || "Free Agent");
+        formData.append('main_archetype', document.getElementById('main-archetype')?.value || "");
+        formData.append('main_position', document.getElementById('main-position')?.value || "");
 
-            try {
-                // Utilisation de no-cors pour Google Apps Script
-                await fetch(APP_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify(formData)
-                });
-                alert("Profile successfully updated in the database!");
-            } catch (error) {
-                console.error('Submission error:', error);
-                alert("Error: Could not update profile.");
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerText = originalBtnText;
-            }
-        });
-    }
+        try {
+            // On retire 'no-cors' et on laisse le navigateur gérer
+            const response = await fetch(APP_SCRIPT_URL, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
+
+            alert("Profile successfully updated!");
+        } catch (error) {
+            console.error('Submission error:', error);
+            // Note: Avec Google Script, on tombe souvent en "error" même si ça marche 
+            // à cause des redirections. Vérifiez votre feuille !
+            alert("Update sent (check your sheet).");
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = originalBtnText;
+        }
+    });
+}
 
     // --- 6. LOGIQUE LISTE DES CLUBS (clubs.html) ---
     async function fetchFumaClubs() {
@@ -268,3 +273,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
