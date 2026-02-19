@@ -127,128 +127,145 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-   // --- 5. LOGIQUE DÉTAILS CLUB ---
-    async function loadClubProfile() {
-        const detailContainer = document.getElementById('club-details');
-        if (!detailContainer) return;
+  // --- 5. LOGIQUE DÉTAILS CLUB (Version Stabilisée) ---
+async function loadClubProfile() {
+    const detailContainer = document.getElementById('club-details');
+    if (!detailContainer) return;
 
-        const params = new URLSearchParams(window.location.search);
-        const clubName = params.get('name');
-        if (!clubName) return;
+    const params = new URLSearchParams(window.location.search);
+    const clubName = params.get('name');
+    if (!clubName) return;
 
-        try {
-            const resp = await fetch(SHEET_URL);
-            const text = await resp.text();
-            const lines = text.trim().split("\n");
-            const headers = lines[0].split(",");
+    try {
+        const resp = await fetch(SHEET_URL);
+        const text = await resp.text();
+        const lines = text.trim().split("\n");
+        const headers = lines[0].split(",");
+        
+        const idx = {
+            team: headers.indexOf('TEAMS'),
+            crest: headers.indexOf('CREST'),
+            history: headers.indexOf('HISTORY'),
+            gp: headers.indexOf('GAMES PLAYED'),
+            win: headers.indexOf('WIN'),
+            draw: headers.indexOf('DRAW'),
+            lost: headers.indexOf('LOST'),
+            trophies: headers.indexOf('TROPHIES'),
+            manager: headers.indexOf('MANAGER'),
+            players: headers.indexOf('PLAYERS'),
+            active: headers.indexOf('ACTIVE'),
+            stream: headers.indexOf('STREAM')
+        };
+
+        // Utilisation d'une fonction robuste pour séparer les colonnes CSV
+        const parseCSVLine = (line) => {
+            // Cette Regex gère les virgules à l'intérieur des guillemets ET les cellules vides
+            const result = [];
+            let cell = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                let char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(cell);
+                    cell = '';
+                } else {
+                    cell += char;
+                }
+            }
+            result.push(cell);
+            return result.map(v => v.replace(/^"|"$/g, '').trim());
+        };
+
+        const clubLine = lines.slice(1).find(line => {
+            const columns = parseCSVLine(line);
+            return columns[idx.team] === clubName;
+        });
+
+        if (clubLine) {
+            const v = parseCSVLine(clubLine);
             
-            const idx = {
-                team: headers.indexOf('TEAMS'),
-                crest: headers.indexOf('CREST'),
-                history: headers.indexOf('HISTORY'),
-                gp: headers.indexOf('GAMES PLAYED'),
-                win: headers.indexOf('WIN'),
-                draw: headers.indexOf('DRAW'),
-                lost: headers.indexOf('LOST'),
-                trophies: headers.indexOf('TROPHIES'),
-                manager: headers.indexOf('MANAGER'),
-                players: headers.indexOf('PLAYERS'),
-                active: headers.indexOf('ACTIVE'), // Nouvelle colonne
-                stream: headers.indexOf('STREAM')   // Nouvelle colonne
-            };
+            // Sécurité : On s'assure que si la donnée est vide, on affiche un texte par défaut
+            const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "No history available.";
+            const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "<li>Roster is empty.</li>";
 
-            const clubData = lines.slice(1).find(line => {
-                const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(s => s.replace(/^"|"$/g,'')) || [];
-                return values[idx.team]?.trim() === clubName;
-            });
+            // Logique Statut Actif
+            const isActive = v[idx.active]?.toUpperCase() === 'YES';
+            const statusHTML = `<span style="color: ${isActive ? '#4caf50' : '#f44336'}; font-weight: bold;">
+                                <i class="fas fa-circle" style="font-size: 10px; vertical-align: middle;"></i> 
+                                ${isActive ? 'ACTIVE' : 'INACTIVE'}
+                               </span>`;
 
-            if (clubData) {
-                const v = clubData.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(s => s.replace(/^"|"$/g,'')) || [];
-                
-                const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "No history available.";
-                const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "Roster is empty.";
+            // Logique Bouton Stream
+            const streamUrl = v[idx.stream] || "";
+            let streamHTML = '';
+            if (streamUrl && streamUrl !== "" && streamUrl.toLowerCase() !== "none") {
+                const isTwitch = streamUrl.includes('twitch.tv');
+                streamHTML = `
+                    <h3 class="sidebar-title" style="margin-top:20px;"><i class="fas fa-broadcast-tower"></i> LIVE STREAM</h3>
+                    <a href="${streamUrl}" target="_blank" class="fuma-cta" style="display:block; text-align:center; background:#6441a5; font-size: 0.8rem; padding: 10px;">
+                        <i class="${isTwitch ? 'fab fa-twitch' : 'fab fa-youtube'}"></i> WATCH NOW
+                    </a>`;
+            }
 
-                // Logique Statut Actif
-                const isActive = v[idx.active]?.toUpperCase() === 'YES';
-                const statusHTML = `<span style="color: ${isActive ? '#4caf50' : '#f44336'}; font-weight: bold;">
-                                    <i class="fas fa-circle" style="font-size: 10px; vertical-align: middle;"></i> 
-                                    ${isActive ? 'ACTIVE' : 'INACTIVE'}
-                                   </span>`;
+            // Logique Achievements
+            const trophyValue = v[idx.trophies] || "";
+            let trophiesHTML = ''; 
+            const isInvalidTrophy = trophyValue === "" || trophyValue === "0" || trophyValue.toLowerCase() === "none";
 
-                // Logique Bouton Stream
-                const streamUrl = v[idx.stream]?.trim();
-                let streamHTML = '';
-                if (streamUrl && streamUrl !== "" && streamUrl.toLowerCase() !== "none") {
-                    const isTwitch = streamUrl.includes('twitch.tv');
-                    streamHTML = `
-                        <h3 class="sidebar-title" style="margin-top:20px;"><i class="fas fa-broadcast-tower"></i> LIVE STREAM</h3>
-                        <a href="${streamUrl}" target="_blank" class="fuma-cta" style="display:block; text-align:center; background:#6441a5; font-size: 0.8rem; padding: 10px;">
-                            <i class="${isTwitch ? 'fab fa-twitch' : 'fab fa-youtube'}"></i> WATCH NOW
-                        </a>`;
-                }
-
-                // Logique Achievements
-                const trophyValue = v[idx.trophies] ? v[idx.trophies].trim() : "";
-                let trophiesHTML = ''; 
-                const isInvalidTrophy = trophyValue === "" || trophyValue === "0" || trophyValue.toLowerCase() === "none";
-
-                if (!isInvalidTrophy) {
-                    const trophyData = trophyValue.split(',');
-                    trophiesHTML = `
-                        <div class="trophy-section">
-                            <h3 class="sidebar-title" style="border:none; margin-bottom:0;"><i class="fas fa-trophy" style="color:var(--fuma-primary)"></i> ACHIEVEMENTS</h3>
-                            <div class="trophy-grid">
-                                ${trophyData.map(t => `
-                                    <div class="trophy-badge">
-                                        <span class="trophy-icon">🏆</span>
-                                        <span class="trophy-text">${t.trim()}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `;
-                }
-
-                detailContainer.innerHTML = `
-                    <div class="club-profile-header" style="text-align: center; margin-bottom: 50px;">
-                        <img src="${v[idx.crest]}" style="width: 180px; margin-bottom: 20px;" alt="Crest">
-                        <h1 style="font-size: 3rem; color: var(--fuma-primary); margin-bottom:5px;">${v[idx.team]}</h1>
-                        <div class="status-badge">${statusHTML}</div>
-                    </div>
-                    
-                    <div class="club-grid-layout">
-                        <div class="club-main-info">
-                            ${trophiesHTML}
-
-                            <section>
-                                <h2 style="color:var(--fuma-primary); border-bottom: 1px solid #333; padding-bottom: 10px;">HISTORY</h2>
-                                <div style="font-style: italic; color: var(--fuma-text-dim);">${formattedHistory}</div>
-                            </section>
-
-                            <div class="stats-bar">
-                                <div class="stat-item"><strong>${v[idx.gp] || 0}</strong><br><span>GAMES</span></div>
-                                <div class="stat-item" style="color:#4caf50;"><strong>${v[idx.win] || 0}</strong><br><span>WIN</span></div>
-                                <div class="stat-item" style="color:#ffeb3b;"><strong>${v[idx.draw] || 0}</strong><br><span>DRAW</span></div>
-                                <div class="stat-item" style="color:#f44336;"><strong>${v[idx.lost] || 0}</strong><br><span>LOST</span></div>
-                            </div>
-                        </div>
-
-                        <div class="club-sidebar">
-                            <div class="sidebar-box">
-                                <h3 class="sidebar-title">MANAGER</h3>
-                                <p style="margin-bottom:20px;">${v[idx.manager] || 'N/A'}</p>
-                                
-                                <h3 class="sidebar-title">ROSTER</h3>
-                                <ul class="roster-list">${playersList}</ul>
-
-                                ${streamHTML}
-                            </div>
+            if (!isInvalidTrophy) {
+                const trophyData = trophyValue.split(',');
+                trophiesHTML = `
+                    <div class="trophy-section">
+                        <h3 class="sidebar-title" style="border:none; margin-bottom:0;"><i class="fas fa-trophy" style="color:var(--fuma-primary)"></i> ACHIEVEMENTS</h3>
+                        <div class="trophy-grid">
+                            ${trophyData.map(t => `
+                                <div class="trophy-badge">
+                                    <span class="trophy-icon">🏆</span>
+                                    <span class="trophy-text">${t.trim()}</span>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
                 `;
             }
-        } catch (e) { console.error(e); }
-    }
+
+            detailContainer.innerHTML = `
+                <div class="club-profile-header" style="text-align: center; margin-bottom: 50px;">
+                    <img src="${v[idx.crest] || ''}" style="width: 180px; margin-bottom: 20px;" alt="Crest">
+                    <h1 style="font-size: 3rem; color: var(--fuma-primary); margin-bottom:5px;">${v[idx.team]}</h1>
+                    <div class="status-badge">${statusHTML}</div>
+                </div>
+                
+                <div class="club-grid-layout">
+                    <div class="club-main-info">
+                        ${trophiesHTML}
+                        <section>
+                            <h2 style="color:var(--fuma-primary); border-bottom: 1px solid #333; padding-bottom: 10px;">HISTORY</h2>
+                            <div style="font-style: italic; color: var(--fuma-text-dim);">${formattedHistory}</div>
+                        </section>
+                        <div class="stats-bar">
+                            <div class="stat-item"><strong>${v[idx.gp] || 0}</strong><br><span>GAMES</span></div>
+                            <div class="stat-item" style="color:#4caf50;"><strong>${v[idx.win] || 0}</strong><br><span>WIN</span></div>
+                            <div class="stat-item" style="color:#ffeb3b;"><strong>${v[idx.draw] || 0}</strong><br><span>DRAW</span></div>
+                            <div class="stat-item" style="color:#f44336;"><strong>${v[idx.lost] || 0}</strong><br><span>LOST</span></div>
+                        </div>
+                    </div>
+                    <div class="club-sidebar">
+                        <div class="sidebar-box">
+                            <h3 class="sidebar-title">MANAGER</h3>
+                            <p style="margin-bottom:20px;">${v[idx.manager] || 'N/A'}</p>
+                            <h3 class="sidebar-title">ROSTER</h3>
+                            <ul class="roster-list">${playersList}</ul>
+                            ${streamHTML}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (e) { console.error("Erreur de parsing :", e); }
+}
 
     // --- 6. INITIALISATION & ÉVÉNEMENTS ---
     injectNavigation();
@@ -284,6 +301,7 @@ backBtn?.addEventListener('click', () => {
 if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
 if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
