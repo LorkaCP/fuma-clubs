@@ -509,58 +509,55 @@ document.addEventListener('DOMContentLoaded', () => {
         else backBtn?.classList.remove('visible');
 
         // --- 7. ENVOI DU FORMULAIRE VERS GOOGLE SHEETS ---
-const profileForm = document.getElementById('profile-form'); // Assure-toi que ton <form> a cet ID
+const profileForm = document.getElementById('profile-form');
 
 if (profileForm) {
     profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // Récupération du bouton pour donner un feedback visuel
         const submitBtn = profileForm.querySelector('button[type="submit"]');
         const originalBtnText = submitBtn.innerText;
         submitBtn.disabled = true;
-        submitBtn.innerText = "Envoi en cours...";
+        submitBtn.innerText = "Updating...";
 
-        // Préparation des données (les IDs doivent correspondre à tes <input>)
+        // On récupère les valeurs en utilisant les IDs EXACTS de ton HTML
         const formData = {
-            game_id: document.getElementById('game-id')?.value || "",
-            game_tag: document.getElementById('game-tag')?.value || "",
+            game_id: document.getElementById('id-game')?.value || "", // Mapping vers GAME_ID
+            game_tag: document.getElementById('id-game')?.value || "", // Mapping vers GAME_TAG
             discord_id: document.getElementById('id-discord')?.value || "",
             discord_name: document.getElementById('discord-name')?.value || "",
             country: document.getElementById('country')?.value || "",
-            avatar: document.getElementById('avatar-url')?.value || "",
-            current_team: document.getElementById('current-team')?.value || "",
-            main_archetype: document.getElementById('archetype')?.value || "",
-            main_position: document.getElementById('position')?.value || ""
+            avatar: document.getElementById('avatar')?.value || "",
+            current_team: document.getElementById('team')?.value || "Free Agent",
+            main_archetype: document.getElementById('main-archetype')?.value || "",
+            main_position: document.getElementById('main-position')?.value || ""
         };
 
-        // URL de ton Script Google (à récupérer après déploiement)
-        const APP_SCRIPT_URL = 'TON_URL_DEPLOIEMENT_WEB_APP';
+        // REMPLACE CETTE URL par celle obtenue lors du déploiement Apps Script
+        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/XXXXX/exec'; 
 
         try {
-            const response = await fetch(APP_SCRIPT_URL, {
+            await fetch(APP_SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Important pour Google Apps Script
+                mode: 'no-cors', // Requis pour Google Apps Script
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(formData)
             });
 
-            // Note: avec 'no-cors', on ne peut pas lire la réponse JSON, 
-            // mais si aucune erreur n'est levée, c'est que c'est parti.
-            alert("Profil mis à jour avec succès !");
+            // Avec no-cors, on ne peut pas lire la réponse, donc on assume le succès si pas d'erreur
+            alert("Profile successfully updated in the database!");
             
         } catch (error) {
-            console.error('Erreur:', error);
-            alert("Une erreur est survenue lors de l'envoi.");
+            console.error('Submission error:', error);
+            alert("Error: Could not update profile.");
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerText = originalBtnText;
         }
     });
 }
-
     });
 
     backBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
@@ -572,4 +569,5 @@ if (profileForm) {
     if (document.getElementById('club-details')) loadClubProfile();
 
 });
+
 
