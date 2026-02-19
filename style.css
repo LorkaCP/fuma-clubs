@@ -1,2370 +1,525 @@
 /* --- VARIABLES ET RESET --- */
 
-
-
 :root {
-
-
-
     --fuma-primary: #d4af37; 
-
-
-
     --fuma-bg-dark: #000000;      
-
-
-
     --fuma-bg-card: #141619;      
-
-
-
     --fuma-text-main: #f5f5f7;    
-
-
-
     --fuma-text-dim: #a1a1a6;     
-
-
-
     --fuma-border: 1px solid rgba(255, 255, 255, 0.05);
-
-
-
 }
-
-
-
-
-
-
 
 html { scroll-behavior: smooth; }
 
-
-
-
-
-
-
 body, .fuma-wrapper {
-
-
-
     font-family: 'Poppins', sans-serif;
-
-
-
     background-color: var(--fuma-bg-dark);
-
-
-
     color: var(--fuma-text-main);
-
-
-
     line-height: 1.7;
-
-
-
     padding: 0;
-
-
-
     margin: 0;
-
-
-
     overflow-x: hidden;
-
-
-
 }
-
-
-
-
-
-
 
 /* --- NAVIGATION --- */
 
-
-
 .fuma-nav {
-
-
-
     position: sticky;
-
-
-
     top: 0;
-
-
-
     z-index: 9999;
-
-
-
     background: rgba(0, 0, 0, 0.9);
-
-
-
     backdrop-filter: blur(10px);
-
-
-
     border-bottom: var(--fuma-border);
-
-
-
     padding: 15px 0;
-
-
-
 }
-
-
-
-
-
-
 
 .nav-container {
-
-
-
     max-width: 1000px;
-
-
-
     margin: 0 auto;
-
-
-
     display: flex;
-
-
-
     justify-content: space-between;
-
-
-
     align-items: center;
-
-
-
     padding: 0 20px;
-
-
-
 }
-
-
-
-
-
-
 
 .nav-logo {
-
-
-
     font-weight: 800;
-
-
-
     color: var(--fuma-primary);
-
-
-
     text-decoration: none;
-
-
-
     letter-spacing: 2px;
-
-
-
     text-transform: uppercase;
-
-
-
 }
-
-
-
-
-
-
 
 .fuma-burger {
-
-
-
     display: none;
-
-
-
     cursor: pointer;
-
-
-
     background: none;
-
-
-
     border: none;
-
-
-
     padding: 5px;
-
-
-
     z-index: 10001;
-
-
-
 }
-
-
-
-
-
-
 
 .fuma-burger span {
-
-
-
     display: block;
-
-
-
     width: 25px;
-
-
-
     height: 2px;
-
-
-
     background-color: var(--fuma-text-main);
-
-
-
     margin: 6px 0;
-
-
-
     transition: 0.4s;
-
-
-
 }
-
-
-
-
-
-
 
 .nav-links {
-
-
-
     display: flex;
-
-
-
     align-items: center;
-
-
-
 }
-
-
-
-
-
-
 
 .nav-links a {
-
-
-
     color: var(--fuma-text-main);
-
-
-
     text-decoration: none;
-
-
-
     margin-left: 20px;
-
-
-
     font-size: 0.8rem;
-
-
-
     text-transform: uppercase;
-
-
-
     letter-spacing: 1px;
-
-
-
     font-weight: 600;
-
-
-
     transition: color 0.3s;
-
-
-
 }
-
-
-
-
-
-
 
 .nav-links a:hover, .nav-links a.active { color: var(--fuma-primary); }
 
-
-
-
-
-
-
 /* --- HERO SECTION --- */
 
-
-
 .fuma-hero {
-
-
-
     padding: 60px 20px; 
-
-
-
     text-align: center;
-
-
-
     background: radial-gradient(circle at 50% -20%, #1e2126 0%, var(--fuma-bg-dark) 80%);
-
-
-
 }
-
-
-
-
-
-
 
 .fuma-hero-subtitle {
-
-
-
     color: var(--fuma-primary);
-
-
-
     font-size: 1.8rem;
-
-
-
     text-transform: uppercase;
-
-
-
     letter-spacing: 5px;
-
-
-
     margin-bottom: 20px;
-
-
-
 }
-
-
-
-
-
-
 
 .fuma-cta {
-
-
-
     display: inline-block;
-
-
-
     padding: 14px 35px;
-
-
-
     background-color: var(--fuma-primary);
-
-
-
     color: #000;
-
-
-
     text-decoration: none;
-
-
-
     font-weight: 800;
-
-
-
     border-radius: 4px;
-
-
-
     text-transform: uppercase;
-
-
-
     font-size: 0.85rem;
-
-
-
     transition: all 0.3s ease;
-
-
-
     border: none;
-
-
-
     cursor: pointer;
-
-
-
 }
-
-
-
-
-
-
 
 .fuma-cta:hover { 
-
-
-
     transform: translateY(-3px);
-
-
-
     box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
-
-
-
 }
-
-
-
-
-
-
 
 /* --- SECTIONS & CONTAINERS --- */
 
-
-
 .fuma-container {
-
-
-
     max-width: 1000px;
-
-
-
     margin: 0 auto;
-
-
-
     padding: 0 20px 40px;
-
-
-
 }
-
-
-
-
-
-
 
 .fuma-section-title {
-
-
-
     font-size: 1.1rem;
-
-
-
     color: var(--fuma-text-dim);
-
-
-
     text-align: center;
-
-
-
     margin-bottom: 30px;
-
-
-
     text-transform: uppercase;
-
-
-
     letter-spacing: 4px;
-
-
-
     display: flex;
-
-
-
     align-items: center;
-
-
-
     justify-content: center;
-
-
-
     gap: 20px;
-
-
-
 }
-
-
-
-
-
-
 
 .fuma-section-title::before, .fuma-section-title::after {
-
-
-
     content: ""; flex: 1; height: 1px;
-
-
-
     background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
-
-
-
     max-width: 100px;
-
-
-
 }
-
-
-
-
-
-
 
 .fuma-about {
-
-
-
-    text-align: center; /* Centre le texte à l'intérieur */
-
-
-
-    max-width: 800px;   /* Limite la largeur pour une meilleure lecture */
-
-
-
-    margin: 0 auto;     /* Centre le bloc horizontalement dans la page */
-
-
-
-    padding: 40px 20px; /* Ajoute un peu d'espace autour */
-
-
-
+    text-align: center;
+    max-width: 800px;  
+    margin: 0 auto;    
+    padding: 40px 20px;
 }
-
-
-
-
-
-
 
 .fuma-about p {
-
-
-
-    color: var(--fuma-text-dim); /* Optionnel : utilise la couleur tamisée pour le texte */
-
-
-
+    color: var(--fuma-text-dim);
     font-size: 1rem;
-
-
-
 }
-
-
-
-
-
-
 
 /* --- VIDEO --- */
 
-
-
 .fuma-video-container {
-
-
-
     position: relative;
-
-
-
     padding-bottom: 56.25%;
-
-
-
     border-radius: 15px;
-
-
-
     overflow: hidden;
-
-
-
     box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-
-
-
     border: var(--fuma-border);
-
-
-
     background: #000;
-
-
-
     margin-bottom: 45px;
-
-
-
 }
-
-
-
-
-
-
 
 .fuma-video-container iframe {
-
-
-
     position: absolute;
-
-
-
     top: 0; left: 0; width: 100%; height: 100%; border: none;
-
-
-
 }
-
-
-
-
-
-
 
 /* --- SEARCH & CLUB CARDS (GRID) --- */
 
-
-
 .fuma-search-container {
-
-
-
     text-align: center;
-
-
-
     margin-top: 20px;
-
-
-
     margin-bottom: 35px;
-
-
-
     max-width: 300px;
-
-
-
 }
-
-
-
-
-
-
 
 .fuma-search-input {
-
-
-
     background: var(--fuma-bg-card);
-
-
-
     border: var(--fuma-border);
-
-
-
     padding: 12px 25px;
-
-
-
     border-radius: 30px;
-
-
-
     color: white;
-
-
-
-    width: auto;
-
-
-
-    max-width: 350px;
-
-
-
+    width: 100% !important;
+    max-width: 100%;
     outline: none;
-
-
-
     transition: all 0.3s;
-
-
-
+    box-sizing: border-box;
 }
 
-
-
-
-
-
+.fuma-search-input:focus {
+    border-color: var(--fuma-primary);
+    background-color: rgba(212, 175, 55, 0.05);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
+}
 
 .fuma-club-grid {
-
-
-
     display: grid;
-
-
-
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-
-
-
     gap: 20px;
-
-
-
 }
-
-
-
-
-
-
 
 .club-card {
-
-
-
     background: linear-gradient(145deg, #141619, #0a0b0c);
-
-
-
     border: 1px solid rgba(255, 255, 255, 0.03);
-
-
-
     border-radius: 12px;
-
-
-
     padding: 25px 15px;
-
-
-
     display: flex;
-
-
-
     flex-direction: column;
-
-
-
     align-items: center;
-
-
-
     text-decoration: none;
-
-
-
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-
-
-
 }
-
-
-
-
-
-
 
 .club-card:hover {
-
-
-
     transform: translateY(-8px);
-
-
-
     border-color: var(--fuma-primary);
-
-
-
 }
-
-
-
-
-
-
 
 .club-card img { width: 75px; height: 75px; object-fit: contain; }
 
-
-
-
-
-
-
 .club-name {
-
-
-
     margin-top: 15px;
-
-
-
     font-size: 0.7rem;
-
-
-
     color: var(--fuma-text-dim);
-
-
-
     text-transform: uppercase;
-
-
-
     text-align: center;
-
-
-
 }
 
-
-
-
-
-
-
-/* --- CLUB PROFILE PAGE (SPECIFIC) --- */
-
-
+/* --- CLUB PROFILE PAGE --- */
 
 .club-profile-header img {
-
-
-
     filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
-
-
-
 }
-
-
-
-
-
-
 
 .status-badge {
-
-
-
     background: rgba(212, 175, 55, 0.1);
-
-
-
     color: var(--fuma-primary);
-
-
-
     padding: 5px 12px;
-
-
-
     border-radius: 20px;
-
-
-
-    font-size: 0.7rem;
-
-
-
+    font-size: 0.9rem;
     font-weight: bold;
-
-
-
-    letter-spacing: 1px;
-
-
-
+    letter-spacing: 2px;
     border: 1px solid rgba(212, 175, 55, 0.2);
-
-
-
+    margin-bottom: 20px;
 }
-
-
-
-
-
-
 
 .club-grid-layout {
-
-
-
     display: grid;
-
-
-
     grid-template-columns: 2fr 1fr;
-
-
-
     gap: 40px;
-
-
-
     margin-top: 30px;
-
-
-
 }
-
-
-
-
-
-
 
 .stats-bar {
-
-
-
     display: flex;
-
-
-
     justify-content: space-between;
-
-
-
     background: var(--fuma-bg-card);
-
-
-
     padding: 25px;
-
-
-
     border-radius: 12px;
-
-
-
     border: var(--fuma-border);
-
-
-
     margin-top: 20px;
-
-
-
 }
-
-
-
-
-
-
 
 .stat-item {
-
-
-
     text-align: center;
-
-
-
     flex: 1;
-
-
-
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
-
-
-
-
-
-
 
 .stat-item strong {
-
-
-
     font-size: 1.8rem;
-
-
-
     display: block;
-
-
-
     line-height: 1;
-
-
-
     margin-bottom: 5px;
-
-
-
 }
 
-
-
-
-
-
-
-.stat-item span {
-
-
-
-    font-size: 0.65rem;
-
-
-
+.stat-item span, .stat-item .label {
+    font-size: 0.7rem;
     text-transform: uppercase;
-
-
-
     letter-spacing: 1px;
-
-
-
     color: var(--fuma-text-dim);
-
-
-
 }
 
-
-
-
-
-
+.stats-bar .stat-item input {
+    background: transparent;
+    border: none;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    text-align: center;
+    width: 60px;
+    outline: none;
+}
 
 .sidebar-box {
-
-
-
     background: var(--fuma-bg-card);
-
-
-
     padding: 25px;
-
-
-
     border-radius: 12px;
-
-
-
     border: var(--fuma-border);
-
-
-
     margin-bottom: 20px;
-
-
-
 }
 
-
-
-
-
-
+.sidebar-box .fuma-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(100, 65, 165, 0.4);
+    filter: brightness(1.1);
+}
 
 .sidebar-title {
-
-
-
     font-size: 0.75rem;
-
-
-
     color: var(--fuma-primary);
-
-
-
     margin-bottom: 15px;
-
-
-
     text-transform: uppercase;
-
-
-
     letter-spacing: 2px;
-
-
-
     border-bottom: 1px solid rgba(255,255,255,0.05);
-
-
-
     padding-bottom: 10px;
-
-
-
 }
-
-
-
-
-
-
 
 .roster-list {
-
-
-
     list-style: none;
-
-
-
     padding: 0;
-
-
-
     margin: 0;
-
-
-
     font-size: 0.9rem;
-
-
-
     color: var(--fuma-text-dim);
-
-
-
 }
-
-
-
-
-
-
 
 .roster-list li {
-
-
-
     padding: 8px 0;
-
-
-
     border-bottom: 1px solid rgba(255,255,255,0.02);
-
-
-
 }
-
-
-
-
-
-
 
 .roster-list li:last-child { border: none; }
 
+/* --- TROPHÉES --- */
 
-
-
-
-
-
-.status-badge {
-
-
-
-    letter-spacing: 2px;
-
-
-
-    font-size: 0.9rem;
-
-
-
-    margin-bottom: 20px;
-
-
-
+.trophy-section {
+    margin-bottom: 40px;
+    padding: 20px;
+    background: rgba(212, 175, 55, 0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(212, 175, 55, 0.1);
 }
 
-
-
-
-
-
-
-.sidebar-box .fuma-cta:hover {
-
-
-
-    transform: translateY(-2px);
-
-
-
-    box-shadow: 0 5px 15px rgba(100, 65, 165, 0.4);
-
-
-
-    filter: brightness(1.1);
-
-
-
+.trophy-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 15px;
 }
 
+.trophy-badge {
+    background: var(--fuma-bg-card);
+    border: 1px solid var(--fuma-primary);
+    padding: 8px 15px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: transform 0.3s ease;
+}
 
+.trophy-badge:hover {
+    transform: scale(1.05);
+    background: rgba(212, 175, 55, 0.1);
+}
 
+.trophy-icon { font-size: 1.2rem; }
 
+.trophy-text {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--fuma-text-main);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
 
+/* --- FORMULAIRE DE PROFIL --- */
 
+.fuma-profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--fuma-primary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.fuma-form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.fuma-form-row .form-group {
+    flex: 1;
+    min-width: 0;
+}
+
+/* --- INPUTS SPÉCIFIQUES & SELECTS --- */
+
+input[list], select.fuma-search-input {
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23d4af37' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: calc(100% - 15px) center;
+    padding-right: 35px;
+}
+
+input::-webkit-calendar-picker-indicator {
+    display: none !important;
+}
+
+select option {
+    background-color: #141619;
+    color: white;
+}
 
 /* --- UTILS & ANIMATIONS --- */
 
-
+.loader-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 0;
+    color: var(--fuma-primary);
+}
 
 .fuma-spinner {
-
-
-
-    width: 40px; height: 40px;
-
-
-
-    border: 3px solid rgba(212, 175, 55, 0.1);
-
-
-
-    border-top: 3px solid var(--fuma-primary);
-
-
-
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.1);
+    border-top: 5px solid var(--fuma-primary);
     border-radius: 50%;
-
-
-
     animation: spin 1s linear infinite;
-
-
-
+    margin-bottom: 15px;
 }
 
-
-
-
-
-
-
-@keyframes spin { 100% { transform: rotate(360deg); } }
-
-
-
-
-
-
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 
 .back-to-top {
-
-
-
     position: fixed; bottom: 30px; right: 30px;
-
-
-
     background: var(--fuma-primary);
-
-
-
     width: 50px; height: 50px; border-radius: 50%;
-
-
-
     display: flex; align-items: center; justify-content: center;
-
-
-
     border: none; cursor: pointer; opacity: 0; visibility: hidden; transition: 0.3s;
-
-
-
     z-index: 999;
-
-
-
 }
-
-
-
-
-
-
 
 .back-to-top.visible { opacity: 1; visibility: visible; }
 
-
-
-
-
-
-
 .fuma-credits {
-
-
-
     text-align: center; padding: 60px 0 20px; color: var(--fuma-text-dim);
-
-
-
     font-size: 0.7rem; letter-spacing: 2px; opacity: 0.5;
-
-
-
 }
-
-
-
-
-
-
 
 /* --- RESPONSIVE --- */
 
-
-
 @media (max-width: 850px) {
-
-
-
     .fuma-hero-subtitle { font-size: 1.3rem; }
-
-
-
-    
-
-
-
     .fuma-burger { display: block; }
-
-
-
-    
-
-
-
     .nav-links {
-
-
-
         position: fixed; top: 0; right: -100%;
-
-
-
         width: 100%; height: 100vh;
-
-
-
         background: rgba(0, 0, 0, 0.98);
-
-
-
         flex-direction: column; justify-content: center;
-
-
-
         transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
-
-
     }
-
-
-
-    
-
-
-
     .nav-links.active { right: 0; }
-
-
-
-    
-
-
-
     .nav-links a { margin: 15px 0; font-size: 1.2rem; margin-left: 0; }
-
-
-
-    
-
-
-
     .fuma-burger.active span:nth-child(1) { transform: rotate(-45deg) translate(-5px, 6px); }
-
-
-
     .fuma-burger.active span:nth-child(2) { opacity: 0; }
-
-
-
     .fuma-burger.active span:nth-child(3) { transform: rotate(45deg) translate(-5px, -6px); }
-
-
-
-
-
-
-
-    .club-grid-layout {
-
-
-
-        grid-template-columns: 1fr;
-
-
-
-        gap: 30px;
-
-
-
-    }
-
-
-
-
-
-
-
-    .stats-bar {
-
-
-
-        padding: 15px;
-
-
-
-    }
-
-
-
-    
-
-
-
+    .club-grid-layout { grid-template-columns: 1fr; gap: 30px; }
+    .stats-bar { padding: 15px; }
     .stat-item strong { font-size: 1.4rem; }
-
-
-
 }
-
-
-
-
-
-
-
-/* --- SECTION TROPHÉES --- */
-
-
-
-.trophy-section {
-
-
-
-    margin-bottom: 40px;
-
-
-
-    padding: 20px;
-
-
-
-    background: rgba(212, 175, 55, 0.03); /* Rappel léger du doré */
-
-
-
-    border-radius: 12px;
-
-
-
-    border: 1px solid rgba(212, 175, 55, 0.1);
-
-
-
-}
-
-
-
-
-
-
-
-.trophy-grid {
-
-
-
-    display: flex;
-
-
-
-    flex-wrap: wrap;
-
-
-
-    gap: 12px;
-
-
-
-    margin-top: 15px;
-
-
-
-}
-
-
-
-
-
-
-
-.trophy-badge {
-
-
-
-    background: var(--fuma-bg-card);
-
-
-
-    border: 1px solid var(--fuma-primary);
-
-
-
-    padding: 8px 15px;
-
-
-
-    border-radius: 6px;
-
-
-
-    display: flex;
-
-
-
-    align-items: center;
-
-
-
-    gap: 10px;
-
-
-
-    transition: transform 0.3s ease;
-
-
-
-}
-
-
-
-
-
-
-
-.trophy-badge:hover {
-
-
-
-    transform: scale(1.05);
-
-
-
-    background: rgba(212, 175, 55, 0.1);
-
-
-
-}
-
-
-
-
-
-
-
-.trophy-icon {
-
-
-
-    font-size: 1.2rem;
-
-
-
-}
-
-
-
-
-
-
-
-.trophy-text {
-
-
-
-    font-size: 0.8rem;
-
-
-
-    font-weight: 800;
-
-
-
-    color: var(--fuma-text-main);
-
-
-
-    text-transform: uppercase;
-
-
-
-    letter-spacing: 1px;
-
-
-
-}
-
-
-
-
-
-
-
-.fuma-profile-grid {
-
-
-
-    display: grid;
-
-
-
-    grid-template-columns: 1fr 1fr;
-
-
-
-    gap: 20px;
-
-
-
-    max-width: 900px;
-
-
-
-    margin: 0 auto;
-
-
-
-}
-
-
-
-
-
-
-
-.form-group {
-
-
-
-    margin-bottom: 15px;
-
-
-
-    text-align: left;
-
-
-
-}
-
-
-
-
-
-
-
-.form-group label {
-
-
-
-    display: block;
-
-
-
-    font-size: 0.8rem;
-
-
-
-    color: var(--fuma-primary);
-
-
-
-    text-transform: uppercase;
-
-
-
-    letter-spacing: 1px;
-
-
-
-    margin-bottom: 5px;
-
-
-
-    font-weight: 600;
-
-
-
-}
-
-
-
-
-
-
-
-.stats-bar .stat-item {
-
-
-
-    display: flex;
-
-
-
-    flex-direction: column;
-
-
-
-    align-items: center;
-
-
-
-}
-
-
-
-
-
-
-
-.stats-bar .stat-item input {
-
-
-
-    background: transparent;
-
-
-
-    border: none;
-
-
-
-    color: white;
-
-
-
-    font-weight: bold;
-
-
-
-    font-size: 1.2rem;
-
-
-
-    text-align: center;
-
-
-
-    width: 60px;
-
-
-
-    outline: none;
-
-
-
-}
-
-
-
-
-
-
-
-.stats-bar .stat-item .label {
-
-
-
-    font-size: 0.7rem;
-
-
-
-    color: var(--fuma-text-dim);
-
-
-
-}
-
-
-
-
-
-
 
 @media (max-width: 768px) {
-
-
-
     .fuma-profile-grid { grid-template-columns: 1fr; }
-
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-/* --- FIXES POUR LE FORMULAIRE DE PROFIL --- */
-
-
-
-
-
-
-
-/* Assure que tous les inputs respectent la largeur de leur parent */
-
-
-
-.fuma-search-input {
-
-
-
-    width: 100% !important; /* Force la largeur */
-
-
-
-    box-sizing: border-box; /* Inclut le padding dans le calcul de la largeur */
-
-
-
-    max-width: 100%;
-
-
-
-}
-
-
-
-
-
-
-
-/* Gestion de la ligne Main Position / Archetype */
-
-
-
-.fuma-form-row {
-
-
-
-    display: flex;
-
-
-
-    gap: 10px;
-
-
-
-}
-
-
-
-
-
-
-
-.fuma-form-row .form-group {
-
-
-
-    flex: 1;
-
-
-
-    min-width: 0; /* Important pour permettre aux éléments flex de rétrécir */
-
-
-
-}
-
-
-
-
-
-
-
-/* --- RESPONSIVE MOBILE --- */
-
-
 
 @media (max-width: 600px) {
-
-
-
-    /* Empile Main Position et Archetype sur petit mobile */
-
-
-
-    .fuma-form-row {
-
-
-
-        flex-direction: column;
-
-
-
-        gap: 0;
-
-
-
-    }
-
-
-
-    
-
-
-
-    /* Ajuste le container pour éviter les paddings excessifs */
-
-
-
-    .fuma-container {
-
-
-
-        padding: 0 15px 40px;
-
-
-
-    }
-
-
-
-
-
-
-
-    /* Ajuste la grille de profil pour qu'elle ne force pas de colonnes */
-
-
-
-    .fuma-profile-grid {
-
-
-
-        display: flex;
-
-
-
-        flex-direction: column;
-
-
-
-    }
-
-
-
-
-
-
-
-    /* Le titre de section peut être un peu grand sur mobile */
-
-
-
-    .fuma-section-title {
-
-
-
-        font-size: 0.9rem;
-
-
-
-        letter-spacing: 2px;
-
-
-
-    }
-
-
-
+    .fuma-form-row { flex-direction: column; gap: 0; }
+    .fuma-container { padding: 0 15px 40px; }
+    .fuma-profile-grid { display: flex; flex-direction: column; }
+    .fuma-section-title { font-size: 0.9rem; letter-spacing: 2px; }
+    .fuma-search-input { font-size: 16px !important; padding: 15px 20px; }
+    .sidebar-box { padding: 20px 15px; }
 }
-
-
-
-
-
-
-
-/* Style spécifique pour les champs avec listes (Position, Archetype, Country) */
-
-
-
-input[list] {
-
-
-
-    cursor: pointer;
-
-
-
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23d4af37' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-
-
-
-    background-repeat: no-repeat;
-
-
-
-    background-position: calc(100% - 15px) center;
-
-
-
-    padding-right: 35px; /* Espace pour la flèche dorée */
-
-
-
-}
-
-
-
-
-
-
-
-/* Effet au focus pour mobile */
-
-
-
-.fuma-search-input:focus {
-
-
-
-    border-color: var(--fuma-primary);
-
-
-
-    background-color: rgba(212, 175, 55, 0.05);
-
-
-
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
-
-
-
-}
-
-
-
-
-
-/* Style pour les listes (Position, Archetype, Country) et les Select */
-
-input[list], 
-
-select.fuma-search-input {
-
-    cursor: pointer;
-
-    -webkit-appearance: none;  /* Désactive le style Safari/Chrome */
-
-    -moz-appearance: none;     /* Désactive le style Firefox */
-
-    appearance: none;          /* Désactive le style standard */
-
-    
-
-    /* On garde votre flèche dorée personnalisée */
-
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23d4af37' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-
-    background-repeat: no-repeat;
-
-    background-position: calc(100% - 15px) center;
-
-    padding-right: 35px; 
-
-}
-
-
-
-/* Cacher spécifiquement l'indicateur de flèche datalist pour Chrome/Safari */
-
-input::-webkit-calendar-picker-indicator {
-
-    display: none !important;
-
-    -webkit-appearance: none;
-
-}
-
-
-
-/* Fix pour voir les options du select (fond noir) */
-
-select option {
-
-    background-color: #141619;
-
-    color: white;
-
-}
-
-
-
-
-
-/* Optimisation de la saisie sur mobile */
-
-
-
-@media (max-width: 600px) {
-
-
-
-    .fuma-search-input {
-
-
-
-        font-size: 16px !important; /* Évite le zoom automatique forcé sur iOS */
-
-
-
-        padding: 15px 20px; /* Plus grande zone de clic */
-
-
-
-    }
-
-
-
-    
-
-
-
-    .sidebar-box {
-
-
-
-        padding: 20px 15px; /* On gagne un peu de place sur les côtés */
-
-
-
-    }
-
-
-
-}
-
-
-
-
-
-
-
-.loader-container {
-
-
-
-    display: flex;
-
-
-
-    flex-direction: column;
-
-
-
-    align-items: center;
-
-
-
-    justify-content: center;
-
-
-
-    padding: 50px 0;
-
-
-
-    color: var(--fuma-primary);
-
-
-
-}
-
-
-
-
-
-
-
-.fuma-spinner {
-
-
-
-    width: 50px;
-
-
-
-    height: 50px;
-
-
-
-    border: 5px solid rgba(255, 255, 255, 0.1);
-
-
-
-    border-top: 5px solid var(--fuma-primary); /* La couleur de ton thème */
-
-
-
-    border-radius: 50%;
-
-
-
-    animation: spin 1s linear infinite;
-
-
-
-    margin-bottom: 15px;
-
-
-
-}
-
-
-
-
-
-
-
-@keyframes spin {
-
-
-
-    0% { transform: rotate(0deg); }
-
-
-
-    100% { transform: rotate(360deg); }
-
-
-
-}
-
-
-
-
-
-
-
