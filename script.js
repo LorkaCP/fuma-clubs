@@ -250,20 +250,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 6. INITIALISATION & FORMULAIRE ---
 
-// URL de votre déploiement Google Apps Script (à remplacer après avoir publié votre script)
+// --- 6. INITIALISATION & FORMULAIRE ---
+
+// 1. Définition de l'URL Google Apps Script
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz73s8loo-1G_O6zmVse2_zh8z604AKQ4snSe1P1Ol6tMht3Gkpl6viqe2MT-4FjSgy9Q/exec'; 
 
+// 2. Lancement des fonctions de base
 injectNavigation();
-handleProfilePage();
+handleProfilePage(); // C'est cette fonction qui remplit automatiquement l'ID et le Nom Discord
 
-// Gestion de la recherche de clubs
+// 3. Gestion de la recherche de clubs (si présent sur la page)
 const searchInput = document.getElementById('fuma-search');
 searchInput?.addEventListener('input', (e) => {
     const term = e.target.value.toLowerCase();
     renderClubs(allClubs.filter(c => c.name.toLowerCase().includes(term)));
 });
 
-// Bouton Retour en haut
+// 4. Bouton Retour en haut
 const backBtn = document.getElementById('backTop');
 window.addEventListener('scroll', () => {
     if (window.scrollY > 400) backBtn?.classList.add('visible');
@@ -271,11 +274,13 @@ window.addEventListener('scroll', () => {
 });
 backBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
+// 5. Chargement des données dynamiques
 if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
 if (document.getElementById('club-details')) loadClubProfile();
 
-// --- NOUVEAU : ENVOI DES DONNÉES VERS GOOGLE SHEETS ---
+// 6. GESTION DE LA SOUMISSION DU FORMULAIRE
 const profileForm = document.getElementById('profile-form');
+
 if (profileForm) {
     profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -289,11 +294,13 @@ if (profileForm) {
 
         // Extraction des données du formulaire
         const formData = new FormData(profileForm);
+        
+        // On récupère les valeurs des champs (y compris ceux remplis automatiquement)
         const data = {
             game_tag: formData.get('GAME_TAG'),
             country: formData.get('COUNTRY'),
-            id_discord: formData.get('ID_DISCORD'),
-            name_discord: formData.get('NAME_DISCORD'),
+            id_discord: document.getElementById('id-discord').value, // On force la lecture de l'ID
+            name_discord: document.getElementById('discord-name').value, // On force la lecture du Nom
             current_team: formData.get('CURRENT_TEAM'),
             main_position: formData.get('MAIN_POSITION'),
             main_archetype: formData.get('MAIN_ARCHETYPE'),
@@ -302,8 +309,7 @@ if (profileForm) {
         };
 
         try {
-            // Envoi des données via Fetch API
-            // Note: On utilise 'no-cors' car Google Apps Script ne gère pas nativement les requêtes CORS complexes
+            // Envoi vers Google Sheets
             await fetch(APPS_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -312,15 +318,12 @@ if (profileForm) {
                 body: JSON.stringify(data)
             });
 
-            // Puisqu'on est en 'no-cors', on ne peut pas lire la réponse, 
-            // on assume donc que si l'appel n'a pas crashé, c'est envoyé.
             alert("✅ Profile successfully updated in FUMA Database!");
             
         } catch (error) {
             console.error("Submission error:", error);
             alert("❌ An error occurred. Please try again later.");
         } finally {
-            // Remise à l'état initial du bouton
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
         }
