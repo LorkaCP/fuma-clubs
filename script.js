@@ -248,23 +248,82 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { console.error(e); }
     }
 
-    // --- 6. INITIALISATION ---
-    injectNavigation();
-    handleProfilePage();
+    // --- 6. INITIALISATION & FORMULAIRE ---
 
-    const searchInput = document.getElementById('fuma-search');
-    searchInput?.addEventListener('input', (e) => {
-        const term = e.target.value.toLowerCase();
-        renderClubs(allClubs.filter(c => c.name.toLowerCase().includes(term)));
-    });
+// URL de votre déploiement Google Apps Script (à remplacer après avoir publié votre script)
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz73s8loo-1G_O6zmVse2_zh8z604AKQ4snSe1P1Ol6tMht3Gkpl6viqe2MT-4FjSgy9Q/exec'; 
 
-    const backBtn = document.getElementById('backTop');
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 400) backBtn?.classList.add('visible');
-        else backBtn?.classList.remove('visible');
-    });
-    backBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+injectNavigation();
+handleProfilePage();
 
-    if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
-    if (document.getElementById('club-details')) loadClubProfile();
+// Gestion de la recherche de clubs
+const searchInput = document.getElementById('fuma-search');
+searchInput?.addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase();
+    renderClubs(allClubs.filter(c => c.name.toLowerCase().includes(term)));
 });
+
+// Bouton Retour en haut
+const backBtn = document.getElementById('backTop');
+window.addEventListener('scroll', () => {
+    if (window.scrollY > 400) backBtn?.classList.add('visible');
+    else backBtn?.classList.remove('visible');
+});
+backBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
+if (document.getElementById('club-details')) loadClubProfile();
+
+// --- NOUVEAU : ENVOI DES DONNÉES VERS GOOGLE SHEETS ---
+const profileForm = document.getElementById('profile-form');
+if (profileForm) {
+    profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const submitBtn = profileForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+
+        // Effet visuel de chargement
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
+        // Extraction des données du formulaire
+        const formData = new FormData(profileForm);
+        const data = {
+            game_tag: formData.get('GAME_TAG'),
+            country: formData.get('COUNTRY'),
+            id_discord: formData.get('ID_DISCORD'),
+            name_discord: formData.get('NAME_DISCORD'),
+            current_team: formData.get('CURRENT_TEAM'),
+            main_position: formData.get('MAIN_POSITION'),
+            main_archetype: formData.get('MAIN_ARCHETYPE'),
+            avatar: formData.get('AVATAR'),
+            timestamp: new Date().toLocaleString()
+        };
+
+        try {
+            // Envoi des données via Fetch API
+            // Note: On utilise 'no-cors' car Google Apps Script ne gère pas nativement les requêtes CORS complexes
+            await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                cache: 'no-cache',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            // Puisqu'on est en 'no-cors', on ne peut pas lire la réponse, 
+            // on assume donc que si l'appel n'a pas crashé, c'est envoyé.
+            alert("✅ Profile successfully updated in FUMA Database!");
+            
+        } catch (error) {
+            console.error("Submission error:", error);
+            alert("❌ An error occurred. Please try again later.");
+        } finally {
+            // Remise à l'état initial du bouton
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    });
+}
+
