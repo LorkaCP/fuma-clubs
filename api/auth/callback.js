@@ -2,17 +2,17 @@ export default async function handler(req, res) {
     const { code } = req.query;
 
     if (!code) {
-        return res.status(400).send('Code de connexion manquant.');
+        return res.status(400).send('Missing connection code.');
     }
 
     // --- CONFIGURATION ---
-    const MY_GUILD_ID = '882539898953949204'; // Ton ID de serveur FUMA
+    const MY_GUILD_ID = '882539898953949204'; // FUMA Server ID
     const clientID = process.env.DISCORD_CLIENT_ID;
     const clientSecret = process.env.DISCORD_CLIENT_SECRET;
     const redirectUri = 'https://fuma-clubs-official.vercel.app/api/auth/callback';
 
     try {
-        // 1. ÉCHANGE DU CODE CONTRE UN TOKEN D'ACCÈS
+        // 1. EXCHANGE CODE FOR ACCESS TOKEN
         const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
             method: 'POST',
             body: new URLSearchParams({
@@ -29,13 +29,13 @@ export default async function handler(req, res) {
         const tokenData = await tokenResponse.json();
 
         if (!tokenData.access_token) {
-            console.error("Erreur Token Discord:", tokenData);
-            return res.status(500).send("Impossible d'obtenir le token d'accès.");
+            console.error("Discord Token Error:", tokenData);
+            return res.status(500).send("Unable to obtain access token.");
         }
 
         const accessToken = tokenData.access_token;
 
-        // 2. RÉCUPÉRATION DES SERVEURS DE L'UTILISATEUR (GUILDS)
+        // 2. FETCH USER GUILDS
         const guildsResponse = await fetch('https://discord.com/api/users/@me/guilds', {
             headers: { Authorization: `Bearer ${accessToken}` },
         });
@@ -43,18 +43,18 @@ export default async function handler(req, res) {
         const guilds = await guildsResponse.json();
 
         if (!Array.isArray(guilds)) {
-            return res.status(500).send("Erreur lors de la récupération de vos serveurs Discord.");
+            return res.status(500).send("Error while retrieving your Discord servers.");
         }
 
-        // 3. VÉRIFICATION DE L'APPARTENANCE
+        // 3. MEMBERSHIP VERIFICATION
         const isMember = guilds.some(guild => guild.id === MY_GUILD_ID);
 
         if (!isMember) {
-            // Affichage d'un message propre si l'utilisateur n'est pas sur le Discord
+            // Display clean Access Denied page if user is not in the server
             return res.send(`
                 <html>
                     <head>
-                        <title>Accès Refusé - FUMA CLUBS</title>
+                        <title>Access Denied - FUMA CLUBS</title>
                         <meta charset="UTF-8">
                         <style>
                             body { background: #0f0f0f; color: white; font-family: 'Poppins', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
@@ -67,30 +67,30 @@ export default async function handler(req, res) {
                     </head>
                     <body>
                         <div class="card">
-                            <h1>ACCÈS REFUSÉ</h1>
-                            <p>Désolé, vous devez être membre du serveur Discord <strong>FUMA CLUBS</strong> pour accéder à la création de profil.</p>
-                            <a href="https://discord.gg/xPz9FBkdtm" class="btn">REJOINDRE LE DISCORD</a>
-                            <p style="font-size: 0.8rem; margin-top: 15px; color: #555;">Une fois rejoint, réessayez de vous connecter.</p>
+                            <h1>ACCESS DENIED</h1>
+                            <p>Sorry, you must be a member of the <strong>FUMA CLUBS</strong> Discord server to create a profile.</p>
+                            <a href="https://discord.gg/xPz9FBkdtm" class="btn">JOIN OUR DISCORD</a>
+                            <p style="font-size: 0.8rem; margin-top: 15px; color: #555;">Once you've joined, try logging in again.</p>
                         </div>
                     </body>
                 </html>
             `);
         }
 
-        // 4. RÉCUPÉRATION DES INFOS UTILISATEUR (SI MEMBRE)
+        // 4. FETCH USER INFO (IF MEMBER)
         const userResponse = await fetch('https://discord.com/api/users/@me', {
             headers: { Authorization: `Bearer ${accessToken}` },
         });
 
         const userData = await userResponse.json();
         const discordId = userData.id || "";
-        const discordName = userData.username || "Joueur";
+        const discordName = userData.username || "Player";
 
-        // 5. REDIRECTION FINALE VERS LE PROFIL AVEC LES DONNÉES
+        // 5. FINAL REDIRECT TO PROFILE WITH DATA
         res.redirect(`/profile.html?id=${discordId}&username=${encodeURIComponent(discordName)}`);
 
     } catch (error) {
-        console.error("Erreur Callback:", error);
-        res.status(500).send('Erreur lors de la communication avec Discord');
+        console.error("Callback Error:", error);
+        res.status(500).send('Error communicating with Discord');
     }
 }
