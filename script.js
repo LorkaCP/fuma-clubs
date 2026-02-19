@@ -52,32 +52,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. LOGIQUE PAGE PROFIL ---
     function handleProfilePage() {
-    if (!window.location.pathname.includes('profile.html')) return;
+        if (!window.location.pathname.includes('profile.html')) return;
 
-    const params = new URLSearchParams(window.location.search);
-    const discordUsername = params.get('username');
-    const discordId = params.get('id');
+        const params = new URLSearchParams(window.location.search);
+        const discordUsername = params.get('username');
+        const discordId = params.get('id');
 
-    // Récupération des éléments du DOM
-    const nameInput = document.getElementById('discord-name');
-    const idInput = document.getElementById('id-discord');
+        if (discordUsername && discordUsername !== "undefined" && discordId && discordId !== "undefined") {
+            const nameInput = document.getElementById('discord-name');
+            const idInput = document.getElementById('id-discord');
 
-    if (discordUsername && discordUsername !== "undefined" && discordId && discordId !== "undefined") {
-        if (nameInput && idInput) {
-            nameInput.value = decodeURIComponent(discordUsername);
-            idInput.value = discordId;
-            
-            // Note: Ici, vous devriez idéalement lancer une fonction 
-            // pour aller chercher les données existantes du joueur dans le CSV
-            // via son discordId pour remplir le reste des champs (GAME_ID, TEAM, etc.)
-            
-            window.history.replaceState({}, document.title, window.location.pathname);
-        } else {
-            // Si le DOM n'est pas encore prêt, on retente
-            setTimeout(handleProfilePage, 100);
+            if (nameInput && idInput) {
+                nameInput.value = decodeURIComponent(discordUsername);
+                idInput.value = discordId;
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                setTimeout(handleProfilePage, 100);
+            }
         }
     }
-}
 
     // --- 4. LOGIQUE LISTE DES CLUBS ---
     async function fetchFumaClubs() {
@@ -275,4 +268,3 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
-
