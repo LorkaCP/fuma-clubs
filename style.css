@@ -478,4 +478,49 @@ body, .fuma-wrapper {
 }
 
 
+/* --- FIXES POUR LE FORMULAIRE DE PROFIL --- */
+
+/* Assure que tous les inputs respectent la largeur de leur parent */
+.fuma-search-input {
+    width: 100% !important; /* Force la largeur */
+    box-sizing: border-box; /* Inclut le padding dans le calcul de la largeur */
+    max-width: 100%;
+}
+
+/* Gestion de la ligne Main Position / Archetype */
+.fuma-form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.fuma-form-row .form-group {
+    flex: 1;
+    min-width: 0; /* Important pour permettre aux éléments flex de rétrécir */
+}
+
+/* --- RESPONSIVE MOBILE --- */
+@media (max-width: 600px) {
+    /* Empile Main Position et Archetype sur petit mobile */
+    .fuma-form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    /* Ajuste le container pour éviter les paddings excessifs */
+    .fuma-container {
+        padding: 0 15px 40px;
+    }
+
+    /* Ajuste la grille de profil pour qu'elle ne force pas de colonnes */
+    .fuma-profile-grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Le titre de section peut être un peu grand sur mobile */
+    .fuma-section-title {
+        font-size: 0.9rem;
+        letter-spacing: 2px;
+    }
+}
 
