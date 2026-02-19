@@ -121,9 +121,10 @@ body, .fuma-wrapper {
 
 /* --- SECTIONS & CONTAINERS --- */
 .fuma-container {
-    max-width: 1000px;
+    max-width: 400px;
     margin: 0 auto;
     padding: 0 20px 40px;
+    
 }
 
 .fuma-section-title {
@@ -551,3 +552,4 @@ input[list] {
         padding: 20px 15px; /* On gagne un peu de place sur les côtés */
     }
 }
+
