@@ -90,36 +90,53 @@ document.addEventListener('DOMContentLoaded', () => {
             const text = await resp.text();
             const lines = text.trim().split("\n");
             
-            const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
-            console.log("En-têtes détectés:", headers);
+            // Nettoyage agressif des en-têtes : MAJUSCULES et suppression des espaces/_
+            const rawHeaders = lines[0].split(",");
+            const cleanHeaders = rawHeaders.map(h => h.trim().toUpperCase().replace(/[\s_]/g, ''));
+            
+            console.log("En-têtes bruts:", rawHeaders);
+            console.log("En-têtes nettoyés pour recherche:", cleanHeaders);
+
+            // Fonction pour trouver l'index malgré les variations de noms
+            const getIdx = (name) => cleanHeaders.indexOf(name.replace(/[\s_]/g, '').toUpperCase());
 
             const idx = {
-                discord: headers.indexOf('DISCORD_ID'),
-                gameTag: headers.indexOf('GAME_TAG'),
-                country: headers.indexOf('COUNTRY'),
-                avatar: headers.indexOf('AVATAR'),
-                pos: headers.indexOf('MAIN_POSITION'),
-                arch: headers.indexOf('MAIN_ARCHETYPE'),
-                team: headers.indexOf('CURRENT_TEAM')
+                discord: getIdx('DISCORDID'),
+                gameTag: getIdx('GAMETAG'),
+                country: getIdx('COUNTRY'),
+                avatar: getIdx('AVATAR'),
+                pos: getIdx('MAINPOSITION'),
+                arch: getIdx('MAINARCHETYPE'),
+                team: getIdx('CURRENTTEAM')
             };
+
+            // Si l'index discord n'est pas trouvé, on ne peut pas continuer
+            if (idx.discord === -1) {
+                console.error("ERREUR : La colonne DISCORD_ID est introuvable dans le Google Sheet.");
+                return;
+            }
 
             for (let i = 1; i < lines.length; i++) {
                 const values = parseCSVLine(lines[i]);
                 
+                // Comparaison stricte de l'ID
                 if (values[idx.discord] === discordId) {
-                    console.log("Profil trouvé ! Remplissage...");
+                    console.log("MATCH TROUVÉ ! Remplissage en cours...");
 
                     const setVal = (id, val) => {
                         const el = document.getElementById(id);
-                        if (el && val !== undefined) el.value = val;
+                        if (el && val !== undefined && val !== null) {
+                            el.value = val.trim();
+                        }
                     };
 
-                    setVal('id-game', values[idx.gameTag]);
-                    setVal('country', values[idx.country]);
-                    setVal('avatar', values[idx.avatar]);
-                    setVal('main-position', values[idx.pos]);
-                    setVal('main-archetype', values[idx.arch]);
-                    setVal('team', values[idx.team] || "Free Agent");
+                    // On utilise les index trouvés dynamiquement
+                    if (idx.gameTag !== -1) setVal('id-game', values[idx.gameTag]);
+                    if (idx.country !== -1) setVal('country', values[idx.country]);
+                    if (idx.avatar !== -1) setVal('avatar', values[idx.avatar]);
+                    if (idx.pos !== -1) setVal('main-position', values[idx.pos]);
+                    if (idx.arch !== -1) setVal('main-archetype', values[idx.arch]);
+                    if (idx.team !== -1) setVal('team', values[idx.team]);
 
                     const submitBtn = document.querySelector('#profile-form button[type="submit"]');
                     if (submitBtn) submitBtn.innerText = "Update Existing Profile";
@@ -127,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return; 
                 }
             }
+            console.log("Aucun profil correspondant à l'ID Discord dans la base.");
         } catch (e) {
             console.error("Erreur lors de la vérification:", e);
         }
@@ -329,6 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
