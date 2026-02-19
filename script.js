@@ -1,574 +1,270 @@
 document.addEventListener('DOMContentLoaded', () => {
-
     let allClubs = [];
+    
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
-    // Configuration Discord
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz73s8loo-1G_O6zmVse2_zh8z604AKQ4snSe1P1Ol6tMht3Gkpl6viqe2MT-4FjSgy9Q/exec'; 
     const CLIENT_ID = '1473807551329079408'; 
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
-    // SCOPE guilds ajouté pour la restriction d'accès
     const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
 
+    // --- 2. UTILITAIRES ---
+    const parseCSVLine = (line) => {
+        const result = [];
+        let cell = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+            let char = line[i];
+            if (char === '"') inQuotes = !inQuotes;
+            else if (char === ',' && !inQuotes) { result.push(cell); cell = ''; }
+            else cell += char;
+        }
+        result.push(cell);
+        return result.map(v => v.replace(/^"|"$/g, '').trim());
+    };
 
-    // --- 2. INJECTION DU MENU ---
+    // --- 3. INJECTION DU MENU ---
     function injectNavigation() {
         const navElement = document.getElementById('main-nav');
         if (!navElement) return;
-        const path = window.location.pathname;
-
-        const page = path.split("/").pop() || 'index.html';
-
-
+        const page = window.location.pathname.split("/").pop() || 'index.html';
 
         navElement.innerHTML = `
-
             <div class="nav-container">
-
                 <a href="index.html" class="nav-logo">FUMA CLUBS</a>
-
                 <button class="fuma-burger" id="burger">
-
                     <span></span><span></span><span></span>
-
                 </button>
-
                 <div class="nav-links" id="navLinks">
-
                     <a href="index.html" class="${page === 'index.html' ? 'active' : ''}">Home</a>
-
                     <a href="clubs.html" class="${page === 'clubs.html' ? 'active' : ''}">Clubs</a>
-
                     <a href="#">League</a>
-
                     <a href="#">Rules</a>
-
-                    <a href="https://discord.gg/xPz9FBkdtm" target="_blank">
-
-                        <i class="fab fa-discord"></i> Discord
-
-                    </a>
-
+                    <a href="https://discord.gg/xPz9FBkdtm" target="_blank"><i class="fab fa-discord"></i> Discord</a>
                     <a href="${authUrl}" class="${page === 'profile.html' ? 'active' : ''}">Profile</a>
-
                 </div>
-
-            </div>
-
-        `;
-
+            </div>`;
         setupBurger();
-
     }
-
-
 
     function setupBurger() {
-
         const burger = document.getElementById('burger');
-
         const navLinks = document.getElementById('navLinks');
-
         if (burger && navLinks) {
-
             burger.addEventListener('click', () => {
-
                 burger.classList.toggle('active');
-
                 navLinks.classList.toggle('active');
-
             });
-
         }
-
     }
 
-
-
-    // --- 3. LOGIQUE PAGE PROFIL ---
-
+    // --- 4. LOGIQUE PAGE PROFIL ---
     function handleProfilePage() {
-
         if (!window.location.pathname.includes('profile.html')) return;
-
-
-
         const params = new URLSearchParams(window.location.search);
-
         const discordUsername = params.get('username');
-
         const discordId = params.get('id');
 
-
-
         if (discordUsername && discordUsername !== "undefined" && discordId && discordId !== "undefined") {
-
             const nameInput = document.getElementById('discord-name');
-
             const idInput = document.getElementById('id-discord');
-
-
-
             if (nameInput && idInput) {
-
                 nameInput.value = decodeURIComponent(discordUsername);
-
                 idInput.value = discordId;
-
                 window.history.replaceState({}, document.title, window.location.pathname);
-
-            } else {
-
-                setTimeout(handleProfilePage, 100);
-
             }
-
         }
-
     }
 
+    // --- 5. ENVOI DU FORMULAIRE (CORRIGÉ) ---
+    function setupFormSubmission() {
+        const profileForm = document.getElementById('profile-form');
+        if (!profileForm) return;
 
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = profileForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerText;
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Updating...";
 
-    // --- 4. LOGIQUE LISTE DES CLUBS ---
+            const formData = {
+                game_id: document.getElementById('id-game')?.value || "",
+                game_tag: document.getElementById('id-game')?.value || "",
+                discord_id: document.getElementById('id-discord')?.value || "",
+                discord_name: document.getElementById('discord-name')?.value || "",
+                country: document.getElementById('country')?.value || "",
+                avatar: document.getElementById('avatar')?.value || "",
+                current_team: document.getElementById('team')?.value || "Free Agent",
+                main_archetype: document.getElementById('main-archetype')?.value || "",
+                main_position: document.getElementById('main-position')?.value || ""
+            };
 
+            try {
+                // Utilisation de no-cors pour Google Apps Script
+                await fetch(APP_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(formData)
+                });
+                alert("Profile successfully updated in the database!");
+            } catch (error) {
+                console.error('Submission error:', error);
+                alert("Error: Could not update profile.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalBtnText;
+            }
+        });
+    }
+
+    // --- 6. LOGIQUE LISTE DES CLUBS (clubs.html) ---
     async function fetchFumaClubs() {
-
         const clubContainer = document.getElementById('fuma-js-clubs');
-
         if (!clubContainer) return;
 
-
-
-        const parseCSVLine = (line) => {
-
-            const result = [];
-
-            let cell = '';
-
-            let inQuotes = false;
-
-            for (let i = 0; i < line.length; i++) {
-
-                let char = line[i];
-
-                if (char === '"') inQuotes = !inQuotes;
-
-                else if (char === ',' && !inQuotes) { result.push(cell); cell = ''; }
-
-                else cell += char;
-
-            }
-
-            result.push(cell);
-
-            return result.map(v => v.replace(/^"|"$/g, '').trim());
-
-        };
-
-
-
         try {
-
             const resp = await fetch(SHEET_URL);
-
             const text = await resp.text();
-
             const lines = text.trim().split("\n");
-
             const headers = lines[0].split(",");
-
-            
-
             const teamIdx = headers.indexOf('TEAMS');
-
             const crestIdx = headers.indexOf('CREST');
 
-
-
             allClubs = lines.slice(1).map(line => {
-
                 const values = parseCSVLine(line);
-
-                return {
-
-                    name: values[teamIdx] || "",
-
-                    logo: values[crestIdx] || ""
-
-                };
-
+                return { name: values[teamIdx] || "", logo: values[crestIdx] || "" };
             }).filter(c => c.name && c.logo && !c.name.toLowerCase().includes('free agent'));
 
-
-
             renderClubs(allClubs);
-
         } catch (e) {
-
             clubContainer.innerHTML = "<div class='fuma-loading-wrapper'>Erreur de chargement des clubs.</div>";
-
         }
-
     }
-
-
 
     function renderClubs(clubsList) {
-
         const clubContainer = document.getElementById('fuma-js-clubs');
-
         if (!clubContainer) return;
-
-        clubContainer.innerHTML = '';
-
-
-
-        clubsList.forEach(club => {
-
-            const card = document.createElement('a');
-
-            card.href = `club.html?name=${encodeURIComponent(club.name)}`;
-
-            card.className = 'club-card';
-
-            card.innerHTML = `
-
+        clubContainer.innerHTML = clubsList.map(club => `
+            <a href="club.html?name=${encodeURIComponent(club.name)}" class="club-card">
                 <img src="${club.logo}" alt="${club.name}" loading="lazy" onerror="this.src='https://placehold.co/150x150?text=NO+LOGO'">
-
                 <span class="club-name">${club.name}</span>
-
-            `;
-
-            clubContainer.appendChild(card);
-
-        });
-
+            </a>`).join('');
     }
 
-
-
-    // --- 5. LOGIQUE DÉTAILS CLUB (VERSION LONGUE RESTAURÉE) ---
-
+    // --- 7. LOGIQUE DÉTAILS CLUB (club.html) ---
     async function loadClubProfile() {
-
         const detailContainer = document.getElementById('club-details');
-
         if (!detailContainer) return;
 
-
-
         const params = new URLSearchParams(window.location.search);
-
         const clubName = params.get('name');
-
         if (!clubName) return;
 
-
-
         try {
-
             const resp = await fetch(SHEET_URL);
-
             const text = await resp.text();
-
             const lines = text.trim().split("\n");
-
             const headers = lines[0].split(",");
 
-
-
-            const parseCSVLine = (line) => {
-
-                const result = [];
-
-                let cell = '';
-
-                let inQuotes = false;
-
-                for (let i = 0; i < line.length; i++) {
-
-                    let char = line[i];
-
-                    if (char === '"') inQuotes = !inQuotes;
-
-                    else if (char === ',' && !inQuotes) { result.push(cell); cell = ''; }
-
-                    else cell += char;
-
-                }
-
-                result.push(cell);
-
-                return result.map(v => v.replace(/^"|"$/g, '').trim());
-
-            };
-
-
-
             const idx = {
-
                 team: headers.indexOf('TEAMS'),
-
                 crest: headers.indexOf('CREST'),
-
                 history: headers.indexOf('HISTORY'),
-
                 gp: headers.indexOf('GAMES PLAYED'),
-
                 win: headers.indexOf('WIN'),
-
                 draw: headers.indexOf('DRAW'),
-
                 lost: headers.indexOf('LOST'),
-
                 trophies: headers.indexOf('TROPHIES'),
-
                 manager: headers.indexOf('MANAGER'),
-
                 players: headers.indexOf('PLAYERS'),
-
                 active: headers.indexOf('ACTIVE'),
-
                 stream: headers.indexOf('STREAM')
-
             };
-
-
 
             const clubLine = lines.slice(1).find(line => parseCSVLine(line)[idx.team] === clubName);
 
-
-
             if (clubLine) {
-
                 const v = parseCSVLine(clubLine);
-
                 const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "No history available.";
-
                 const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "<li>Roster is empty.</li>";
-
                 const isActive = v[idx.active]?.toUpperCase() === 'YES';
-
                 
-
-                // Statut HTML
-
                 const statusHTML = `<span style="color: ${isActive ? '#4caf50' : '#f44336'}; font-weight: bold;">
-
                     <i class="fas fa-circle" style="font-size: 10px; vertical-align: middle;"></i> ${isActive ? 'ACTIVE' : 'INACTIVE'}
-
                 </span>`;
 
-
-
-                // Stream HTML
-
-                const streamUrl = v[idx.stream] || "";
-
                 let streamHTML = '';
-
-                if (streamUrl && streamUrl !== "" && streamUrl.toLowerCase() !== "none") {
-
-                    const isTwitch = streamUrl.includes('twitch.tv');
-
-                    streamHTML = `
-
-                        <h3 class="sidebar-title" style="margin-top:20px;"><i class="fas fa-broadcast-tower"></i> LIVE STREAM</h3>
-
-                        <a href="${streamUrl}" target="_blank" class="fuma-cta" style="display:block; text-align:center; background:#6441a5; font-size: 0.8rem; padding: 10px;">
-
-                            <i class="${isTwitch ? 'fab fa-twitch' : 'fab fa-youtube'}"></i> WATCH NOW
-
-                        </a>`;
-
+                if (v[idx.stream] && v[idx.stream].toLowerCase() !== "none") {
+                    const isTwitch = v[idx.stream].includes('twitch.tv');
+                    streamHTML = `<h3 class="sidebar-title" style="margin-top:20px;"><i class="fas fa-broadcast-tower"></i> LIVE STREAM</h3>
+                                  <a href="${v[idx.stream]}" target="_blank" class="fuma-cta" style="display:block; text-align:center; background:#6441a5; font-size: 0.8rem; padding: 10px;">
+                                  <i class="${isTwitch ? 'fab fa-twitch' : 'fab fa-youtube'}"></i> WATCH NOW</a>`;
                 }
-
-
-
-                // Trophies HTML
-
-                const trophyValue = v[idx.trophies] || "";
 
                 let trophiesHTML = ''; 
-
-                if (trophyValue !== "" && trophyValue !== "0" && trophyValue.toLowerCase() !== "none") {
-
-                    trophiesHTML = `
-
-                        <div class="trophy-section">
-
-                            <h3 class="sidebar-title" style="border:none; margin-bottom:0;"><i class="fas fa-trophy" style="color:var(--fuma-primary)"></i> ACHIEVEMENTS</h3>
-
-                            <div class="trophy-grid">
-
-                                ${trophyValue.split(',').map(t => `<div class="trophy-badge"><span class="trophy-icon">🏆</span><span class="trophy-text">${t.trim()}</span></div>`).join('')}
-
-                            </div>
-
-                        </div>`;
-
+                if (v[idx.trophies] && v[idx.trophies] !== "0" && v[idx.trophies].toLowerCase() !== "none") {
+                    trophiesHTML = `<div class="trophy-section">
+                        <h3 class="sidebar-title" style="border:none; margin-bottom:0;"><i class="fas fa-trophy" style="color:var(--fuma-primary)"></i> ACHIEVEMENTS</h3>
+                        <div class="trophy-grid">${v[idx.trophies].split(',').map(t => `<div class="trophy-badge"><span class="trophy-icon">🏆</span><span class="trophy-text">${t.trim()}</span></div>`).join('')}</div>
+                    </div>`;
                 }
 
-
-
                 detailContainer.innerHTML = `
-
                     <div class="club-profile-header" style="text-align: center; margin-bottom: 50px;">
-
                         <img src="${v[idx.crest] || ''}" style="width: 180px; margin-bottom: 20px;" alt="Crest">
-
                         <h1 style="font-size: 3rem; color: var(--fuma-primary); margin-bottom:5px;">${v[idx.team]}</h1>
-
                         <div class="status-badge">${statusHTML}</div>
-
                     </div>
-
                     <div class="club-grid-layout">
-
                         <div class="club-main-info">
-
                             ${trophiesHTML}
-
                             <section>
-
                                 <h2 style="color:var(--fuma-primary); border-bottom: 1px solid #333; padding-bottom: 10px;">HISTORY</h2>
-
                                 <div style="font-style: italic; color: var(--fuma-text-dim);">${formattedHistory}</div>
-
                             </section>
-
                             <div class="stats-bar">
-
                                 <div class="stat-item"><strong>${v[idx.gp] || 0}</strong><br><span>GAMES</span></div>
-
                                 <div class="stat-item" style="color:#4caf50;"><strong>${v[idx.win] || 0}</strong><br><span>WIN</span></div>
-
                                 <div class="stat-item" style="color:#ffeb3b;"><strong>${v[idx.draw] || 0}</strong><br><span>DRAW</span></div>
-
                                 <div class="stat-item" style="color:#f44336;"><strong>${v[idx.lost] || 0}</strong><br><span>LOST</span></div>
-
                             </div>
-
                         </div>
-
                         <div class="club-sidebar">
-
                             <div class="sidebar-box">
-
                                 <h3 class="sidebar-title">MANAGER</h3>
-
                                 <p style="margin-bottom:20px;">${v[idx.manager] || 'N/A'}</p>
-
                                 <h3 class="sidebar-title">ROSTER</h3>
-
                                 <ul class="roster-list">${playersList}</ul>
-
                                 ${streamHTML}
-
                             </div>
-
                         </div>
-
-                    </div>
-
-                `;
-
+                    </div>`;
             }
-
         } catch (e) { console.error(e); }
-
     }
 
-
-
-    // --- 6. INITIALISATION ---
-
+    // --- 8. INITIALISATION ---
     injectNavigation();
-
     handleProfilePage();
+    setupFormSubmission();
 
-
-
+    // Recherche
     const searchInput = document.getElementById('fuma-search');
-
     searchInput?.addEventListener('input', (e) => {
-
         const term = e.target.value.toLowerCase();
-
         renderClubs(allClubs.filter(c => c.name.toLowerCase().includes(term)));
-
     });
 
-
-
+    // Back to top
     const backBtn = document.getElementById('backTop');
-
     window.addEventListener('scroll', () => {
-
         if (window.scrollY > 400) backBtn?.classList.add('visible');
-
         else backBtn?.classList.remove('visible');
-
-        // --- 7. ENVOI DU FORMULAIRE VERS GOOGLE SHEETS ---
-const profileForm = document.getElementById('profile-form');
-
-if (profileForm) {
-    profileForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const submitBtn = profileForm.querySelector('button[type="submit"]');
-        const originalBtnText = submitBtn.innerText;
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Updating...";
-
-        // On récupère les valeurs en utilisant les IDs EXACTS de ton HTML
-        const formData = {
-            game_id: document.getElementById('id-game')?.value || "", // Mapping vers GAME_ID
-            game_tag: document.getElementById('id-game')?.value || "", // Mapping vers GAME_TAG
-            discord_id: document.getElementById('id-discord')?.value || "",
-            discord_name: document.getElementById('discord-name')?.value || "",
-            country: document.getElementById('country')?.value || "",
-            avatar: document.getElementById('avatar')?.value || "",
-            current_team: document.getElementById('team')?.value || "Free Agent",
-            main_archetype: document.getElementById('main-archetype')?.value || "",
-            main_position: document.getElementById('main-position')?.value || ""
-        };
-
-        // REMPLACE CETTE URL par celle obtenue lors du déploiement Apps Script
-        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz73s8loo-1G_O6zmVse2_zh8z604AKQ4snSe1P1Ol6tMht3Gkpl6viqe2MT-4FjSgy9Q/exec'; 
-
-        try {
-            await fetch(APP_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors', // Requis pour Google Apps Script
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            });
-
-            // Avec no-cors, on ne peut pas lire la réponse, donc on assume le succès si pas d'erreur
-            alert("Profile successfully updated in the database!");
-            
-        } catch (error) {
-            console.error('Submission error:', error);
-            alert("Error: Could not update profile.");
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerText = originalBtnText;
-        }
     });
-}
-    });
-
     backBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-
-
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
-
     if (document.getElementById('club-details')) loadClubProfile();
-
 });
-
-
-
