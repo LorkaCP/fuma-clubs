@@ -524,3 +524,30 @@ body, .fuma-wrapper {
     }
 }
 
+/* Style spécifique pour les champs avec listes (Position, Archetype, Country) */
+input[list] {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23d4af37' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: calc(100% - 15px) center;
+    padding-right: 35px; /* Espace pour la flèche dorée */
+}
+
+/* Effet au focus pour mobile */
+.fuma-search-input:focus {
+    border-color: var(--fuma-primary);
+    background-color: rgba(212, 175, 55, 0.05);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
+}
+
+/* Optimisation de la saisie sur mobile */
+@media (max-width: 600px) {
+    .fuma-search-input {
+        font-size: 16px !important; /* Évite le zoom automatique forcé sur iOS */
+        padding: 15px 20px; /* Plus grande zone de clic */
+    }
+    
+    .sidebar-box {
+        padding: 20px 15px; /* On gagne un peu de place sur les côtés */
+    }
+}
