@@ -22,6 +22,11 @@
                 <h3 class="sidebar-title"><i class="fas fa-user"></i> Player Identity</h3>
                 
                 <div class="form-group">
+                    <label>Game ID (Internal)</label>
+                    <input type="text" id="game-id" name="GAME_ID" class="fuma-search-input" readonly style="opacity: 0.6;">
+                </div>
+
+                <div class="form-group">
                     <label>In-Game Tag (PSN/Xbox/EA)</label>
                     <input type="text" id="id-game" name="GAME_TAG" class="fuma-search-input" placeholder="Ex: Capi_10" required>
                 </div>
@@ -47,11 +52,41 @@
             </div>
 
             <div class="sidebar-box">
-                <h3 class="sidebar-title"><i class="fas fa-shield-halved"></i> Club & Appearance</h3>
+                <h3 class="sidebar-title"><i class="fas fa-shield-halved"></i> Club & Style</h3>
                 
                 <div class="form-group">
                     <label>Current Team</label>
-                    <input type="text" id="team" name="CURRENT_TEAM" class="fuma-search-input" readonly value="Not assigned yet" style="opacity: 0.6;">
+                    <input type="text" id="team" name="CURRENT_TEAM" class="fuma-search-input" readonly value="Free Agent" style="opacity: 0.6;">
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Main Position</label>
+                        <select id="main-position" name="MAIN_POSITION" class="fuma-search-input">
+                            <option value="GK">GK</option>
+                            <option value="DEF">DEF</option>
+                            <option value="MID">MID</option>
+                            <option value="ATT">ATT</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Main Archetype</label>
+                        <select id="main-archetype" name="MAIN_ARCHETYPE" class="fuma-search-input">
+                            <option value="Magician">Magician</option>
+                            <option value="Finisher">Finisher</option>
+                            <option value="Target">Target</option>
+                            <option value="Recycler">Recycler</option>
+                            <option value="Maestro">Maestro</option>
+                            <option value="Creator">Creator</option>
+                            <option value="Spark">Spark</option>
+                            <option value="Progressor">Progressor</option>
+                            <option value="Boss">Boss</option>
+                            <option value="Engine">Engine</option>
+                            <option value="Marauder">Marauder</option>
+                            <option value="Shot Stopper">Shot Stopper</option>
+                            <option value="Sweeper Keeper">Sweeper Keeper</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -61,11 +96,46 @@
 
                 <input type="hidden" name="FLAG" id="flag-hidden">
                 <input type="hidden" name="LOGO" id="logo-hidden">
-                <input type="hidden" name="GAME_ID" id="GAME_ID-hidden">
 
+                <div style="display: flex; gap: 10px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Club Position 1</label>
+                        <input type="text" id="pos1" name="POSITION_1" class="fuma-search-input" readonly value="N/A" style="opacity: 0.6;">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Club Position 2</label>
+                        <input type="text" id="pos2" name="POSITION_2" class="fuma-search-input" readonly value="N/A" style="opacity: 0.6;">
+                    </div>
+                </div>
+            </div>
 
-                     
-          <button type="submit" class="fuma-cta" style="grid-column: 1 / -1; margin-top: 20px;">
+            <div class="sidebar-box full-width" style="grid-column: 1 / -1;">
+                <h3 class="sidebar-title"><i class="fas fa-chart-line"></i> Career Statistics</h3>
+                <div class="stats-bar" style="background: rgba(255,255,255,0.03); margin-top: 10px;">
+                    <div class="stat-item">
+                        <span class="label">Matches</span>
+                        <input type="number" name="GAME_PLAYED" value="0" readonly>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label">Rating</span>
+                        <input type="text" name="RATING" value="0.0" readonly>
+                    </div>
+                    <div class="stat-item" style="color: var(--fuma-primary);">
+                        <span class="label">Goals</span>
+                        <input type="number" name="GOALS" value="0" readonly>
+                    </div>
+                    <div class="stat-item" style="color: var(--fuma-primary);">
+                        <span class="label">Assists</span>
+                        <input type="number" name="ASSISTS" value="0" readonly>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label">Tackles</span>
+                        <input type="number" name="SUCCESSFUL_TACKLES" value="0" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="fuma-cta" style="grid-column: 1 / -1; margin-top: 20px;">
                 Update Profile
             </button>
 
