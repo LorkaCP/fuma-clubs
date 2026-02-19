@@ -553,24 +553,6 @@ input[list] {
     }
 }
 
-/* Animation de chargement pour les inputs */
-.fuma-input-loading {
-    background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
-    background-size: 200% 100%;
-    animation: loading-shimmer 1.5s infinite;
-    color: transparent !important;
-    pointer-events: none; /* Empêche d'écrire pendant le chargement */
-}
 
-@keyframes loading-shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-}
-
-/* Optionnel : style pour le bouton en mode attente */
-.fuma-cta:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
 
 
