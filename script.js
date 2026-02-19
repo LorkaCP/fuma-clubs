@@ -1,13 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
     let allClubs = [];
     
+  document.addEventListener('DOMContentLoaded', () => {
+    let allClubs = [];
+    
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
     
     // Configuration Discord
     const CLIENT_ID = '1473807551329079408'; 
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
-    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify`;
+    // AJOUT DU SCOPE guilds POUR LA VÉRIFICATION
+    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
 
     // --- 2. INJECTION DU MENU ---
     function injectNavigation() {
@@ -57,27 +61,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const discordUsername = params.get('username');
         const discordId = params.get('id');
 
-        // On vérifie que les données sont PRÉSENTES et ne sont pas la chaîne "undefined"
         if (discordUsername && discordUsername !== "undefined" && discordId && discordId !== "undefined") {
-            
             const nameInput = document.getElementById('discord-name');
             const idInput = document.getElementById('id-discord');
 
             if (nameInput && idInput) {
-                // Remplissage des champs
                 nameInput.value = decodeURIComponent(discordUsername);
                 idInput.value = discordId;
-                
-                console.log("✅ Champs remplis :", discordUsername);
-
-                // NETTOYAGE URL : On ne le fait qu'ici, une fois le remplissage réussi
                 window.history.replaceState({}, document.title, window.location.pathname);
             } else {
-                // Si les champs HTML ne sont pas encore créés, on retente vite
                 setTimeout(handleProfilePage, 100);
             }
-        } else {
-            console.log("⚠️ Aucune donnée Discord valide à injecter (ou valeurs 'undefined')");
         }
     }
 
@@ -329,6 +323,7 @@ backBtn?.addEventListener('click', () => {
 if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
 if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
