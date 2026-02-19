@@ -1,110 +1,64 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FUMA CLUBS - MON PROFIL</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+<form id="profile-form" class="fuma-profile-grid">
+    
+    <div class="sidebar-box">
+        <h3 class="sidebar-title"><i class="fas fa-id-card"></i> Identité Joueur</h3>
+        
+        <div class="form-group">
+            <label>ID Unique (GAME_ID)</label>
+            <input type="text" id="game-id" name="GAME_ID" class="fuma-search-input" readonly style="opacity: 0.6;" placeholder="Généré par l'admin">
+        </div>
 
-<div class="fuma-wrapper">
-    <nav class="fuma-nav" id="main-nav"></nav>
+        <div class="form-group">
+            <label>Nom en Jeu (GAME_TAG)</label>
+            <input type="text" id="game-tag" name="GAME_TAG" class="fuma-search-input" placeholder="Ex: Capi_10" required>
+        </div>
 
-    <div class="fuma-container" style="margin-top: 50px; padding-bottom: 100px;">
-        <h2 class="fuma-section-title">Gestion du Profil</h2>
+        <div class="form-group">
+            <label>Pays</label>
+            <select id="country" name="COUNTRY" class="fuma-search-input">
+                <option value="France">France</option>
+                <option value="Belgium">Belgique</option>
+                <option value="Switzerland">Suisse</option>
+                <option value="Other">Autre</option>
+            </select>
+        </div>
 
-        <form id="profile-form" class="fuma-profile-grid">
-            
-            <div class="sidebar-box">
-                <h3 class="sidebar-title"><i class="fas fa-user"></i> Identité Joueur</h3>
-                
-                <div class="form-group">
-                    <label>ID en Jeu (PSN/Xbox/EA)</label>
-                    <input type="text" id="id-game" name="ID_GAME" class="fuma-search-input" placeholder="Ex: Capi_10" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Pays</label>
-                    <select id="country" name="COUNTRY" class="fuma-search-input">
-                        <option value="France">France</option>
-                        <option value="Belgium">Belgique</option>
-                        <option value="Switzerland">Suisse</option>
-                        <option value="Other">Autre</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Discord ID</label>
-                    <input type="text" id="id-discord" name="ID_DISCORD" class="fuma-search-input" readonly style="opacity: 0.6;">
-                </div>
-                <div class="form-group">
-                    <label>Nom Discord</label>
-                    <input type="text" id="discord-name" name="NAME_DISCORD" class="fuma-search-input" readonly style="opacity: 0.6;">
-                </div>
-            </div>
-
-            <div class="sidebar-box">
-                <h3 class="sidebar-title"><i class="fas fa-shield-halved"></i> Club & Poste</h3>
-                
-                <div class="form-group">
-                    <label>Équipe Actuelle</label>
-                    <input type="text" id="team" name="TEAM" class="fuma-search-input" readonly value="Agent Libre" style="opacity: 0.6;">
-                </div>
-
-                <div style="display: flex; gap: 10px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label>Position 1</label>
-                        <input type="text" id="pos1" name="POSITION_1" class="fuma-search-input" readonly value="N/A" style="opacity: 0.6;">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label>Position 2</label>
-                        <input type="text" id="pos2" name="POSITION_2" class="fuma-search-input" readonly value="N/A" style="opacity: 0.6;">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Lien Avatar (URL)</label>
-                    <input type="text" id="avatar" name="AVATAR" class="fuma-search-input" placeholder="Lien vers votre photo">
-                </div>
-            </div>
-
-            <div class="sidebar-box full-width" style="grid-column: 1 / -1;">
-                <h3 class="sidebar-title"><i class="fas fa-chart-line"></i> Statistiques Carrière</h3>
-                <div class="stats-bar" style="background: rgba(255,255,255,0.03); margin-top: 10px;">
-                    <div class="stat-item">
-                        <span class="label">Matches</span>
-                        <input type="number" name="GAME_PLAYED" value="0" readonly>
-                    </div>
-                    <div class="stat-item">
-                        <span class="label">Note</span>
-                        <input type="text" name="RATING" value="0.0" readonly>
-                    </div>
-                    <div class="stat-item" style="color: var(--fuma-primary);">
-                        <span class="label">Buts</span>
-                        <input type="number" name="GOALS" value="0" readonly>
-                    </div>
-                    <div class="stat-item" style="color: var(--fuma-primary);">
-                        <span class="label">Passes D.</span>
-                        <input type="number" name="ASSISTS" value="0" readonly>
-                    </div>
-                    <div class="stat-item">
-                        <span class="label">Tacles</span>
-                        <input type="number" name="SUCCESSFUL_TACKLES" value="0" readonly>
-                    </div>
-                </div>
-            </div>
-
-            <button type="submit" class="fuma-cta" style="grid-column: 1 / -1; margin-top: 20px;">
-                Mettre à jour mon profil
-            </button>
-
-        </form>
+        <div class="form-group">
+            <label>Drapeau (Auto)</label>
+            <input type="text" id="flag" name="FLAG" class="fuma-search-input" readonly style="opacity: 0.6; text-align: center; font-size: 1.5rem;">
+        </div>
     </div>
-</div>
 
-<script src="script.js"></script>
-</body>
-</html>
+    <div class="sidebar-box">
+        <h3 class="sidebar-title"><i class="fab fa-discord"></i> Compte & Image</h3>
+        
+        <div class="form-group">
+            <label>Discord ID</label>
+            <input type="text" id="id-discord" name="DISCORD_ID" class="fuma-search-input" readonly style="opacity: 0.6;">
+        </div>
+        
+        <div class="form-group">
+            <label>Nom Discord</label>
+            <input type="text" id="discord-name" name="DISCORD_NAME" class="fuma-search-input" readonly style="opacity: 0.6;">
+        </div>
+
+        <div class="form-group">
+            <label>Lien Photo de Profil (URL)</label>
+            <input type="text" id="avatar" name="AVATAR" class="fuma-search-input" placeholder="https://...">
+        </div>
+    </div>
+
+    <div class="sidebar-box full-width" style="grid-column: 1 / -1; display: flex; align-items: center; gap: 20px;">
+        <div id="team-logo-container">
+            <img id="team-logo" src="https://placehold.co/80x80?text=CLUB" style="width: 80px; border-radius: 10px;">
+        </div>
+        <div style="flex: 1;">
+            <h3 class="sidebar-title" style="margin: 0;"><i class="fas fa-shield-halved"></i> Club Actuel</h3>
+            <input type="text" id="current-team" name="CURRENT_TEAM" class="fuma-search-input" readonly style="opacity: 0.6; border: none; background: transparent; font-size: 1.2rem; font-weight: bold;">
+        </div>
+    </div>
+
+    <button type="submit" class="fuma-cta" style="grid-column: 1 / -1; margin-top: 20px;">
+        Enregistrer les modifications
+    </button>
+</form>
