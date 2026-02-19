@@ -22,11 +22,6 @@
                 <h3 class="sidebar-title"><i class="fas fa-user"></i> Player Identity</h3>
                 
                 <div class="form-group">
-                    <label>Game ID (Internal)</label>
-                    <input type="text" id="game-id" name="GAME_ID" class="fuma-search-input" readonly style="opacity: 0.6;">
-                </div>
-
-                <div class="form-group">
                     <label>In-Game Tag (PSN/Xbox/EA)</label>
                     <input type="text" id="id-game" name="GAME_TAG" class="fuma-search-input" placeholder="Ex: Capi_10" required>
                 </div>
@@ -66,8 +61,10 @@
 
                 <input type="hidden" name="FLAG" id="flag-hidden">
                 <input type="hidden" name="LOGO" id="logo-hidden">
+                <input type="hidden" name="GAME_ID" id="GAME_ID-hidden">
 
-        
+
+                     
           <button type="submit" class="fuma-cta" style="grid-column: 1 / -1; margin-top: 20px;">
                 Update Profile
             </button>
