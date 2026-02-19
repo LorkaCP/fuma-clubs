@@ -1,4 +1,10 @@
-// --- 1. CONFIGURATION & URLS ---
+document.addEventListener('DOMContentLoaded', () => {
+
+    let allClubs = [];
+
+    
+
+    // --- 1. CONFIGURATION & URLS ---
 
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
 
