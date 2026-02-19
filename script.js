@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
-    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtLg4Q47devHEgtuTZ8EvS4c2rDPZlszRpOUD6mH-PDDF19sC-HVRs06-RYAT6m5nYnw/exec'; 
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxiGiyTrCReV9yIkmfzPnChhUFRSh1UvlRX9UMrXEyWGQJYXOYAfj6q5Oox0BeMCHsg1w/exec'; 
     const CLIENT_ID = '1473807551329079408'; 
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
     const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
@@ -343,6 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
