@@ -239,15 +239,30 @@ document.addEventListener('DOMContentLoaded', () => {
         renderClubs(filtered);
     });
 
-    const backBtn = document.getElementById('backTop');
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 400) backBtn?.classList.add('visible');
-        else backBtn?.classList.remove('visible');
-    });
+    // LOGIQUE BACK TO TOP
+const backBtn = document.getElementById('backTop');
 
-    if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
-    if (document.getElementById('club-details')) loadClubProfile();
+// Afficher/Masquer au scroll
+window.addEventListener('scroll', () => {
+    if (window.scrollY > 400) {
+        backBtn?.classList.add('visible');
+    } else {
+        backBtn?.classList.remove('visible');
+    }
 });
+
+// Action de clic pour remonter
+backBtn?.addEventListener('click', () => {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+});
+
+if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
+if (document.getElementById('club-details')) loadClubProfile();
+});
+
 
 
 
