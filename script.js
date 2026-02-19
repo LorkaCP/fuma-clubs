@@ -536,4 +536,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (document.getElementById('club-details')) loadClubProfile();
 
+}
+
+// --- 7. ENVOI DU FORMULAIRE ---
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz73s8loo-1G_O6zmVse2_zh8z604AKQ4snSe1P1Ol6tMht3Gkpl6viqe2MT-4FjSgy9Q/exec';
+
+const profileForm = document.getElementById('profile-form');
+if (profileForm) {
+    profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const params = new URLSearchParams(window.location.search);
+
+        const formData = {
+            game_id: "PENDING",
+            game_tag: document.getElementById('game-tag')?.value || "",
+            discord_id: document.getElementById('id-discord')?.value || "",
+            discord_name: document.getElementById('discord-name')?.value || "",
+            country: document.getElementById('country')?.value || "",
+            avatar: params.get('avatar') || "", 
+            current_team: "FREE AGENT",
+            main_archetype: document.getElementById('main-archetype')?.value || "",
+            main_position: document.getElementById('main-position')?.value || ""
+        };
+
+        try {
+            await fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            
+            alert("Profil envoyé ! Les colonnes Flag et Logo seront complétées par l'admin.");
+            profileForm.reset();
+        } catch (error) {
+            console.error("Erreur d'envoi:", error);
+            alert("Erreur lors de l'envoi.");
+        }
+    });
+}
 });
