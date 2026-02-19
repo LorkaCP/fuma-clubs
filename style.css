@@ -1083,12 +1083,25 @@ input[list] {
 }
 
 
-input[list], select.fuma-search-input {
+/* Style pour les listes (Position, Archetype, Country) et les Select */
+input[list], 
+select.fuma-search-input {
     cursor: pointer;
+    -webkit-appearance: none;  /* Désactive le style Safari/Chrome */
+    -moz-appearance: none;     /* Désactive le style Firefox */
+    appearance: none;          /* Désactive le style standard */
+    
+    /* On garde votre flèche dorée personnalisée */
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23d4af37' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: calc(100% - 15px) center;
-    padding-right: 35px;
+    padding-right: 35px; 
+}
+
+/* Cacher spécifiquement l'indicateur de flèche datalist pour Chrome/Safari */
+input::-webkit-calendar-picker-indicator {
+    display: none !important;
+    -webkit-appearance: none;
 }
 
 /* Fix pour voir les options du select (fond noir) */
@@ -1167,6 +1180,7 @@ select option {
     100% { transform: rotate(360deg); }
 
 }
+
 
 
 
