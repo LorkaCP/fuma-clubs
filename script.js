@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 4. LOGIQUE PAGE PROFIL ---
     function handleProfilePage() {
         if (!window.location.pathname.includes('profile.html')) return;
+        
         const params = new URLSearchParams(window.location.search);
         const discordUsername = params.get('username');
         const discordId = params.get('id');
@@ -68,11 +69,64 @@ document.addEventListener('DOMContentLoaded', () => {
         if (discordUsername && discordUsername !== "undefined" && discordId && discordId !== "undefined") {
             const nameInput = document.getElementById('discord-name');
             const idInput = document.getElementById('id-discord');
+            
             if (nameInput && idInput) {
+                // Remplissage des champs masqués Discord
                 nameInput.value = decodeURIComponent(discordUsername);
                 idInput.value = discordId;
+                
+                // --- NOUVEAU : On cherche si le profil existe déjà dans le Google Sheet ---
+                checkExistingProfile(discordId);
+                
+                // Nettoyage de l'URL pour l'esthétique
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
+        }
+    }
+
+    async function checkExistingProfile(discordId) {
+        try {
+            const resp = await fetch(SHEET_URL);
+            const text = await resp.text();
+            const lines = text.trim().split("\n");
+            
+            // Extraction des en-têtes pour trouver les bonnes colonnes
+            const headers = lines[0].split(",").map(h => h.trim());
+            const discordIdx = headers.indexOf('DISCORD_ID');
+            
+            // Parcourir les lignes pour trouver l'ID correspondant
+            for (let i = 1; i < lines.length; i++) {
+                const values = parseCSVLine(lines[i]);
+                
+                if (values[discordIdx] === discordId) {
+                    // Mapping des données existantes vers les champs du formulaire
+                    if (document.getElementById('id-game')) 
+                        document.getElementById('id-game').value = values[headers.indexOf('GAME_TAG')] || "";
+                    
+                    if (document.getElementById('country')) 
+                        document.getElementById('country').value = values[headers.indexOf('COUNTRY')] || "";
+                    
+                    if (document.getElementById('avatar')) 
+                        document.getElementById('avatar').value = values[headers.indexOf('AVATAR')] || "";
+                    
+                    if (document.getElementById('main-position')) 
+                        document.getElementById('main-position').value = values[headers.indexOf('MAIN_POSITION')] || "";
+                    
+                    if (document.getElementById('main-archetype')) 
+                        document.getElementById('main-archetype').value = values[headers.indexOf('MAIN_ARCHETYPE')] || "";
+                    
+                    if (document.getElementById('team')) 
+                        document.getElementById('team').value = values[headers.indexOf('CURRENT_TEAM')] || "Free Agent";
+
+                    // Changement visuel du bouton pour confirmer la mise à jour
+                    const submitBtn = document.querySelector('#profile-form button[type="submit"]');
+                    if (submitBtn) submitBtn.innerText = "Update Existing Profile";
+                    
+                    break; // Profil trouvé, on arrête la boucle
+                }
+            }
+        } catch (e) {
+            console.error("Erreur lors de la vérification du profil existant:", e);
         }
     }
 
@@ -273,4 +327,5 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
