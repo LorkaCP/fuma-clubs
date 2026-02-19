@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
-    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfdGhlrIVT9_T-81MZxXoXmUVA8gOtpNsQU_u4v0nJ1ouODTvBOv7uMD-afaMebtfN9A/exec'; 
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyHLcO3L_myK0PRoqirsxeZPGN1A4BNK2FITNOhXwd3hAlXce4gK6wVtdVd-OtfH23QDA/exec'; 
     const CLIENT_ID = '1473807551329079408'; 
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
     const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function checkExistingProfile(discordId) {
     console.log("Vérification du profil pour l'ID:", discordId);
     try {
-        // Ajout d'un timestamp pour éviter le cache du navigateur
+        // Ajout d'un paramètre temporel pour forcer la mise à jour du cache CSV de Google
         const resp = await fetch(SHEET_URL + '&t=' + Date.now());
         const text = await resp.text();
         const lines = text.trim().split(/\r?\n/);
@@ -93,12 +93,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (lines.length < 2) return;
 
         const rawHeaders = parseCSVLine(lines[0]);
-        // Nettoyage : on garde les underscores pour correspondre à vos colonnes
+        // Nettoyage strict pour correspondre à vos noms de colonnes (ex: DISCORD_ID)
         const cleanHeaders = rawHeaders.map(h => h.trim().toUpperCase());
         
-        console.log("Colonnes détectées:", cleanHeaders);
-
-        // Mapping indexé sur vos noms de colonnes exacts
         const getIdx = (name) => cleanHeaders.indexOf(name.toUpperCase());
 
         const idx = {
@@ -112,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         if (idx.discord === -1) {
-            console.error("Erreur : Colonne DISCORD_ID introuvable.");
+            console.error("Erreur : Colonne DISCORD_ID introuvable dans le Sheet.");
             return;
         }
 
@@ -121,14 +118,14 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Comparaison de l'ID Discord
             if (values[idx.discord] === discordId) {
-                console.log("Profil existant trouvé !");
+                console.log("Profil trouvé ! Pré-remplissage du formulaire...");
 
                 const fill = (id, val) => {
                     const el = document.getElementById(id);
                     if (el && val) el.value = val.trim();
                 };
 
-                // Remplissage du formulaire avec les IDs HTML existants
+                // Remplissage automatique des champs HTML
                 fill('id-game', values[idx.gameTag]);
                 fill('country', values[idx.country]);
                 fill('avatar', values[idx.avatar]);
@@ -136,14 +133,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 fill('main-archetype', values[idx.arch]);
                 fill('main-position', values[idx.pos]);
 
+                // Modification du bouton pour indiquer une mise à jour
                 const submitBtn = document.querySelector('#profile-form button[type="submit"]');
-                if (submitBtn) submitBtn.innerText = "Mettre à jour mon profil";
+                if (submitBtn) submitBtn.innerText = "Update Existing Profile";
                 
                 return;
             }
         }
+        console.log("Aucun profil existant trouvé.");
     } catch (e) {
-        console.error("Erreur lors de la récupération des données:", e);
+        console.error("Erreur lors de la vérification du profil:", e);
     }
 }
 
@@ -344,6 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
