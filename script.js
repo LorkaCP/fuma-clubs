@@ -59,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 4. LOGIQUE PAGE PROFIL ---
-    // --- 4. LOGIQUE PAGE PROFIL ---
     function handleProfilePage() {
         if (!window.location.pathname.includes('profile.html')) return;
         
@@ -84,71 +83,69 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function checkExistingProfile(discordId) {
-        console.log("Vérification du profil pour l'ID:", discordId);
-        try {
-            const resp = await fetch(SHEET_URL);
-            const text = await resp.text();
-            const lines = text.trim().split("\n");
+    console.log("Vérification du profil pour l'ID:", discordId);
+    try {
+        // Ajout d'un timestamp pour éviter le cache du navigateur
+        const resp = await fetch(SHEET_URL + '&t=' + Date.now());
+        const text = await resp.text();
+        const lines = text.trim().split(/\r?\n/);
+        
+        if (lines.length < 2) return;
+
+        const rawHeaders = parseCSVLine(lines[0]);
+        // Nettoyage : on garde les underscores pour correspondre à vos colonnes
+        const cleanHeaders = rawHeaders.map(h => h.trim().toUpperCase());
+        
+        console.log("Colonnes détectées:", cleanHeaders);
+
+        // Mapping indexé sur vos noms de colonnes exacts
+        const getIdx = (name) => cleanHeaders.indexOf(name.toUpperCase());
+
+        const idx = {
+            discord: getIdx('DISCORD_ID'),
+            gameTag: getIdx('GAME_TAG'),
+            country: getIdx('COUNTRY'),
+            avatar: getIdx('AVATAR'),
+            team: getIdx('CURRENT_TEAM'),
+            arch: getIdx('MAIN_ARCHETYPE'),
+            pos: getIdx('MAIN_POSITION')
+        };
+
+        if (idx.discord === -1) {
+            console.error("Erreur : Colonne DISCORD_ID introuvable.");
+            return;
+        }
+
+        for (let i = 1; i < lines.length; i++) {
+            const values = parseCSVLine(lines[i]);
             
-            // Nettoyage agressif des en-têtes : MAJUSCULES et suppression des espaces/_
-            const rawHeaders = lines[0].split(",");
-            const cleanHeaders = rawHeaders.map(h => h.trim().toUpperCase().replace(/[\s_]/g, ''));
-            
-            console.log("En-têtes bruts:", rawHeaders);
-            console.log("En-têtes nettoyés pour recherche:", cleanHeaders);
+            // Comparaison de l'ID Discord
+            if (values[idx.discord] === discordId) {
+                console.log("Profil existant trouvé !");
 
-            // Fonction pour trouver l'index malgré les variations de noms
-            const getIdx = (name) => cleanHeaders.indexOf(name.replace(/[\s_]/g, '').toUpperCase());
+                const fill = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el && val) el.value = val.trim();
+                };
 
-            const idx = {
-                discord: getIdx('DISCORDID'),
-                gameTag: getIdx('GAMETAG'),
-                country: getIdx('COUNTRY'),
-                avatar: getIdx('AVATAR'),
-                pos: getIdx('MAINPOSITION'),
-                arch: getIdx('MAINARCHETYPE'),
-                team: getIdx('CURRENTTEAM')
-            };
+                // Remplissage du formulaire avec les IDs HTML existants
+                fill('id-game', values[idx.gameTag]);
+                fill('country', values[idx.country]);
+                fill('avatar', values[idx.avatar]);
+                fill('team', values[idx.team]);
+                fill('main-archetype', values[idx.arch]);
+                fill('main-position', values[idx.pos]);
 
-            // Si l'index discord n'est pas trouvé, on ne peut pas continuer
-            if (idx.discord === -1) {
-                console.error("ERREUR : La colonne DISCORD_ID est introuvable dans le Google Sheet.");
+                const submitBtn = document.querySelector('#profile-form button[type="submit"]');
+                if (submitBtn) submitBtn.innerText = "Mettre à jour mon profil";
+                
                 return;
             }
-
-            for (let i = 1; i < lines.length; i++) {
-                const values = parseCSVLine(lines[i]);
-                
-                // Comparaison stricte de l'ID
-                if (values[idx.discord] === discordId) {
-                    console.log("MATCH TROUVÉ ! Remplissage en cours...");
-
-                    const setVal = (id, val) => {
-                        const el = document.getElementById(id);
-                        if (el && val !== undefined && val !== null) {
-                            el.value = val.trim();
-                        }
-                    };
-
-                    // On utilise les index trouvés dynamiquement
-                    if (idx.gameTag !== -1) setVal('id-game', values[idx.gameTag]);
-                    if (idx.country !== -1) setVal('country', values[idx.country]);
-                    if (idx.avatar !== -1) setVal('avatar', values[idx.avatar]);
-                    if (idx.pos !== -1) setVal('main-position', values[idx.pos]);
-                    if (idx.arch !== -1) setVal('main-archetype', values[idx.arch]);
-                    if (idx.team !== -1) setVal('team', values[idx.team]);
-
-                    const submitBtn = document.querySelector('#profile-form button[type="submit"]');
-                    if (submitBtn) submitBtn.innerText = "Update Existing Profile";
-                    
-                    return; 
-                }
-            }
-            console.log("Aucun profil correspondant à l'ID Discord dans la base.");
-        } catch (e) {
-            console.error("Erreur lors de la vérification:", e);
         }
+    } catch (e) {
+        console.error("Erreur lors de la récupération des données:", e);
     }
+}
 
     // --- 5. ENVOI DU FORMULAIRE (CORRIGÉ) ---
     function setupFormSubmission() {
@@ -347,6 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
