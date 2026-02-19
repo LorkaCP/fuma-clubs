@@ -1,37 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     let allClubs = [];
-
-    
-
     // --- 1. CONFIGURATION & URLS ---
-
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
-
-    
-
     // Configuration Discord
-
     const CLIENT_ID = '1473807551329079408'; 
-
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
-
     // SCOPE guilds ajouté pour la restriction d'accès
-
     const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
 
 
-
     // --- 2. INJECTION DU MENU ---
-
     function injectNavigation() {
-
         const navElement = document.getElementById('main-nav');
-
         if (!navElement) return;
-
-
-
         const path = window.location.pathname;
 
         const page = path.split("/").pop() || 'index.html';
@@ -526,6 +508,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
         else backBtn?.classList.remove('visible');
 
+        // --- 7. ENVOI DU FORMULAIRE VERS GOOGLE SHEETS ---
+const profileForm = document.getElementById('profile-form'); // Assure-toi que ton <form> a cet ID
+
+if (profileForm) {
+    profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Récupération du bouton pour donner un feedback visuel
+        const submitBtn = profileForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerText;
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Envoi en cours...";
+
+        // Préparation des données (les IDs doivent correspondre à tes <input>)
+        const formData = {
+            game_id: document.getElementById('game-id')?.value || "",
+            game_tag: document.getElementById('game-tag')?.value || "",
+            discord_id: document.getElementById('id-discord')?.value || "",
+            discord_name: document.getElementById('discord-name')?.value || "",
+            country: document.getElementById('country')?.value || "",
+            avatar: document.getElementById('avatar-url')?.value || "",
+            current_team: document.getElementById('current-team')?.value || "",
+            main_archetype: document.getElementById('archetype')?.value || "",
+            main_position: document.getElementById('position')?.value || ""
+        };
+
+        // URL de ton Script Google (à récupérer après déploiement)
+        const APP_SCRIPT_URL = 'TON_URL_DEPLOIEMENT_WEB_APP';
+
+        try {
+            const response = await fetch(APP_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Important pour Google Apps Script
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+
+            // Note: avec 'no-cors', on ne peut pas lire la réponse JSON, 
+            // mais si aucune erreur n'est levée, c'est que c'est parti.
+            alert("Profil mis à jour avec succès !");
+            
+        } catch (error) {
+            console.error('Erreur:', error);
+            alert("Une erreur est survenue lors de l'envoi.");
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = originalBtnText;
+        }
+    });
+}
+
     });
 
     backBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
@@ -537,3 +572,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('club-details')) loadClubProfile();
 
 });
+
