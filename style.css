@@ -187,7 +187,7 @@ body, .fuma-wrapper {
     padding: 12px 25px;
     border-radius: 30px;
     color: white;
-    width: 100%;
+    width: auto;
     max-width: 350px;
     outline: none;
     transition: all 0.3s;
@@ -476,5 +476,6 @@ body, .fuma-wrapper {
 @media (max-width: 768px) {
     .fuma-profile-grid { grid-template-columns: 1fr; }
 }
+
 
 
