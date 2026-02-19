@@ -7,29 +7,64 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Styles critiques pour le chargement */
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px; /* Espace réservé pour le loader */
+            width: 100%;
+            color: var(--fuma-primary);
+            text-align: center;
+        }
+
+        .fuma-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(212, 175, 55, 0.1);
+            border-top: 5px solid var(--fuma-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Animation d'apparition fluide du formulaire */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 <body>
 
-<div id="fuma-loader" class="loader-container">
-    <div class="fuma-spinner"></div>
-    <p>Checking your profile...</p>
-</div>
-
-<form id="profile-form" class="fuma-profile-grid" style="display: none;">
-    </form>
-    
 <div class="fuma-wrapper">
     <nav class="fuma-nav" id="main-nav"></nav>
 
     <div class="fuma-container" style="margin-top: 50px; padding-bottom: 100px;">
         <h2 class="fuma-section-title">Profile Management</h2>
 
-        <form id="profile-form" class="fuma-profile-grid">
+        <div id="fuma-loader" class="loader-container">
+            <div class="fuma-spinner"></div>
+            <p style="letter-spacing: 2px; text-transform: uppercase; font-size: 0.8rem;">Checking your profile...</p>
+        </div>
+
+        <form id="profile-form" class="fuma-profile-grid" style="display: none;">
             
             <div class="sidebar-box">
                 <h3 class="sidebar-title"><i class="fas fa-user"></i> Player Identity</h3>
                 
-              <div class="form-group">
+                <div class="form-group">
                     <label>In-Game Tag (PSN/Xbox/EA)</label>
                     <input type="text" id="id-game" name="GAME_TAG" class="fuma-search-input" placeholder="Ex: Capi_10" required>
                 </div>
