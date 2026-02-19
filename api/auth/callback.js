@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     }
 
     // --- CONFIGURATION ---
-    const MY_GUILD_ID = '88253989895394920'; // Ton ID de serveur FUMA
+    const MY_GUILD_ID = '882539898953949204'; // Ton ID de serveur FUMA
     const clientID = process.env.DISCORD_CLIENT_ID;
     const clientSecret = process.env.DISCORD_CLIENT_SECRET;
     const redirectUri = 'https://fuma-clubs-official.vercel.app/api/auth/callback';
