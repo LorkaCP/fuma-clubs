@@ -85,29 +85,31 @@ document.addEventListener('DOMContentLoaded', () => {
     async function checkExistingProfile(discordId) {
     console.log("Recherche du profil via API pour l'ID:", discordId);
     
-    // 1. Sélection des champs à "verrouiller" pendant le chargement
-    const fieldsToFill = ['id-game', 'country', 'avatar', 'team', 'main-archetype', 'main-position'];
-    const submitBtn = document.querySelector('#profile-form button[type="submit"]');
-    
-    // Ajout d'un état de chargement visuel
-    fieldsToFill.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.classList.add('fuma-input-loading');
-            el.placeholder = "Loading data...";
-        }
-    });
-    if (submitBtn) submitBtn.innerText = "Checking existing profile...";
+    // Sélection des éléments DOM
+    const loader = document.getElementById('fuma-loader');
+    const form = document.getElementById('profile-form');
+    const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+
+    // 1. État initial : Afficher le loader et cacher le formulaire
+    if (loader) loader.style.display = 'flex';
+    if (form) form.style.display = 'none';
 
     try {
-        const response = await fetch(`${APP_SCRIPT_URL}?discord_id=${discordId}`);
+        // 2. Appel GET vers l'Apps Script avec le paramètre discord_id
+        // On ajoute un timestamp (t=) pour forcer la récupération de données fraîches
+        const response = await fetch(`${APP_SCRIPT_URL}?discord_id=${discordId}&t=${Date.now()}`);
+        
+        if (!response.ok) throw new Error('Erreur lors de la communication avec le serveur');
+        
         const data = await response.json();
 
-        if (data.result === "success") {
-            // 2. Injection des données
+        // 3. Si le profil existe, on injecte les données dans les champs
+        if (data && data.result === "success") {
+            console.log("Profil trouvé, remplissage du formulaire...");
+
             const fill = (id, val) => {
                 const el = document.getElementById(id);
-                if (el && val) el.value = val;
+                if (el) el.value = (val !== undefined && val !== null) ? val : "";
             };
 
             fill('id-game', data.game_tag);
@@ -117,23 +119,26 @@ document.addEventListener('DOMContentLoaded', () => {
             fill('main-archetype', data.main_archetype);
             fill('main-position', data.main_position);
 
+            // Mise à jour du texte du bouton pour indiquer une édition
             if (submitBtn) submitBtn.innerText = "Update Existing Profile";
         } else {
-            console.log("Nouveau joueur ou profil non trouvé.");
-            if (submitBtn) submitBtn.innerText = "Create Profile";
+            console.log("Aucun profil existant trouvé, prêt pour une nouvelle création.");
+            if (submitBtn) submitBtn.innerText = "Create My Profile";
         }
+
     } catch (e) {
-        console.error("Erreur:", e);
+        console.error("Erreur lors de la vérification du profil:", e);
+        alert("Erreur lors de la récupération de vos données. Vous pouvez remplir le formulaire manuellement.");
     } finally {
-        // 3. Retrait de l'état de chargement
-        fieldsToFill.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.classList.remove('fuma-input-loading');
-                if (el.id === 'id-game') el.placeholder = "Ex: Capi_10";
-                else el.placeholder = "";
+        // 4. Une fois terminé, on cache le loader et on affiche le formulaire
+        // On utilise un petit délai de 300ms pour une transition plus fluide
+        setTimeout(() => {
+            if (loader) loader.style.display = 'none';
+            if (form) {
+                form.style.display = 'grid'; // 'grid' correspond à ta classe fuma-profile-grid
+                form.classList.add('fade-in'); // Optionnel : ajoute une animation CSS
             }
-        });
+        }, 300);
     }
 }
     // --- 5. ENVOI DU FORMULAIRE (CORRIGÉ) ---
@@ -333,6 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
