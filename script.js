@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 4. LOGIQUE PAGE PROFIL ---
+    // --- 4. LOGIQUE PAGE PROFIL ---
     function handleProfilePage() {
         if (!window.location.pathname.includes('profile.html')) return;
         
@@ -71,62 +72,63 @@ document.addEventListener('DOMContentLoaded', () => {
             const idInput = document.getElementById('id-discord');
             
             if (nameInput && idInput) {
-                // Remplissage des champs masqués Discord
                 nameInput.value = decodeURIComponent(discordUsername);
                 idInput.value = discordId;
                 
-                // --- NOUVEAU : On cherche si le profil existe déjà dans le Google Sheet ---
+                // Appel de la vérification du profil existant
                 checkExistingProfile(discordId);
                 
-                // Nettoyage de l'URL pour l'esthétique
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
     }
 
     async function checkExistingProfile(discordId) {
+        console.log("Vérification du profil pour l'ID:", discordId);
         try {
             const resp = await fetch(SHEET_URL);
             const text = await resp.text();
             const lines = text.trim().split("\n");
             
-            // Extraction des en-têtes pour trouver les bonnes colonnes
-            const headers = lines[0].split(",").map(h => h.trim());
-            const discordIdx = headers.indexOf('DISCORD_ID');
-            
-            // Parcourir les lignes pour trouver l'ID correspondant
+            const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
+            console.log("En-têtes détectés:", headers);
+
+            const idx = {
+                discord: headers.indexOf('DISCORD_ID'),
+                gameTag: headers.indexOf('GAME_TAG'),
+                country: headers.indexOf('COUNTRY'),
+                avatar: headers.indexOf('AVATAR'),
+                pos: headers.indexOf('MAIN_POSITION'),
+                arch: headers.indexOf('MAIN_ARCHETYPE'),
+                team: headers.indexOf('CURRENT_TEAM')
+            };
+
             for (let i = 1; i < lines.length; i++) {
                 const values = parseCSVLine(lines[i]);
                 
-                if (values[discordIdx] === discordId) {
-                    // Mapping des données existantes vers les champs du formulaire
-                    if (document.getElementById('id-game')) 
-                        document.getElementById('id-game').value = values[headers.indexOf('GAME_TAG')] || "";
-                    
-                    if (document.getElementById('country')) 
-                        document.getElementById('country').value = values[headers.indexOf('COUNTRY')] || "";
-                    
-                    if (document.getElementById('avatar')) 
-                        document.getElementById('avatar').value = values[headers.indexOf('AVATAR')] || "";
-                    
-                    if (document.getElementById('main-position')) 
-                        document.getElementById('main-position').value = values[headers.indexOf('MAIN_POSITION')] || "";
-                    
-                    if (document.getElementById('main-archetype')) 
-                        document.getElementById('main-archetype').value = values[headers.indexOf('MAIN_ARCHETYPE')] || "";
-                    
-                    if (document.getElementById('team')) 
-                        document.getElementById('team').value = values[headers.indexOf('CURRENT_TEAM')] || "Free Agent";
+                if (values[idx.discord] === discordId) {
+                    console.log("Profil trouvé ! Remplissage...");
 
-                    // Changement visuel du bouton pour confirmer la mise à jour
+                    const setVal = (id, val) => {
+                        const el = document.getElementById(id);
+                        if (el && val !== undefined) el.value = val;
+                    };
+
+                    setVal('id-game', values[idx.gameTag]);
+                    setVal('country', values[idx.country]);
+                    setVal('avatar', values[idx.avatar]);
+                    setVal('main-position', values[idx.pos]);
+                    setVal('main-archetype', values[idx.arch]);
+                    setVal('team', values[idx.team] || "Free Agent");
+
                     const submitBtn = document.querySelector('#profile-form button[type="submit"]');
                     if (submitBtn) submitBtn.innerText = "Update Existing Profile";
                     
-                    break; // Profil trouvé, on arrête la boucle
+                    return; 
                 }
             }
         } catch (e) {
-            console.error("Erreur lors de la vérification du profil existant:", e);
+            console.error("Erreur lors de la vérification:", e);
         }
     }
 
@@ -327,6 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
