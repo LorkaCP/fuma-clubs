@@ -176,7 +176,6 @@ body, .fuma-wrapper {
 
 /* --- SEARCH & CLUB CARDS (GRID) --- */
 .fuma-search-container {
-    align-items: right;
     text-align: center;
     margin-top: 20px;
     margin-bottom: 35px;
@@ -553,5 +552,6 @@ input[list] {
         padding: 20px 15px; /* On gagne un peu de place sur les côtés */
     }
 }
+
 
 
