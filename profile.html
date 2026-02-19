@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FUMA CLUBS - MON PROFIL</title>
+    <title>FUMA CLUBS - MY PROFILE</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -14,45 +14,60 @@
     <nav class="fuma-nav" id="main-nav"></nav>
 
     <div class="fuma-container" style="margin-top: 50px; padding-bottom: 100px;">
-        <h2 class="fuma-section-title">Gestion du Profil</h2>
+        <h2 class="fuma-section-title">Profile Management</h2>
 
         <form id="profile-form" class="fuma-profile-grid">
             
             <div class="sidebar-box">
-                <h3 class="sidebar-title"><i class="fas fa-user"></i> Identité Joueur</h3>
+                <h3 class="sidebar-title"><i class="fas fa-user"></i> Player Identity</h3>
                 
                 <div class="form-group">
-                    <label>ID en Jeu (PSN/Xbox/EA)</label>
-                    <input type="text" id="id-game" name="ID_GAME" class="fuma-search-input" placeholder="Ex: Capi_10" required>
+                    <label>Game ID (Internal)</label>
+                    <input type="text" id="game-id" name="GAME_ID" class="fuma-search-input" readonly style="opacity: 0.6;">
                 </div>
 
                 <div class="form-group">
-                    <label>Pays</label>
+                    <label>Game Tag (PSN/Xbox/EA)</label>
+                    <input type="text" id="game-tag" name="GAME_TAG" class="fuma-search-input" placeholder="Ex: Capi_10" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Country</label>
                     <select id="country" name="COUNTRY" class="fuma-search-input">
                         <option value="France">France</option>
-                        <option value="Belgium">Belgique</option>
-                        <option value="Switzerland">Suisse</option>
-                        <option value="Other">Autre</option>
+                        <option value="Belgium">Belgium</option>
+                        <option value="Switzerland">Switzerland</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="Other">Other</option>
                     </select>
                 </div>
 
+                <input type="hidden" name="FLAG" id="flag-url">
+
                 <div class="form-group">
                     <label>Discord ID</label>
-                    <input type="text" id="id-discord" name="ID_DISCORD" class="fuma-search-input" readonly style="opacity: 0.6;">
+                    <input type="text" id="discord-id" name="DISCORD_ID" class="fuma-search-input" readonly style="opacity: 0.6;">
                 </div>
                 <div class="form-group">
-                    <label>Nom Discord</label>
-                    <input type="text" id="discord-name" name="NAME_DISCORD" class="fuma-search-input" readonly style="opacity: 0.6;">
+                    <label>Discord Name</label>
+                    <input type="text" id="discord-name" name="DISCORD_NAME" class="fuma-search-input" readonly style="opacity: 0.6;">
                 </div>
             </div>
 
             <div class="sidebar-box">
-                <h3 class="sidebar-title"><i class="fas fa-shield-halved"></i> Club & Poste</h3>
+                <h3 class="sidebar-title"><i class="fas fa-shield-halved"></i> Club & Appearance</h3>
                 
                 <div class="form-group">
-                    <label>Équipe Actuelle</label>
-                    <input type="text" id="team" name="TEAM" class="fuma-search-input" readonly value="Agent Libre" style="opacity: 0.6;">
+                    <label>Current Team</label>
+                    <input type="text" id="current-team" name="CURRENT_TEAM" class="fuma-search-input" readonly value="Free Agent" style="opacity: 0.6;">
                 </div>
+
+                <div class="form-group">
+                    <label>Avatar Link (URL)</label>
+                    <input type="text" id="avatar" name="AVATAR" class="fuma-search-input" placeholder="Link to your photo">
+                </div>
+
+                <input type="hidden" name="LOGO" id="team-logo">
 
                 <div style="display: flex; gap: 10px;">
                     <div class="form-group" style="flex: 1;">
@@ -64,41 +79,36 @@
                         <input type="text" id="pos2" name="POSITION_2" class="fuma-search-input" readonly value="N/A" style="opacity: 0.6;">
                     </div>
                 </div>
-
-                <div class="form-group">
-                    <label>Lien Avatar (URL)</label>
-                    <input type="text" id="avatar" name="AVATAR" class="fuma-search-input" placeholder="Lien vers votre photo">
-                </div>
             </div>
 
             <div class="sidebar-box full-width" style="grid-column: 1 / -1;">
-                <h3 class="sidebar-title"><i class="fas fa-chart-line"></i> Statistiques Carrière</h3>
+                <h3 class="sidebar-title"><i class="fas fa-chart-line"></i> Career Statistics</h3>
                 <div class="stats-bar" style="background: rgba(255,255,255,0.03); margin-top: 10px;">
                     <div class="stat-item">
                         <span class="label">Matches</span>
                         <input type="number" name="GAME_PLAYED" value="0" readonly>
                     </div>
                     <div class="stat-item">
-                        <span class="label">Note</span>
+                        <span class="label">Rating</span>
                         <input type="text" name="RATING" value="0.0" readonly>
                     </div>
                     <div class="stat-item" style="color: var(--fuma-primary);">
-                        <span class="label">Buts</span>
+                        <span class="label">Goals</span>
                         <input type="number" name="GOALS" value="0" readonly>
                     </div>
                     <div class="stat-item" style="color: var(--fuma-primary);">
-                        <span class="label">Passes D.</span>
+                        <span class="label">Assists</span>
                         <input type="number" name="ASSISTS" value="0" readonly>
                     </div>
                     <div class="stat-item">
-                        <span class="label">Tacles</span>
+                        <span class="label">Tackles</span>
                         <input type="number" name="SUCCESSFUL_TACKLES" value="0" readonly>
                     </div>
                 </div>
             </div>
 
             <button type="submit" class="fuma-cta" style="grid-column: 1 / -1; margin-top: 20px;">
-                Mettre à jour mon profil
+                Update My Profile
             </button>
 
         </form>
