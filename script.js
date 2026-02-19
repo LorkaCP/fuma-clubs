@@ -534,7 +534,7 @@ if (profileForm) {
         };
 
         // REMPLACE CETTE URL par celle obtenue lors du déploiement Apps Script
-        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/XXXXX/exec'; 
+        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz73s8loo-1G_O6zmVse2_zh8z604AKQ4snSe1P1Ol6tMht3Gkpl6viqe2MT-4FjSgy9Q/exec'; 
 
         try {
             await fetch(APP_SCRIPT_URL, {
@@ -569,5 +569,6 @@ if (profileForm) {
     if (document.getElementById('club-details')) loadClubProfile();
 
 });
+
 
 
