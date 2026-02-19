@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
-    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxiGiyTrCReV9yIkmfzPnChhUFRSh1UvlRX9UMrXEyWGQJYXOYAfj6q5Oox0BeMCHsg1w/exec'; 
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzieuE-AiE2XSwE7anpAeDzLhe-rHpgA8eV7TMS3RRbUuzESLt40zBmIDqi9N6mxbdkqA/exec'; 
     const CLIENT_ID = '1473807551329079408'; 
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
     const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
@@ -83,66 +83,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function checkExistingProfile(discordId) {
-    console.log("Vérification du profil pour l'ID:", discordId);
+    console.log("Recherche du profil via API pour l'ID:", discordId);
+    
     try {
-        // Ajout d'un paramètre temporel pour forcer la mise à jour du cache CSV de Google
-        const resp = await fetch(SHEET_URL + '&t=' + Date.now());
-        const text = await resp.text();
-        const lines = text.trim().split(/\r?\n/);
-        
-        if (lines.length < 2) return;
+        // Appel GET vers ton Apps Script avec le paramètre discord_id
+        const response = await fetch(`${APP_SCRIPT_URL}?discord_id=${discordId}`);
+        const data = await response.json();
 
-        const rawHeaders = parseCSVLine(lines[0]);
-        // Nettoyage strict pour correspondre à vos noms de colonnes (ex: DISCORD_ID)
-        const cleanHeaders = rawHeaders.map(h => h.trim().toUpperCase());
-        
-        const getIdx = (name) => cleanHeaders.indexOf(name.toUpperCase());
+        if (data.result === "success") {
+            console.log("Données reçues:", data);
 
-        const idx = {
-            discord: getIdx('DISCORD_ID'),
-            gameTag: getIdx('GAME_TAG'),
-            country: getIdx('COUNTRY'),
-            avatar: getIdx('AVATAR'),
-            team: getIdx('CURRENT_TEAM'),
-            arch: getIdx('MAIN_ARCHETYPE'),
-            pos: getIdx('MAIN_POSITION')
-        };
+            // Injection automatique dans le formulaire
+            const fill = (id, val) => {
+                const el = document.getElementById(id);
+                if (el && val) el.value = val;
+            };
 
-        if (idx.discord === -1) {
-            console.error("Erreur : Colonne DISCORD_ID introuvable dans le Sheet.");
-            return;
+            fill('id-game', data.game_tag);
+            fill('country', data.country);
+            fill('avatar', data.avatar);
+            fill('team', data.current_team);
+            fill('main-archetype', data.main_archetype);
+            fill('main-position', data.main_position);
+
+            // Mise à jour visuelle du bouton
+            const submitBtn = document.querySelector('#profile-form button[type="submit"]');
+            if (submitBtn) submitBtn.innerText = "Update Existing Profile";
+        } else {
+            console.log("Aucun profil existant trouvé ou nouveau joueur.");
         }
-
-        for (let i = 1; i < lines.length; i++) {
-            const values = parseCSVLine(lines[i]);
-            
-            // Comparaison de l'ID Discord
-            if (values[idx.discord] === discordId) {
-                console.log("Profil trouvé ! Pré-remplissage du formulaire...");
-
-                const fill = (id, val) => {
-                    const el = document.getElementById(id);
-                    if (el && val) el.value = val.trim();
-                };
-
-                // Remplissage automatique des champs HTML
-                fill('id-game', values[idx.gameTag]);
-                fill('country', values[idx.country]);
-                fill('avatar', values[idx.avatar]);
-                fill('team', values[idx.team]);
-                fill('main-archetype', values[idx.arch]);
-                fill('main-position', values[idx.pos]);
-
-                // Modification du bouton pour indiquer une mise à jour
-                const submitBtn = document.querySelector('#profile-form button[type="submit"]');
-                if (submitBtn) submitBtn.innerText = "Update Existing Profile";
-                
-                return;
-            }
-        }
-        console.log("Aucun profil existant trouvé.");
     } catch (e) {
-        console.error("Erreur lors de la vérification du profil:", e);
+        console.error("Erreur lors de la récupération des données:", e);
     }
 }
 
@@ -343,6 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
