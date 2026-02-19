@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Utilisation de FormData pour éviter les problèmes de CORS JSON
         const formData = new URLSearchParams();
-        formData.append('game_id', document.getElementById('id-game')?.value || "");
+        formData.append('game_id',"");
         formData.append('game_tag', document.getElementById('id-game')?.value || "");
         formData.append('discord_id', document.getElementById('id-discord')?.value || "");
         formData.append('discord_name', document.getElementById('discord-name')?.value || "");
@@ -347,6 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
