@@ -85,15 +85,26 @@ document.addEventListener('DOMContentLoaded', () => {
     async function checkExistingProfile(discordId) {
     console.log("Recherche du profil via API pour l'ID:", discordId);
     
+    // 1. Sélection des champs à "verrouiller" pendant le chargement
+    const fieldsToFill = ['id-game', 'country', 'avatar', 'team', 'main-archetype', 'main-position'];
+    const submitBtn = document.querySelector('#profile-form button[type="submit"]');
+    
+    // Ajout d'un état de chargement visuel
+    fieldsToFill.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.add('fuma-input-loading');
+            el.placeholder = "Loading data...";
+        }
+    });
+    if (submitBtn) submitBtn.innerText = "Checking existing profile...";
+
     try {
-        // Appel GET vers ton Apps Script avec le paramètre discord_id
         const response = await fetch(`${APP_SCRIPT_URL}?discord_id=${discordId}`);
         const data = await response.json();
 
         if (data.result === "success") {
-            console.log("Données reçues:", data);
-
-            // Injection automatique dans le formulaire
+            // 2. Injection des données
             const fill = (id, val) => {
                 const el = document.getElementById(id);
                 if (el && val) el.value = val;
@@ -106,17 +117,25 @@ document.addEventListener('DOMContentLoaded', () => {
             fill('main-archetype', data.main_archetype);
             fill('main-position', data.main_position);
 
-            // Mise à jour visuelle du bouton
-            const submitBtn = document.querySelector('#profile-form button[type="submit"]');
             if (submitBtn) submitBtn.innerText = "Update Existing Profile";
         } else {
-            console.log("Aucun profil existant trouvé ou nouveau joueur.");
+            console.log("Nouveau joueur ou profil non trouvé.");
+            if (submitBtn) submitBtn.innerText = "Create Profile";
         }
     } catch (e) {
-        console.error("Erreur lors de la récupération des données:", e);
+        console.error("Erreur:", e);
+    } finally {
+        // 3. Retrait de l'état de chargement
+        fieldsToFill.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.remove('fuma-input-loading');
+                if (el.id === 'id-game') el.placeholder = "Ex: Capi_10";
+                else el.placeholder = "";
+            }
+        });
     }
 }
-
     // --- 5. ENVOI DU FORMULAIRE (CORRIGÉ) ---
     function setupFormSubmission() {
     const profileForm = document.getElementById('profile-form');
@@ -314,6 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
