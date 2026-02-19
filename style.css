@@ -227,6 +227,23 @@ body, .fuma-wrapper {
     margin-top: 30px;
 }
 
+/* --- RÉSULTATS MATCHS --- */
+.res-v { color: #2ecc71; font-weight: bold; } /* Vert pour Victoire */
+.res-n { color: #f1c40f; font-weight: bold; } /* Jaune/Or pour Nul */
+.res-d { color: #e74c3c; font-weight: bold; } /* Rouge pour Défaite */
+
+/* Si tu les utilises sous forme de petits cercles/badges */
+.result-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+.bg-v { background-color: #2ecc71; }
+.bg-n { background-color: #f1c40f; }
+.bg-d { background-color: #e74c3c; }
+
 .sidebar-box {
     background: var(--fuma-bg-card);
     padding: 25px;
@@ -246,6 +263,42 @@ body, .fuma-wrapper {
 .roster-list li {
     padding: 8px 0;
     border-bottom: 1px solid rgba(255,255,255,0.02);
+}
+
+/* --- MANAGER & ROSTER --- */
+.manager-tag {
+    color: var(--fuma-primary);
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.manager-tag::before {
+    content: "★"; /* Symbole étoile pour le côté premium */
+}
+
+.roster-player {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.roster-player .player-name {
+    color: var(--fuma-text-main);
+    font-weight: 500;
+}
+
+.roster-player .player-pos {
+    color: var(--fuma-text-dim);
+    font-size: 0.75rem;
+    text-transform: uppercase;
 }
 
 /* --- 6. FORMULAIRES ET INPUTS --- */
@@ -291,6 +344,29 @@ body, .fuma-wrapper {
     letter-spacing: 1px;
     margin-bottom: 5px;
     font-weight: 600;
+}
+
+/* --- TITRES DE SECTION PROFIL --- */
+.fuma-profile-title {
+    color: var(--fuma-primary);
+    font-size: 1.2rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin: 30px 0 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--fuma-primary);
+    display: inline-block;
+}
+
+/* Version alternative sans bordure si tu préfères la sobriété */
+.fuma-profile-subtitle {
+    color: var(--fuma-primary);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 20px;
 }
 
 .fuma-form-row { display: flex; gap: 10px; }
@@ -436,3 +512,4 @@ select option { background-color: #141619; color: white; }
     .stat-item strong { font-size: 1.4rem; }
     .sidebar-box { padding: 20px 15px; }
 }
+
