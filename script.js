@@ -1,6 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
-    let allClubs = [];
-    
+ 
   document.addEventListener('DOMContentLoaded', () => {
     let allClubs = [];
     
@@ -323,6 +321,7 @@ backBtn?.addEventListener('click', () => {
 if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
 if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
