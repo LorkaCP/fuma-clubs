@@ -81,10 +81,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 4. LOGIQUE LISTE DES CLUBS ---
+   // --- 4. LOGIQUE LISTE DES CLUBS (Version Stabilisée) ---
     async function fetchFumaClubs() {
         const clubContainer = document.getElementById('fuma-js-clubs');
         if (!clubContainer) return;
+
+        // Fonction interne pour parser une ligne CSV sans décalage
+        const parseCSVLine = (line) => {
+            const result = [];
+            let cell = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                let char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(cell);
+                    cell = '';
+                } else {
+                    cell += char;
+                }
+            }
+            result.push(cell);
+            return result.map(v => v.replace(/^"|"$/g, '').trim());
+        };
 
         try {
             const resp = await fetch(SHEET_URL);
@@ -95,18 +115,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const teamIdx = headers.indexOf('TEAMS');
             const crestIdx = headers.indexOf('CREST');
 
+            // Extraction sécurisée des données
             allClubs = lines.slice(1).map(line => {
-                const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(s => s.replace(/^"|"$/g,'')) || [];
+                const values = parseCSVLine(line);
                 return {
-                    name: values[teamIdx]?.trim(),
-                    logo: values[crestIdx]?.trim()
+                    name: values[teamIdx] || "",
+                    logo: values[crestIdx] || ""
                 };
             }).filter(c => c.name && c.logo && !c.name.toLowerCase().includes('free agent'));
 
             renderClubs(allClubs);
         } catch (e) {
             clubContainer.innerHTML = "<div class='fuma-loading-wrapper'>Erreur de chargement des clubs.</div>";
-            console.error(e);
+            console.error("Erreur Fetch Clubs:", e);
         }
     }
 
@@ -115,18 +136,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!clubContainer) return;
         clubContainer.innerHTML = '';
 
+        if (clubsList.length === 0) {
+            clubContainer.innerHTML = "<p style='color:white; text-align:center; width:100%;'>Aucun club trouvé.</p>";
+            return;
+        }
+
         clubsList.forEach(club => {
             const card = document.createElement('a');
             card.href = `club.html?name=${encodeURIComponent(club.name)}`;
             card.className = 'club-card';
+            // Sécurité supplémentaire : si le logo est vide, on met une image par défaut ou on n'affiche pas l'image
+            const logoSrc = club.logo ? club.logo : 'path/to/default-logo.png';
+            
             card.innerHTML = `
-                <img src="${club.logo}" alt="${club.name}" loading="lazy" onerror="this.parentElement.remove()">
+                <img src="${logoSrc}" alt="${club.name}" loading="lazy" onerror="this.src='https://placehold.co/150x150?text=NO+LOGO'">
                 <span class="club-name">${club.name}</span>
             `;
             clubContainer.appendChild(card);
         });
     }
-
   // --- 5. LOGIQUE DÉTAILS CLUB (Version Stabilisée) ---
 async function loadClubProfile() {
     const detailContainer = document.getElementById('club-details');
@@ -301,6 +329,7 @@ backBtn?.addEventListener('click', () => {
 if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
 if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
