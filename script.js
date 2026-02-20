@@ -623,22 +623,28 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     // Page Détails Club
     if (document.getElementById('club-details')) loadClubProfile();
 
-    // Page Profil Joueur (Avec Loader)
+    // Page Profil Joueur (Correctif avec roue de chargement forcée)
     if (document.getElementById('player-header')) {
         const params = new URLSearchParams(window.location.search);
         const playerId = params.get('id') || params.get('tag');
         
         if (playerId) {
-            // ON AFFICHE LE LOADER AVANT DE CHARGER
+            // On vide le contenu et on met la roue immédiatement
             document.getElementById('player-header').innerHTML = `
-                <div class="fuma-loading-wrapper" style="text-align: center; padding: 100px;">
-                    <div class="fuma-spinner" style="margin: 0 auto 15px;"></div>
-                    <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">Loading Player Profile...</p>
+                <div class="fuma-loading-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; width: 100%;">
+                    <div class="fuma-spinner"></div>
+                    <p style="color: var(--fuma-primary); margin-top: 20px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600;">
+                        Loading Player Data...
+                    </p>
                 </div>`;
             
             fetchPlayerData(playerId);
         } else {
-            document.getElementById('player-header').innerHTML = "<h2 style='text-align:center;margin-top:50px;'>No player specified.</h2>";
+            document.getElementById('player-header').innerHTML = `
+                <div style="text-align:center; padding: 50px;">
+                    <h2 style="color:var(--fuma-primary)">No player specified</h2>
+                    <p>Please go back to the players list.</p>
+                </div>`;
         }
     }
 
