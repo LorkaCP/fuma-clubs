@@ -240,7 +240,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const resp = await fetch(SHEET_URL);
             const text = await resp.text();
             const lines = text.trim().split("\n");
-            const headers = lines[0].split(",");
+            
+            // Nettoyage des headers pour éviter les problèmes de majuscules/espaces
+            const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
 
             const idx = {
                 team: headers.indexOf('TEAMS'),
@@ -261,10 +263,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (clubLine) {
                 const v = parseCSVLine(clubLine);
-                const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "No history available.";
-                const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "<li>Roster is empty.</li>";
-                const isActive = v[idx.active]?.toUpperCase() === 'YES';
                 
+                // Traitement de l'historique
+                const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "No history available.";
+                
+                // --- LOGIQUE DU ROSTER CORRIGÉE ---
+                const rawPlayers = v[idx.players];
+                let playersList = "<li>Roster is empty.</li>";
+
+                if (rawPlayers && rawPlayers.trim() !== "" && rawPlayers.toLowerCase() !== "none") {
+                    // On sépare par la virgule, on nettoie les espaces, et on filtre les entrées vides
+                    playersList = rawPlayers.split(',')
+                        .map(p => p.trim())
+                        .filter(p => p.length > 0)
+                        .map(p => `<li><i class="fas fa-user" style="font-size:0.8rem; margin-right:10px; color:var(--fuma-primary);"></i>${p}</li>`)
+                        .join('');
+                }
+                // ----------------------------------
+
+                const isActive = v[idx.active]?.toUpperCase() === 'YES';
                 const statusHTML = `<span style="color: ${isActive ? '#4caf50' : '#f44336'}; font-weight: bold; font-size: 0.9rem;">
                     <i class="fas fa-circle" style="font-size: 10px; vertical-align: middle;"></i> ${isActive ? 'ACTIVE' : 'INACTIVE'}
                 </span>`;
@@ -317,8 +334,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                     </div>`;
+            } else {
+                detailContainer.innerHTML = "<p style='text-align:center;'>Club not found.</p>";
             }
         } catch (e) { 
+            console.error(e);
             detailContainer.innerHTML = "<p style='text-align:center; color:red;'>Error loading club details.</p>";
         }
     }
@@ -565,6 +585,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
