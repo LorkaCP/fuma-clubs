@@ -568,7 +568,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     if (playerId) fetchPlayerData(playerId, e.target.value);
 });
 
-  // --- 9. INITIALISATION ---
+ // --- 9. INITIALISATION ---
     injectNavigation();
     handleProfilePage();
     setupFormSubmission();
@@ -623,27 +623,32 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     // Page Détails Club
     if (document.getElementById('club-details')) loadClubProfile();
 
-    // Page Profil Joueur (Correctif avec ta roue de chargement)
-    if (document.getElementById('player-header')) {
+    // Page Profil Joueur (Correction Finale Roue de Chargement)
+    const playerHeader = document.getElementById('player-header');
+    if (playerHeader) {
+        // 1. On affiche la roue IMMÉDIATEMENT (avant même de vérifier l'URL)
+        playerHeader.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; width: 100%;">
+                <div class="fuma-spinner"></div>
+                <p style="color: var(--fuma-primary); margin-top: 20px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600;">
+                    Loading Player Data...
+                </p>
+            </div>`;
+
         const params = new URLSearchParams(window.location.search);
         const playerId = params.get('id') || params.get('tag');
         
+        // 2. On attend un tout petit peu (10ms) pour laisser le navigateur afficher la roue
+        // puis on lance la récupération des données
         if (playerId) {
-            // Utilisation de ta classe fuma-spinner avec un wrapper centré
-            document.getElementById('player-header').innerHTML = `
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; width: 100%;">
-                    <div class="fuma-spinner"></div>
-                    <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase; font-weight: 600; font-size: 0.9rem;">
-                        Loading Player Data...
-                    </p>
-                </div>`;
-            
-            fetchPlayerData(playerId);
+            setTimeout(() => {
+                fetchPlayerData(playerId);
+            }, 10);
         } else {
-            document.getElementById('player-header').innerHTML = `
-                <div style="text-align:center; padding: 50px;">
+            playerHeader.innerHTML = `
+                <div style="text-align:center; padding: 100px 20px;">
                     <h2 style="color:var(--fuma-primary)">No player specified</h2>
-                    <p>Please go back to the players list.</p>
+                    <p>Please return to the players database.</p>
                 </div>`;
         }
     }
