@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     let allClubs = [];
-    let allPlayers = []; 
+    let allPlayers = []; // Stockage pour la recherche de joueurs
     
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
@@ -8,307 +8,461 @@ document.addEventListener('DOMContentLoaded', () => {
     const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzieuE-AiE2XSwE7anpAeDzLhe-rHpgA8eV7TMS3RRbUuzESLt40zBmIDqi9N6mxbdkqA/exec'; 
     const CLIENT_ID = '1473807551329079408'; 
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
+    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
 
-    const STATS_CONFIG = [
-        { name: "All Seasons", gid: "1342244083" },
-        { name: "Saison 1", gid: "2074996595" },
-        { name: "Saison 2", gid: "1996803561" }
-    ];
+    // Avatars par défaut
+    const DEFAULT_AVATAR = "https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png";
+    const PLACEHOLDER_AVATAR = "https://i.ibb.co/KcQsBkmB/3715527-image-profil-icon-male-icon-human-or-people-sign-and-symbol-vector-vectoriel-removebg-previe.png";
 
-    // --- 2. NAVIGATION ---
-    const renderNav = () => {
+    // --- 2. UTILITAIRES ---
+    const parseCSVLine = (line) => {
+        const result = [];
+        let cell = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+            let char = line[i];
+            if (char === '"') inQuotes = !inQuotes;
+            else if (char === ',' && !inQuotes) { result.push(cell); cell = ''; }
+            else cell += char;
+        }
+        result.push(cell);
+        return result.map(v => v.replace(/^"|"$/g, '').trim());
+    };
+
+    // --- 3. INJECTION DU MENU ---
+    function injectNavigation() {
         const nav = document.getElementById('main-nav');
         if (!nav) return;
+
+        const discordServerLink = 'https://discord.gg/xPz9FBkdtm';
+
         nav.innerHTML = `
-            <div class="fuma-nav-container">
-                <a href="index.html" class="fuma-logo">FUMA <span>CLUBS</span></a>
-                <div class="fuma-burger" id="fuma-burger"><span></span><span></span><span></span></div>
-                <div class="nav-links" id="nav-links">
-                    <a href="index.html">HOME</a>
-                    <a href="clubs.html">CLUBS</a>
-                    <a href="players.html">PLAYERS</a>
-                    <a href="profile.html" class="nav-highlight">MY PROFILE</a>
+            <div class="nav-container">
+                <a href="index.html" class="fuma-logo">FUMA<span>CLUBS</span></a>
+                
+                <div class="fuma-burger" id="burger-menu">
+                    <span></span><span></span><span></span>
+                </div>
+
+                <div class="nav-links" id="nav-links-container">
+                    <a href="index.html">Home</a>
+                    <a href="clubs.html">Clubs</a>
+                    <a href="players.html">Players</a>
+                    <a href="#">League</a>
+                    <a href="#">Rules</a>
+                    <a href="${discordServerLink}" target="_blank" style="color: #5865F2;">
+                        <i class="fab fa-discord"></i> Discord
+                    </a>
                 </div>
             </div>
         `;
-        const burger = document.getElementById('fuma-burger');
-        const links = document.getElementById('nav-links');
-        burger?.addEventListener('click', () => {
-            burger.classList.toggle('active');
-            links.classList.toggle('active');
+
+        const currentPage = window.location.pathname.split("/").pop() || 'index.html';
+        const allLinks = nav.querySelectorAll('.nav-links a');
+
+        allLinks.forEach(link => {
+            const linkHref = link.getAttribute('href');
+            if (currentPage === linkHref) {
+                link.classList.add('active');
+            }
         });
-    };
-    renderNav();
 
-    // --- 3. DISCORD ---
-    const btnMyProfile = document.getElementById('btn-my-profile');
-    if (btnMyProfile) {
-        btnMyProfile.href = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
+        // Liaison du bouton profile si présent
+        const myProfileBtn = document.getElementById('btn-my-profile');
+        if (myProfileBtn) {
+            myProfileBtn.setAttribute('href', authUrl);
+        }
+
+        // Menu Burger
+        const burger = document.getElementById('burger-menu');
+        const linksContainer = document.getElementById('nav-links-container');
+        
+        if (burger && linksContainer) {
+            burger.onclick = function() {
+                burger.classList.toggle('active');
+                linksContainer.classList.toggle('active');
+            };
+        }
     }
 
-    // --- 4. CLUBS (LISTE) ---
-    async function fetchFumaClubs() {
+    // --- 4. LOGIQUE PAGE PROFIL ---
+    function handleProfilePage() {
+        if (!window.location.pathname.includes('profile.html')) return;
+        
+        const params = new URLSearchParams(window.location.search);
+        const discordUsername = params.get('username');
+        const discordId = params.get('id');
+
+        if (discordUsername && discordUsername !== "undefined" && discordId && discordId !== "undefined") {
+            const nameInput = document.getElementById('discord-name');
+            const idInput = document.getElementById('id-discord');
+            
+            if (nameInput && idInput) {
+                nameInput.value = decodeURIComponent(discordUsername);
+                idInput.value = discordId;
+                checkExistingProfile(discordId);
+                // Nettoyage de l'URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+    }
+
+    async function checkExistingProfile(discordId) {
+        const loader = document.getElementById('fuma-loader');
+        const form = document.getElementById('profile-form');
+        const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+
+        if (loader) loader.style.display = 'flex';
+        if (form) form.style.display = 'none';
+
         try {
-            const response = await fetch(SHEET_URL);
-            const data = await response.text();
-            const rows = data.split('\n').slice(1);
-            allClubs = rows.map(row => {
-                const cols = row.split(',');
-                return {
-                    id: cols[0]?.trim(),
-                    name: cols[1]?.trim(),
-                    logo: cols[3]?.trim() || 'https://via.placeholder.com/100',
-                    flag: cols[4]?.trim() || ''
+            const response = await fetch(`${APP_SCRIPT_URL}?discord_id=${discordId}&t=${Date.now()}`);
+            if (!response.ok) throw new Error('Erreur serveur');
+            
+            const data = await response.json();
+
+            if (data && data.result === "success") {
+                const fill = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = (val !== undefined && val !== null) ? val : "";
                 };
-            }).filter(c => c.name);
-            renderClubs(allClubs);
-        } catch (err) { console.error("Clubs Error:", err); }
+
+                fill('id-game', data.game_tag);
+                fill('country', data.country);
+                fill('avatar', data.avatar);
+                fill('team', data.current_team);
+                fill('main-archetype', data.main_archetype);
+                fill('main-position', data.main_position);
+
+                if (submitBtn) submitBtn.innerText = "Update Existing Profile";
+            } else {
+                if (submitBtn) submitBtn.innerText = "Create My Profile";
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setTimeout(() => {
+                if (loader) loader.style.display = 'none';
+                if (form) form.style.display = 'grid';
+            }, 300);
+        }
     }
 
-    function renderClubs(clubs) {
-        const grid = document.getElementById('fuma-js-clubs');
-        if (!grid) return;
-        grid.innerHTML = clubs.map(c => `
-            <div class="fuma-club-card" onclick="window.location.href='club.html?id=${c.id}'">
-                <img src="${c.logo}" alt="${c.name}" class="club-logo-main">
-                <div class="club-info">
-                    <h3>${c.name}</h3>
-                    <img src="${c.flag}" class="club-flag" alt="pays">
-                </div>
-            </div>
-        `).join('');
+    // --- 5. ENVOI DU FORMULAIRE ---
+    function setupFormSubmission() {
+        const profileForm = document.getElementById('profile-form');
+        if (!profileForm) return;
+
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = profileForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerText;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Updating...";
+
+            const avatarInput = document.getElementById('avatar')?.value.trim();
+            const finalAvatar = (avatarInput === "" || avatarInput.toLowerCase() === "none") ? DEFAULT_AVATAR : avatarInput;
+
+            const formData = new URLSearchParams();
+            formData.append('game_tag', document.getElementById('id-game')?.value || "");
+            formData.append('discord_id', document.getElementById('id-discord')?.value || "");
+            formData.append('discord_name', document.getElementById('discord-name')?.value || "");
+            formData.append('country', document.getElementById('country')?.value || "");
+            formData.append('avatar', finalAvatar);
+            formData.append('current_team', document.getElementById('team')?.value || "Free Agent");
+            formData.append('main_archetype', document.getElementById('main-archetype')?.value || "");
+            formData.append('main_position', document.getElementById('main-position')?.value || "");
+
+            try {
+                // Utilisation de mode: 'no-cors' pour éviter les erreurs de redirection Google Apps Script
+                await fetch(APP_SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    mode: 'no-cors'
+                });
+                alert("Profile update sent! Check back in a few moments.");
+            } catch (error) {
+                console.error("Submission error:", error);
+                alert("Update sent (please check your profile in a few moments).");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalBtnText;
+            }
+        });
     }
 
-    // --- 5. JOUEURS (DATABASE & FILTRES) ---
-    async function fetchFumaPlayers() {
+    // --- 6. LOGIQUE LISTE DES CLUBS (clubs.html) ---
+    async function fetchFumaClubs() {
+        const clubContainer = document.getElementById('fuma-js-clubs');
+        if (!clubContainer) return;
+
         try {
-            const response = await fetch(`${PLAYERS_SHEET_BASE}${STATS_CONFIG[0].gid}`);
-            const data = await response.text();
-            const rows = data.split('\n');
-            if (rows.length < 2) return;
+            const resp = await fetch(SHEET_URL);
+            const text = await resp.text();
+            const lines = text.trim().split("\n");
+            const headers = lines[0].split(",");
+            const teamIdx = headers.indexOf('TEAMS');
+            const crestIdx = headers.indexOf('CREST');
 
-            const headers = rows[0].split(',').map(h => h.trim().toUpperCase());
+            allClubs = lines.slice(1).map(line => {
+                const values = parseCSVLine(line);
+                return { name: values[teamIdx] || "", logo: values[crestIdx] || "" };
+            }).filter(c => c.name && c.logo && !c.name.toLowerCase().includes('free agent'));
+
+            renderClubs(allClubs);
+        } catch (e) {
+            clubContainer.innerHTML = "Error loading clubs.";
+        }
+    }
+
+    function renderClubs(clubsList) {
+        const clubContainer = document.getElementById('fuma-js-clubs');
+        if (!clubContainer) return;
+        clubContainer.innerHTML = clubsList.map(club => `
+            <a href="club.html?name=${encodeURIComponent(club.name)}" class="club-card">
+                <img src="${club.logo}" alt="${club.name}" loading="lazy" onerror="this.src='https://placehold.co/150x150?text=NO+LOGO'">
+                <span class="club-name">${club.name}</span>
+            </a>`).join('');
+    }
+
+    // --- 7. LOGIQUE DÉTAILS CLUB (club.html) ---
+    async function loadClubProfile() {
+        const detailContainer = document.getElementById('club-details');
+        if (!detailContainer) return;
+
+        const params = new URLSearchParams(window.location.search);
+        const clubName = params.get('name');
+        if (!clubName) return;
+
+        try {
+            const resp = await fetch(SHEET_URL);
+            const text = await resp.text();
+            const lines = text.trim().split("\n");
+            const headers = lines[0].split(",");
+
             const idx = {
-                id: headers.indexOf('ID'),
-                tag: headers.indexOf('PSN_ID'),
-                nick: headers.indexOf('NICKNAME'),
-                pos: headers.indexOf('POSITION'),
-                team: headers.indexOf('TEAM'),
-                ava: headers.indexOf('AVATAR'),
-                arch: headers.indexOf('ARCHETYPE')
+                team: headers.indexOf('TEAMS'),
+                crest: headers.indexOf('CREST'),
+                history: headers.indexOf('HISTORY'),
+                gp: headers.indexOf('GAMES PLAYED'),
+                win: headers.indexOf('WIN'),
+                draw: headers.indexOf('DRAW'),
+                lost: headers.indexOf('LOST'),
+                trophies: headers.indexOf('TROPHIES'),
+                manager: headers.indexOf('MANAGER'),
+                players: headers.indexOf('PLAYERS'),
+                active: headers.indexOf('ACTIVE'),
+                stream: headers.indexOf('STREAM')
             };
 
-            allPlayers = rows.slice(1).map(row => {
-                const c = row.split(',');
-                return {
-                    id: c[idx.id]?.trim(),
-                    tag: c[idx.tag]?.trim() || c[idx.nick]?.trim() || 'Unknown',
-                    pos: c[idx.pos]?.trim() || 'N/A',
-                    team: c[idx.team]?.trim() || 'Free Agent',
-                    avatar: c[idx.ava]?.trim() || 'https://via.placeholder.com/80',
-                    archetype: c[idx.arch]?.trim() || 'N/A'
-                };
-            }).filter(p => p.id);
+            const clubLine = lines.slice(1).find(line => parseCSVLine(line)[idx.team] === clubName);
 
-            renderPlayers(allPlayers);
-            populateTeamFilter(allPlayers);
-        } catch (err) { console.error("Players Error:", err); }
-    }
+            if (clubLine) {
+                const v = parseCSVLine(clubLine);
+                const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "No history available.";
+                const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "<li>Roster is empty.</li>";
+                const isActive = v[idx.active]?.toUpperCase() === 'YES';
+                
+                const statusHTML = `<span style="color: ${isActive ? '#4caf50' : '#f44336'}; font-weight: bold; font-size: 0.9rem;">
+                    <i class="fas fa-circle" style="font-size: 10px; vertical-align: middle;"></i> ${isActive ? 'ACTIVE' : 'INACTIVE'}
+                </span>`;
 
-    function renderPlayers(players) {
-        const grid = document.getElementById('fuma-js-players');
-        if (!grid) return;
-        if (players.length === 0) {
-            grid.innerHTML = `<p style="grid-column:1/-1; text-align:center; opacity:0.5;">No players found.</p>`;
-            return;
-        }
-        grid.innerHTML = players.map(p => `
-            <div class="fuma-club-card" onclick="window.location.href='player.html?id=${p.id}'" style="text-align: center; padding: 25px;">
-                <div class="player-avatar-wrapper" style="position:relative; width:90px; height:90px; margin:0 auto 15px;">
-                    <img src="${p.avatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:2px solid var(--fuma-primary);">
-                </div>
-                <h3 style="margin: 0 0 5px 0; font-size:1.1rem;">${p.tag}</h3>
-                <div style="color: var(--fuma-primary); font-weight:600; font-size:0.85rem; text-transform:uppercase; margin-bottom:5px;">${p.pos}</div>
-                <div style="font-size: 0.75rem; opacity: 0.6; margin-bottom:12px;">${p.team}</div>
-                <div style="display:inline-block; font-size: 0.65rem; background: rgba(212,175,55,0.1); color: var(--fuma-primary); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.2);">
-                    ${p.archetype}
-                </div>
-            </div>
-        `).join('');
-    }
-
-    // --- 6. CLUB DETAILS (Roster complet) ---
-    async function fetchClubDetails(clubId) {
-        const container = document.getElementById('club-details');
-        if (!container) return;
-        try {
-            const [resC, resP] = await Promise.all([
-                fetch(SHEET_URL),
-                fetch(`${PLAYERS_SHEET_BASE}${STATS_CONFIG[0].gid}`)
-            ]);
-            const dataC = await resC.text();
-            const clubRow = dataC.split('\n').find(r => r.split(',')[0].trim() === clubId);
-            if (!clubRow) return;
-
-            const cCols = clubRow.split(',');
-            const cName = cCols[1].trim();
-            const dataP = await resP.text();
-            const pRows = dataP.split('\n').slice(1);
-            
-            const teamPlayers = pRows.filter(r => {
-                const cols = r.split(',');
-                return cols[4]?.trim().toLowerCase() === cName.toLowerCase();
-            });
-
-            container.innerHTML = `
-                <div class="fuma-card" style="text-align: center; margin-bottom: 40px; border-bottom: 3px solid var(--fuma-primary);">
-                    <img src="${cCols[3]}" style="width: 150px; margin-bottom: 20px;">
-                    <h1 style="font-size: 2.5rem; margin-bottom: 10px;">${cName}</h1>
-                    <img src="${cCols[4]}" style="width: 30px;" alt="country">
-                </div>
-                <h2 class="fuma-section-title">OFFICIAL ROSTER</h2>
-                <div class="fuma-club-grid">
-                    ${teamPlayers.length > 0 ? teamPlayers.map(r => {
-                        const p = r.split(',');
-                        return `
-                            <div class="fuma-club-card" onclick="window.location.href='player.html?id=${p[0]}'">
-                                <img src="${p[5] || 'https://via.placeholder.com/80'}" style="width:70px; height:70px; border-radius:50%; object-fit:cover; margin-bottom:10px; border:1px solid var(--fuma-primary);">
-                                <h3>${p[1]}</h3>
-                                <p style="color:var(--fuma-primary); font-size:0.8rem;">${p[3]}</p>
-                            </div>
-                        `;
-                    }).join('') : '<p style="grid-column:1/-1; text-align:center;">No players registered for this club.</p>'}
-                </div>
-            `;
-        } catch (err) { console.error(err); }
-    }
-
-    // --- 7. PLAYER PROFILE (Multi-saisons) ---
-    async function fetchPlayerData(playerId) {
-        const head = document.getElementById('player-header');
-        const stats = document.getElementById('player-stats-container');
-        if (!head || !stats) return;
-
-        try {
-            const res = await fetch(`${PLAYERS_SHEET_BASE}${STATS_CONFIG[0].gid}`);
-            const data = await res.text();
-            const rows = data.split('\n').map(r => r.split(','));
-            const headers = rows[0].map(h => h.trim().toUpperCase());
-            const pRow = rows.find(r => r[0].trim() === playerId);
-
-            if (!pRow) { head.innerHTML = "<h2>Player not found</h2>"; return; }
-            
-            const p = {};
-            headers.forEach((h, i) => p[h] = pRow[i]?.trim());
-
-            head.innerHTML = `
-                <div class="fuma-card" style="display:flex; align-items:center; gap:40px; padding:40px; flex-wrap:wrap; justify-content:center;">
-                    <img src="${p.AVATAR || 'https://via.placeholder.com/150'}" style="width:180px; height:180px; border-radius:50%; border:4px solid var(--fuma-primary); object-fit:cover; box-shadow: 0 0 20px rgba(212,175,55,0.2);">
-                    <div style="flex:1; min-width:300px; text-align:left;">
-                        <h1 style="font-size:3rem; margin:0; line-height:1;">${p.PSN_ID || p.NICKNAME}</h1>
-                        <div style="margin:15px 0; font-size:1.3rem; color:var(--fuma-primary);">
-                            <i class="fas fa-tshirt"></i> ${p.POSITION} &nbsp; | &nbsp; <i class="fas fa-shield-halved"></i> ${p.TEAM}
-                        </div>
-                        <div style="display:inline-block; background:var(--fuma-primary); color:black; padding:6px 20px; border-radius:25px; font-weight:800; text-transform:uppercase; letter-spacing:1px;">
-                            ${p.ARCHETYPE}
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            stats.innerHTML = "";
-            for (const conf of STATS_CONFIG) {
-                const sRes = await fetch(`${PLAYERS_SHEET_BASE}${conf.gid}`);
-                const sData = await sRes.text();
-                const sRows = sData.split('\n').map(r => r.split(','));
-                const sHeaders = sRows[0].map(h => h.trim());
-                const sRow = sRows.find(r => r[0].trim() === playerId);
-
-                if (sRow) {
-                    let html = `
-                        <div class="fuma-card" style="margin-bottom:30px; border-left:5px solid var(--fuma-primary); padding:30px;">
-                            <h3 style="color:var(--fuma-primary); font-size:1.5rem; margin-bottom:25px; display:flex; align-items:center; gap:10px;">
-                                <i class="fas fa-chart-bar"></i> ${conf.name}
-                            </h3>
-                            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap:20px;">
-                    `;
-                    const exclude = ['ID','PSN_ID','NICKNAME','AVATAR','TEAM','LOGO','FLAG','ARCHETYPE','POSITION','GAME_ID'];
-                    sHeaders.forEach((h, i) => {
-                        if (!exclude.includes(h.toUpperCase()) && sRow[i] !== undefined) {
-                            html += `
-                                <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px; text-align:center; border:1px solid rgba(255,255,255,0.05);">
-                                    <div style="font-size:0.7rem; color:var(--fuma-text-dim); text-transform:uppercase; margin-bottom:8px; letter-spacing:1px;">${h}</div>
-                                    <div style="font-size:1.6rem; font-weight:800;">${sRow[i] || '0'}</div>
-                                </div>
-                            `;
-                        }
-                    });
-                    stats.innerHTML += html + `</div></div>`;
+                let streamHTML = '';
+                if (v[idx.stream] && v[idx.stream].toLowerCase() !== "none") {
+                    const isTwitch = v[idx.stream].includes('twitch.tv');
+                    streamHTML = `<h3 class="sidebar-title" style="margin-top:20px;"><i class="fas fa-broadcast-tower"></i> LIVE STREAM</h3>
+                                  <a href="${v[idx.stream]}" target="_blank" class="fuma-cta" style="display:block; text-align:center; background:#6441a5; font-size: 0.8rem; padding: 10px;">
+                                  <i class="${isTwitch ? 'fab fa-twitch' : 'fab fa-youtube'}"></i> WATCH NOW</a>`;
                 }
+
+                let trophiesHTML = ''; 
+                if (v[idx.trophies] && v[idx.trophies] !== "0" && v[idx.trophies].toLowerCase() !== "none") {
+                    trophiesHTML = `<div class="trophy-section" style="margin-bottom: 30px;">
+                        <h3 class="sidebar-title" style="border:none; margin-bottom:10px;"><i class="fas fa-trophy" style="color:var(--fuma-primary)"></i> ACHIEVEMENTS</h3>
+                        <div class="trophy-grid" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                            ${v[idx.trophies].split(',').map(t => `<div class="trophy-badge" style="background: rgba(212,175,55,0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--fuma-primary); font-size: 0.8rem; color: var(--fuma-primary);"><span class="trophy-icon">🏆</span> ${t.trim()}</div>`).join('')}
+                        </div>
+                    </div>`;
+                }
+
+                detailContainer.innerHTML = `
+                    <div class="club-profile-header" style="text-align: center; margin-bottom: 50px;">
+                        <img src="${v[idx.crest] || ''}" style="width: 180px; margin-bottom: 20px;" alt="Crest">
+                        <h1 style="font-size: 3rem; color: var(--fuma-primary); margin-bottom:5px;">${v[idx.team]}</h1>
+                        <div class="status-badge">${statusHTML}</div>
+                    </div>
+                    <div class="club-grid-layout">
+                        <div class="club-main-info">
+                            ${trophiesHTML}
+                            <section>
+                                <h2 style="color:var(--fuma-primary); border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px;">HISTORY</h2>
+                                <div style="font-style: italic; color: var(--fuma-text-dim); line-height: 1.8;">${formattedHistory}</div>
+                            </section>
+                            <div class="stats-bar" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: var(--fuma-bg-card); padding: 20px; border-radius: 12px; margin-top: 30px; border: var(--fuma-border);">
+                                <div class="stat-item" style="text-align: center;"><strong style="display: block; font-size: 1.5rem;">${v[idx.gp] || 0}</strong><span style="font-size: 0.7rem; color: var(--fuma-text-dim); text-transform: uppercase;">Games</span></div>
+                                <div class="stat-item" style="text-align: center; color: #4caf50;"><strong style="display: block; font-size: 1.5rem;">${v[idx.win] || 0}</strong><span style="font-size: 0.7rem; color: var(--fuma-text-dim); text-transform: uppercase;">Win</span></div>
+                                <div class="stat-item" style="text-align: center; color: #ffeb3b;"><strong style="display: block; font-size: 1.5rem;">${v[idx.draw] || 0}</strong><span style="font-size: 0.7rem; color: var(--fuma-text-dim); text-transform: uppercase;">Draw</span></div>
+                                <div class="stat-item" style="text-align: center; color: #f44336;"><strong style="display: block; font-size: 1.5rem;">${v[idx.lost] || 0}</strong><span style="font-size: 0.7rem; color: var(--fuma-text-dim); text-transform: uppercase;">Lost</span></div>
+                            </div>
+                        </div>
+                        <div class="club-sidebar">
+                            <div class="sidebar-box" style="background: var(--fuma-bg-card); padding: 25px; border-radius: 12px; border: var(--fuma-border);">
+                                <h3 class="sidebar-title" style="color: var(--fuma-primary); border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; font-size: 1rem;">MANAGER</h3>
+                                <p style="margin-bottom:25px; font-weight: 600;">${v[idx.manager] || 'N/A'}</p>
+                                <h3 class="sidebar-title" style="color: var(--fuma-primary); border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; font-size: 1rem;">ROSTER</h3>
+                                <ul class="roster-list" style="list-style: none; padding: 0; color: var(--fuma-text-dim); font-size: 0.9rem;">${playersList}</ul>
+                                ${streamHTML}
+                            </div>
+                        </div>
+                    </div>`;
             }
-        } catch (e) { console.error(e); }
+        } catch (e) { 
+            detailContainer.innerHTML = "<p style='text-align:center; color:red;'>Error loading club details.</p>";
+        }
     }
 
-    // --- 8. PROFILE FORM & FILTERS ---
-    const populateTeamFilter = (players) => {
-        const select = document.getElementById('filter-team');
-        if (!select) return;
-        const teams = [...new Set(players.map(p => p.team))].sort();
-        teams.forEach(t => {
-            if(t && t !== 'Free Agent'){
-                const opt = document.createElement('option');
-                opt.value = t; opt.textContent = t;
-                select.appendChild(opt);
-            }
-        });
-    };
+    // --- 8. LOGIQUE LISTE DES JOUEURS (players.html) ---
+   async function fetchFumaPlayers(gid = "1342244083") {
+    const playerContainer = document.getElementById('fuma-js-players');
+    if (!playerContainer) return;
 
-    const applyFilters = () => {
-        const s = document.getElementById('player-search')?.value.toLowerCase() || "";
-        const p = document.getElementById('filter-position')?.value || "";
-        const t = document.getElementById('filter-team')?.value || "";
-        const filtered = allPlayers.filter(player => {
-            return player.tag.toLowerCase().includes(s) && (p==="" || player.pos===p) && (t==="" || player.team===t);
+    playerContainer.innerHTML = `
+        <div class="fuma-loading-wrapper" style="grid-column: 1/-1; text-align: center; padding: 50px;">
+            <div class="fuma-spinner" style="margin: 0 auto 15px;"></div>
+            <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">Loading season data...</p>
+        </div>`;
+
+    try {
+        const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}`);
+        const text = await resp.text();
+        const lines = text.trim().split("\n");
+        const headers = lines[0].split(",");
+
+        const idx = {
+            tag: headers.indexOf('GAME_TAG'),
+            pos: headers.indexOf('MAIN_POSITION'),
+            team: headers.indexOf('CURRENT_TEAM'),
+            logo: headers.indexOf('LOGO'),
+            rating: headers.indexOf('RATING'),
+            avatar: headers.indexOf('AVATAR'),
+            arch: headers.indexOf('MAIN_ARCHETYPE'),
+            flag: headers.indexOf('FLAG')
+        };
+
+        allPlayers = lines.slice(1).map(line => {
+            const v = parseCSVLine(line);
+            const rawAvatar = v[idx.avatar] ? v[idx.avatar].trim() : "";
+            const isValidAvatar = rawAvatar !== "" && rawAvatar.toLowerCase() !== "none" && rawAvatar.startsWith('http');
+            
+            return {
+                tag: v[idx.tag] || "Unknown", 
+                pos: v[idx.pos] || "N/A", 
+                team: v[idx.team] || "Free Agent",
+                logo: v[idx.logo] || "",
+                rating: v[idx.rating] || "0.0", 
+                avatar: isValidAvatar ? rawAvatar : DEFAULT_AVATAR,
+                arch: v[idx.arch] || "Standard", 
+                flag: v[idx.flag] || ""
+            };
+        }).filter(p => p.tag && p.tag !== "Unknown");
+
+        // Mise à jour du filtre équipe en conservant la sélection si possible
+        const teamFilter = document.getElementById('filter-team');
+        if (teamFilter) {
+            const currentSelectedTeam = teamFilter.value; // On mémorise le choix actuel
+            const teams = [...new Set(allPlayers.map(p => p.team))].sort();
+            teamFilter.innerHTML = '<option value="">All Teams</option>';
+            teams.forEach(team => {
+                const option = document.createElement('option');
+                option.value = team;
+                option.textContent = team;
+                teamFilter.appendChild(option);
+            });
+            teamFilter.value = currentSelectedTeam; // On restaure si l'équipe existe dans la nouvelle saison
+        }
+
+        // --- LA MODIFICATION CLÉ ---
+        applyPlayerFilters(); 
+        
+    } catch (e) {
+        playerContainer.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:red;'>Error loading players.</p>";
+    }
+}
+    function renderPlayers(list) {
+        const container = document.getElementById('fuma-js-players');
+        if (!container) return;
+
+        container.innerHTML = list.map(p => {
+            const isFreeAgent = !p.team || p.team.toLowerCase().includes("free agent") || p.team === "";
+            const teamBadge = isFreeAgent 
+                ? `<div style="position: absolute; top: 0; left: 0; font-size: 1.2rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));" title="Free Agent">🆓</div>` 
+                : `<div style="position: absolute; top: 2px; left: 2px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
+                    <img src="${p.logo}" alt="${p.team}" title="${p.team}" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.7));">
+                   </div>`;
+
+            return `
+                <div class="club-card" style="text-align:center; padding: 25px; position: relative;">
+                    <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 15px auto;">
+                        <img src="${p.avatar}" alt="${p.tag}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary);" onerror="this.src='${PLACEHOLDER_AVATAR}'">
+                        ${teamBadge}
+                        <div style="position: absolute; bottom: 0; right: 0; font-size: 1.1rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.7));">${p.flag}</div>
+                    </div>
+                    <h3 style="margin:0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">${p.tag}</h3>
+                    <p style="font-size: 0.75rem; color: var(--fuma-text-dim); margin: 5px 0;">${p.pos} | ${p.arch}</p>
+                    <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: black; font-weight: 800; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">${p.rating}</div>
+                </div>`;
+        }).join('');
+    }
+
+    // --- 9. INITIALISATION ---
+    injectNavigation();
+    handleProfilePage();
+    setupFormSubmission();
+
+    // Filtre de Saison
+    document.getElementById('filter-season')?.addEventListener('change', (e) => {
+        fetchFumaPlayers(e.target.value);
+    });
+
+    // Filtres combinés Joueurs
+    const applyPlayerFilters = () => {
+        const searchTerm = document.getElementById('player-search')?.value.toLowerCase() || "";
+        const posFilter = document.getElementById('filter-position')?.value || "";
+        const teamFilterVal = document.getElementById('filter-team')?.value || "";
+
+        const filtered = allPlayers.filter(p => {
+            const matchName = p.tag.toLowerCase().includes(searchTerm);
+            const matchPos = posFilter === "" || p.pos === posFilter;
+            const matchTeam = teamFilterVal === "" || p.team === teamFilterVal;
+            return matchName && matchPos && matchTeam;
         });
         renderPlayers(filtered);
     };
 
-    const profileForm = document.getElementById('fuma-profile-form');
-    if (profileForm) {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('id')) {
-            document.getElementById('game-id-hidden').value = params.get('id');
-            document.getElementById('psn-id').value = params.get('username') || '';
-        }
-        profileForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = profileForm.querySelector('button');
-            btn.innerText = "UPDATING..."; btn.disabled = true;
-            try {
-                await fetch(APP_SCRIPT_URL, {
-                    method: 'POST', mode: 'no-cors',
-                    body: JSON.stringify(Object.fromEntries(new FormData(profileForm)))
-                });
-                alert('Success!'); window.location.href = 'players.html';
-            } catch (err) { alert('Error'); btn.innerText = "UPDATE PROFILE"; btn.disabled = false; }
-        });
-    }
+    document.getElementById('player-search')?.addEventListener('input', applyPlayerFilters);
+    document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
+    document.getElementById('filter-team')?.addEventListener('change', applyPlayerFilters);
 
-    // --- 9. EVENTS ---
-    document.getElementById('player-search')?.addEventListener('input', applyFilters);
-    document.getElementById('filter-position')?.addEventListener('change', applyFilters);
-    document.getElementById('filter-team')?.addEventListener('change', applyFilters);
+    // Recherche clubs
     document.getElementById('fuma-search')?.addEventListener('input', (e) => {
-        renderClubs(allClubs.filter(c => c.name.toLowerCase().includes(e.target.value.toLowerCase())));
+        const term = e.target.value.toLowerCase();
+        renderClubs(allClubs.filter(c => c.name.toLowerCase().includes(term)));
     });
 
-    // --- 10. INIT ---
+    // Retour en haut
+    const backBtn = document.getElementById('backTop');
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 400) backBtn?.classList.add('visible');
+        else backBtn?.classList.remove('visible');
+    });
+    backBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+    // Déclenchement des chargements selon l'ID du container présent
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
-    const urlP = new URLSearchParams(window.location.search);
-    const id = urlP.get('id');
-    if (id) {
-        fetchClubDetails(id);
-        fetchPlayerData(id);
-    }
+    if (document.getElementById('club-details')) loadClubProfile();
 });
+
+
