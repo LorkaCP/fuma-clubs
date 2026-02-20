@@ -416,6 +416,102 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
+
+    async function fetchPlayerData(playerId, gid = "1342244083") {
+    const headerContainer = document.getElementById('player-header');
+    const statsContainer = document.getElementById('player-stats-container');
+    const PLAYERS_SHEET_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=';
+
+    try {
+        const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}`);
+        const text = await resp.text();
+        const lines = text.trim().split("\n");
+        const headers = lines[0].split(",");
+        
+        // On cherche la ligne du joueur
+        const rows = lines.slice(1).map(line => {
+            const v = parseCSVLine(line);
+            let obj = {};
+            headers.forEach((h, i) => obj[h.trim()] = v[i]);
+            return obj;
+        });
+
+        const player = rows.find(p => p.GAME_ID === playerId || p.GAME_TAG === playerId);
+
+        if (!player) {
+            headerContainer.innerHTML = `<p style="text-align:center;">Joueur introuvable pour cette saison.</p>`;
+            statsContainer.innerHTML = "";
+            return;
+        }
+
+        // --- AFFICHAGE HEADER ---
+        headerContainer.innerHTML = `
+            <div class="player-profile-card" style="background: var(--fuma-bg-card); padding: 40px; border-radius: 20px; border: var(--fuma-border); text-align: center; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 20px; right: 20px; font-size: 3rem; font-weight: 800; color: var(--fuma-primary); opacity: 0.2;">${player.RATING}</div>
+                <img src="${player.AVATAR || 'https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png'}" style="width: 150px; height: 150px; border-radius: 50%; border: 3px solid var(--fuma-primary); object-fit: cover; margin-bottom: 20px;">
+                <h1 style="font-size: 2.5rem; margin: 0;">${player.GAME_TAG} ${player.FLAG || ''}</h1>
+                <p style="color: var(--fuma-primary); letter-spacing: 3px; font-weight: 600;">${player.MAIN_POSITION} | ${player.MAIN_ARCHETYPE}</p>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 20px;">
+                    <img src="${player.LOGO}" style="height: 40px;" alt="Club">
+                    <span style="font-size: 1.2rem;">${player.CURRENT_TEAM}</span>
+                </div>
+            </div>
+        `;
+
+        // --- AFFICHAGE STATS ---
+        statsContainer.style.display = "grid";
+        statsContainer.style.gridTemplateColumns = "repeat(auto-fit, minmax(250px, 1fr))";
+        statsContainer.style.gap = "20px";
+        statsContainer.style.marginTop = "30px";
+
+        statsContainer.innerHTML = `
+            ${renderStatCard("GÉNÉRAL", [
+                { label: "Matchs Joués", val: player.GAME_PLAYED },
+                { label: "Note Moyenne", val: player.RATING, color: "var(--fuma-primary)" },
+                { label: "Cartons", val: player.CARDS }
+            ])}
+            ${renderStatCard("ATTAQUE", [
+                { label: "Buts", val: player.GOALS },
+                { label: "Passes D.", val: player.ASSISTS },
+                { label: "Tirs", val: player.SHOTS }
+            ])}
+            ${renderStatCard("DISTRIBUTION", [
+                { label: "Passes Réussies", val: player.SUCCESSFUL_PASSES },
+                { label: "% Précision", val: player['%SUCCESSFUL_PASSES'] }
+            ])}
+            ${renderStatCard("DÉFENSE", [
+                { label: "Tacles Réussis", val: player.SUCCESSFUL_TACKLES },
+                { label: "% Tacles", val: player['%SUCCESSFUL_TACKLES'] }
+            ])}
+        `;
+
+    } catch (e) {
+        console.error(e);
+        headerContainer.innerHTML = "Erreur de chargement.";
+    }
+}
+
+function renderStatCard(title, stats) {
+    return `
+        <div class="stat-box" style="background: var(--fuma-bg-card); border: var(--fuma-border); padding: 20px; border-radius: 12px;">
+            <h3 style="color: var(--fuma-primary); font-size: 0.9rem; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px;">${title}</h3>
+            ${stats.map(s => `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="color: var(--fuma-text-dim);">${s.label}</span>
+                    <span style="font-weight: bold; color: ${s.color || 'white'}">${s.val || '0'}</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// Écouteur pour le changement de saison
+document.getElementById('season-selector')?.addEventListener('change', (e) => {
+    const params = new URLSearchParams(window.location.search);
+    const playerId = params.get('id');
+    if (playerId) fetchPlayerData(playerId, e.target.value);
+});
+
     // --- 9. INITIALISATION ---
     injectNavigation();
     handleProfilePage();
@@ -464,5 +560,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
