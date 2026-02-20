@@ -1,8 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     let allClubs = [];
+    let allPlayers = []; // Stockage pour la recherche de joueurs
     
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
+    const PLAYERS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=1342244083&single=true&output=csv';
     const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzieuE-AiE2XSwE7anpAeDzLhe-rHpgA8eV7TMS3RRbUuzESLt40zBmIDqi9N6mxbdkqA/exec'; 
     const CLIENT_ID = '1473807551329079408'; 
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
@@ -25,65 +27,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. INJECTION DU MENU ---
     function injectNavigation() {
-    const nav = document.getElementById('main-nav');
-    if (!nav) return;
+        const nav = document.getElementById('main-nav');
+        if (!nav) return;
 
-    // --- 1. CONFIGURATION DES LIENS ---
-    const CLIENT_ID = '1473807551329079408'; 
-    const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
-    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
-    const discordServerLink = 'https://discord.gg/xPz9FBkdtm';
+        const discordServerLink = 'https://discord.gg/xPz9FBkdtm';
 
-    // --- 2. INJECTION DU HTML ---
-    nav.innerHTML = `
-        <div class="nav-container">
-            <a href="index.html" class="fuma-logo">FUMA<span>CLUBS</span></a>
-            
-            <div class="fuma-burger" id="burger-menu">
-                <span></span><span></span><span></span>
+        nav.innerHTML = `
+            <div class="nav-container">
+                <a href="index.html" class="fuma-logo">FUMA<span>CLUBS</span></a>
+                
+                <div class="fuma-burger" id="burger-menu">
+                    <span></span><span></span><span></span>
+                </div>
+
+                <div class="nav-links" id="nav-links-container">
+                    <a href="index.html">Home</a>
+                    <a href="clubs.html">Clubs</a>
+                    <a href="players.html">Players</a>
+                    <a href="#">League</a>
+                    <a href="#">Rules</a>
+                    <a href="${discordServerLink}" target="_blank" style="color: #5865F2;">
+                        <i class="fab fa-discord"></i> Discord
+                    </a>
+                </div>
             </div>
+        `;
 
-            <div class="nav-links" id="nav-links-container">
-                <a href="index.html">Home</a>
-                <a href="clubs.html">Clubs</a>
-                <a href="players.html">Players</a>
-                <a href="#">League</a>
-                <a href="#">Rules</a>
-                <a href="${discordServerLink}" target="_blank" style="color: #5865F2;">
-                    <i class="fab fa-discord"></i> Discord
-                </a>
-            </div>
-        </div>
-    `;
+        const currentPage = window.location.pathname.split("/").pop() || 'index.html';
+        const allLinks = nav.querySelectorAll('.nav-links a');
 
-    // --- 3. LOGIQUE DE L'ONGLET ACTIF (OR) ---
-    const currentPage = window.location.pathname.split("/").pop() || 'index.html';
-    const allLinks = nav.querySelectorAll('.nav-links a');
+        allLinks.forEach(link => {
+            const linkHref = link.getAttribute('href');
+            if (currentPage === linkHref) {
+                link.classList.add('active');
+            }
+        });
 
-    allLinks.forEach(link => {
-        const linkHref = link.getAttribute('href');
-        if (currentPage === linkHref) {
-            link.classList.add('active');
+        const myProfileBtn = document.getElementById('btn-my-profile') || document.querySelector('.players-header .fuma-cta');
+        if (myProfileBtn) {
+            myProfileBtn.setAttribute('href', authUrl);
         }
-    });
 
-    // --- 4. LOGIQUE DU BOUTON "MY PROFILE" (Si présent sur la page) ---
-    const myProfileBtn = document.getElementById('btn-my-profile') || document.querySelector('.players-header .fuma-cta');
-    if (myProfileBtn) {
-        myProfileBtn.setAttribute('href', discordAuthUrl);
+        const burger = document.getElementById('burger-menu');
+        const linksContainer = document.getElementById('nav-links-container');
+        
+        if (burger && linksContainer) {
+            burger.onclick = function() {
+                burger.classList.toggle('active');
+                linksContainer.classList.toggle('active');
+            };
+        }
     }
-
-    // --- 5. LOGIQUE DU MENU BURGER (MOBILE) ---
-    const burger = document.getElementById('burger-menu');
-    const linksContainer = document.getElementById('nav-links-container');
-    
-    if (burger && linksContainer) {
-        burger.onclick = function() {
-            burger.classList.toggle('active');
-            linksContainer.classList.toggle('active');
-        };
-    }
-}
 
     // --- 4. LOGIQUE PAGE PROFIL ---
     function handleProfilePage() {
@@ -100,121 +94,91 @@ document.addEventListener('DOMContentLoaded', () => {
             if (nameInput && idInput) {
                 nameInput.value = decodeURIComponent(discordUsername);
                 idInput.value = discordId;
-                
-                // Appel de la vérification du profil existant
                 checkExistingProfile(discordId);
-                
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
     }
 
     async function checkExistingProfile(discordId) {
-    console.log("Recherche du profil via API pour l'ID:", discordId);
-    
-    // Sélection des éléments DOM
-    const loader = document.getElementById('fuma-loader');
-    const form = document.getElementById('profile-form');
-    const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+        const loader = document.getElementById('fuma-loader');
+        const form = document.getElementById('profile-form');
+        const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
 
-    // 1. État initial : Afficher le loader et cacher le formulaire
-    if (loader) loader.style.display = 'flex';
-    if (form) form.style.display = 'none';
-
-    try {
-        // 2. Appel GET vers l'Apps Script avec le paramètre discord_id
-        // On ajoute un timestamp (t=) pour forcer la récupération de données fraîches
-        const response = await fetch(`${APP_SCRIPT_URL}?discord_id=${discordId}&t=${Date.now()}`);
-        
-        if (!response.ok) throw new Error('Erreur lors de la communication avec le serveur');
-        
-        const data = await response.json();
-
-        // 3. Si le profil existe, on injecte les données dans les champs
-        if (data && data.result === "success") {
-            console.log("Profil trouvé, remplissage du formulaire...");
-
-            const fill = (id, val) => {
-                const el = document.getElementById(id);
-                if (el) el.value = (val !== undefined && val !== null) ? val : "";
-            };
-
-            fill('id-game', data.game_tag);
-            fill('country', data.country);
-            fill('avatar', data.avatar);
-            fill('team', data.current_team);
-            fill('main-archetype', data.main_archetype);
-            fill('main-position', data.main_position);
-
-            // Mise à jour du texte du bouton pour indiquer une édition
-            if (submitBtn) submitBtn.innerText = "Update Existing Profile";
-        } else {
-            console.log("Aucun profil existant trouvé, prêt pour une nouvelle création.");
-            if (submitBtn) submitBtn.innerText = "Create My Profile";
-        }
-
-    } catch (e) {
-        console.error("Erreur lors de la vérification du profil:", e);
-        alert("Erreur lors de la récupération de vos données. Vous pouvez remplir le formulaire manuellement.");
-    } finally {
-        // 4. Une fois terminé, on cache le loader et on affiche le formulaire
-        // On utilise un petit délai de 300ms pour une transition plus fluide
-        setTimeout(() => {
-            if (loader) loader.style.display = 'none';
-            if (form) {
-                form.style.display = 'grid'; // 'grid' correspond à ta classe fuma-profile-grid
-                form.classList.add('fade-in'); // Optionnel : ajoute une animation CSS
-            }
-        }, 300);
-    }
-}
-    // --- 5. ENVOI DU FORMULAIRE (CORRIGÉ) ---
-    function setupFormSubmission() {
-    const profileForm = document.getElementById('profile-form');
-    if (!profileForm) return;
-
-    profileForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submitBtn = profileForm.querySelector('button[type="submit"]');
-        const originalBtnText = submitBtn.innerText;
-        
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Updating...";
-
-        // Utilisation de FormData pour éviter les problèmes de CORS JSON
-        const formData = new URLSearchParams();
-        formData.append('game_id',"");
-        formData.append('game_tag', document.getElementById('id-game')?.value || "");
-        formData.append('discord_id', document.getElementById('id-discord')?.value || "");
-        formData.append('discord_name', document.getElementById('discord-name')?.value || "");
-        formData.append('country', document.getElementById('country')?.value || "");
-        formData.append('avatar', document.getElementById('avatar')?.value || "");
-        formData.append('current_team', document.getElementById('team')?.value || "Free Agent");
-        formData.append('main_archetype', document.getElementById('main-archetype')?.value || "");
-        formData.append('main_position', document.getElementById('main-position')?.value || "");
+        if (loader) loader.style.display = 'flex';
+        if (form) form.style.display = 'none';
 
         try {
-            // On retire 'no-cors' et on laisse le navigateur gérer
-            const response = await fetch(APP_SCRIPT_URL, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-            });
+            const response = await fetch(`${APP_SCRIPT_URL}?discord_id=${discordId}&t=${Date.now()}`);
+            if (!response.ok) throw new Error('Erreur serveur');
+            
+            const data = await response.json();
 
-            alert("Profile successfully updated!");
-        } catch (error) {
-            console.error('Submission error:', error);
-            // Note: Avec Google Script, on tombe souvent en "error" même si ça marche 
-            // à cause des redirections. Vérifiez votre feuille !
-            alert("Update sent (check your sheet).");
+            if (data && data.result === "success") {
+                const fill = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = (val !== undefined && val !== null) ? val : "";
+                };
+
+                fill('id-game', data.game_tag);
+                fill('country', data.country);
+                fill('avatar', data.avatar);
+                fill('team', data.current_team);
+                fill('main-archetype', data.main_archetype);
+                fill('main-position', data.main_position);
+
+                if (submitBtn) submitBtn.innerText = "Update Existing Profile";
+            } else {
+                if (submitBtn) submitBtn.innerText = "Create My Profile";
+            }
+        } catch (e) {
+            console.error(e);
         } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerText = originalBtnText;
+            setTimeout(() => {
+                if (loader) loader.style.display = 'none';
+                if (form) form.style.display = 'grid';
+            }, 300);
         }
-    });
-}
+    }
+
+    // --- 5. ENVOI DU FORMULAIRE ---
+    function setupFormSubmission() {
+        const profileForm = document.getElementById('profile-form');
+        if (!profileForm) return;
+
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = profileForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerText;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Updating...";
+
+            const formData = new URLSearchParams();
+            formData.append('game_tag', document.getElementById('id-game')?.value || "");
+            formData.append('discord_id', document.getElementById('id-discord')?.value || "");
+            formData.append('discord_name', document.getElementById('discord-name')?.value || "");
+            formData.append('country', document.getElementById('country')?.value || "");
+            formData.append('avatar', document.getElementById('avatar')?.value || "");
+            formData.append('current_team', document.getElementById('team')?.value || "Free Agent");
+            formData.append('main_archetype', document.getElementById('main-archetype')?.value || "");
+            formData.append('main_position', document.getElementById('main-position')?.value || "");
+
+            try {
+                await fetch(APP_SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                });
+                alert("Profile successfully updated!");
+            } catch (error) {
+                alert("Update sent (check your sheet).");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalBtnText;
+            }
+        });
+    }
 
     // --- 6. LOGIQUE LISTE DES CLUBS (clubs.html) ---
     async function fetchFumaClubs() {
@@ -236,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             renderClubs(allClubs);
         } catch (e) {
-            clubContainer.innerHTML = "<div class='fuma-loading-wrapper'>Erreur de chargement des clubs.</div>";
+            clubContainer.innerHTML = "Erreur de chargement des clubs.";
         }
     }
 
@@ -266,75 +230,42 @@ document.addEventListener('DOMContentLoaded', () => {
             const headers = lines[0].split(",");
 
             const idx = {
-                team: headers.indexOf('TEAMS'),
-                crest: headers.indexOf('CREST'),
-                history: headers.indexOf('HISTORY'),
-                gp: headers.indexOf('GAMES PLAYED'),
-                win: headers.indexOf('WIN'),
-                draw: headers.indexOf('DRAW'),
-                lost: headers.indexOf('LOST'),
-                trophies: headers.indexOf('TROPHIES'),
-                manager: headers.indexOf('MANAGER'),
-                players: headers.indexOf('PLAYERS'),
-                active: headers.indexOf('ACTIVE'),
-                stream: headers.indexOf('STREAM')
+                team: headers.indexOf('TEAMS'), crest: headers.indexOf('CREST'),
+                history: headers.indexOf('HISTORY'), gp: headers.indexOf('GAMES PLAYED'),
+                win: headers.indexOf('WIN'), draw: headers.indexOf('DRAW'),
+                lost: headers.indexOf('LOST'), trophies: headers.indexOf('TROPHIES'),
+                manager: headers.indexOf('MANAGER'), players: headers.indexOf('PLAYERS'),
+                active: headers.indexOf('ACTIVE'), stream: headers.indexOf('STREAM')
             };
 
             const clubLine = lines.slice(1).find(line => parseCSVLine(line)[idx.team] === clubName);
 
             if (clubLine) {
                 const v = parseCSVLine(clubLine);
-                const formattedHistory = v[idx.history] ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') : "No history available.";
                 const playersList = v[idx.players] ? v[idx.players].split(',').map(p => `<li>${p.trim()}</li>`).join('') : "<li>Roster is empty.</li>";
-                const isActive = v[idx.active]?.toUpperCase() === 'YES';
                 
-                const statusHTML = `<span style="color: ${isActive ? '#4caf50' : '#f44336'}; font-weight: bold;">
-                    <i class="fas fa-circle" style="font-size: 10px; vertical-align: middle;"></i> ${isActive ? 'ACTIVE' : 'INACTIVE'}
-                </span>`;
-
-                let streamHTML = '';
-                if (v[idx.stream] && v[idx.stream].toLowerCase() !== "none") {
-                    const isTwitch = v[idx.stream].includes('twitch.tv');
-                    streamHTML = `<h3 class="sidebar-title" style="margin-top:20px;"><i class="fas fa-broadcast-tower"></i> LIVE STREAM</h3>
-                                  <a href="${v[idx.stream]}" target="_blank" class="fuma-cta" style="display:block; text-align:center; background:#6441a5; font-size: 0.8rem; padding: 10px;">
-                                  <i class="${isTwitch ? 'fab fa-twitch' : 'fab fa-youtube'}"></i> WATCH NOW</a>`;
-                }
-
-                let trophiesHTML = ''; 
-                if (v[idx.trophies] && v[idx.trophies] !== "0" && v[idx.trophies].toLowerCase() !== "none") {
-                    trophiesHTML = `<div class="trophy-section">
-                        <h3 class="sidebar-title" style="border:none; margin-bottom:0;"><i class="fas fa-trophy" style="color:var(--fuma-primary)"></i> ACHIEVEMENTS</h3>
-                        <div class="trophy-grid">${v[idx.trophies].split(',').map(t => `<div class="trophy-badge"><span class="trophy-icon">🏆</span><span class="trophy-text">${t.trim()}</span></div>`).join('')}</div>
-                    </div>`;
-                }
-
                 detailContainer.innerHTML = `
                     <div class="club-profile-header" style="text-align: center; margin-bottom: 50px;">
                         <img src="${v[idx.crest] || ''}" style="width: 180px; margin-bottom: 20px;" alt="Crest">
-                        <h1 style="font-size: 3rem; color: var(--fuma-primary); margin-bottom:5px;">${v[idx.team]}</h1>
-                        <div class="status-badge">${statusHTML}</div>
+                        <h1 style="font-size: 3rem; color: var(--fuma-primary);">${v[idx.team]}</h1>
                     </div>
                     <div class="club-grid-layout">
                         <div class="club-main-info">
-                            ${trophiesHTML}
                             <section>
-                                <h2 style="color:var(--fuma-primary); border-bottom: 1px solid #333; padding-bottom: 10px;">HISTORY</h2>
-                                <div style="font-style: italic; color: var(--fuma-text-dim);">${formattedHistory}</div>
+                                <h2 style="color:var(--fuma-primary);">HISTORY</h2>
+                                <p>${v[idx.history] || "No history available."}</p>
                             </section>
                             <div class="stats-bar">
-                                <div class="stat-item"><strong>${v[idx.gp] || 0}</strong><br><span>GAMES</span></div>
-                                <div class="stat-item" style="color:#4caf50;"><strong>${v[idx.win] || 0}</strong><br><span>WIN</span></div>
-                                <div class="stat-item" style="color:#ffeb3b;"><strong>${v[idx.draw] || 0}</strong><br><span>DRAW</span></div>
-                                <div class="stat-item" style="color:#f44336;"><strong>${v[idx.lost] || 0}</strong><br><span>LOST</span></div>
+                                <div class="stat-item"><strong>${v[idx.gp] || 0}</strong><br>GAMES</div>
+                                <div class="stat-item"><strong>${v[idx.win] || 0}</strong><br>WIN</div>
                             </div>
                         </div>
                         <div class="club-sidebar">
                             <div class="sidebar-box">
                                 <h3 class="sidebar-title">MANAGER</h3>
-                                <p style="margin-bottom:20px;">${v[idx.manager] || 'N/A'}</p>
+                                <p>${v[idx.manager] || 'N/A'}</p>
                                 <h3 class="sidebar-title">ROSTER</h3>
                                 <ul class="roster-list">${playersList}</ul>
-                                ${streamHTML}
                             </div>
                         </div>
                     </div>`;
@@ -342,12 +273,71 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { console.error(e); }
     }
 
-    // --- 8. INITIALISATION ---
+    // --- 8. LOGIQUE LISTE DES JOUEURS (players.html) ---
+    async function fetchFumaPlayers() {
+        const playerContainer = document.getElementById('fuma-js-players');
+        if (!playerContainer) return;
+
+        try {
+            const resp = await fetch(PLAYERS_SHEET_URL);
+            const text = await resp.text();
+            const lines = text.trim().split("\n");
+            const headers = lines[0].split(",");
+
+            const idx = {
+                tag: headers.indexOf('GAME_TAG'), pos: headers.indexOf('MAIN_POSITION'),
+                team: headers.indexOf('CURRENT_TEAM'), rating: headers.indexOf('RATING'),
+                avatar: headers.indexOf('AVATAR'), arch: headers.indexOf('MAIN_ARCHETYPE'),
+                flag: headers.indexOf('FLAG')
+            };
+
+            allPlayers = lines.slice(1).map(line => {
+                const v = parseCSVLine(line);
+                return {
+                    tag: v[idx.tag], pos: v[idx.pos], team: v[idx.team] || "Free Agent",
+                    rating: v[idx.rating] || "0.0", avatar: v[idx.avatar] || "https://placehold.co/150x150?text=PLAYER",
+                    arch: v[idx.arch] || "Standard", flag: v[idx.flag] || ""
+                };
+            }).filter(p => p.tag);
+
+            renderPlayers(allPlayers);
+
+            // Filtres
+            document.getElementById('player-search')?.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                renderPlayers(allPlayers.filter(p => p.tag.toLowerCase().includes(term)));
+            });
+
+            document.getElementById('filter-position')?.addEventListener('change', (e) => {
+                const pos = e.target.value;
+                renderPlayers(pos === "" ? allPlayers : allPlayers.filter(p => p.pos === pos));
+            });
+
+        } catch (e) {
+            playerContainer.innerHTML = "Erreur de chargement des joueurs.";
+        }
+    }
+
+    function renderPlayers(list) {
+        const container = document.getElementById('fuma-js-players');
+        if (!container) return;
+        container.innerHTML = list.map(p => `
+            <div class="club-card" style="text-align:center; padding: 25px; position: relative;">
+                <img src="${p.avatar}" alt="${p.tag}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary); margin-bottom:10px;">
+                <h3 style="margin:0;">${p.tag} ${p.flag}</h3>
+                <p style="font-size: 0.8rem; color: var(--fuma-text-dim);">${p.pos} | ${p.arch}</p>
+                <p style="margin-top:10px; font-weight:bold; color:var(--fuma-primary);">${p.team}</p>
+                <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: black; font-weight: 800; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">${p.rating}</div>
+            </div>
+        `).join('');
+    }
+
+    // --- 9. INITIALISATION ---
     injectNavigation();
     handleProfilePage();
     setupFormSubmission();
 
-    // Recherche
+    // Recherche clubs (index/clubs)
     const searchInput = document.getElementById('fuma-search');
     searchInput?.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
@@ -362,26 +352,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     backBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
+    // Chargements spécifiques aux pages
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
+    if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
