@@ -1,22 +1,62 @@
-<div class="fuma-container" style="margin-top: 50px;">
-    <div class="players-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h2 class="fuma-section-title" style="margin: 0;">Players Database</h2>
-        <a href="profile.html" class="fuma-cta" style="background: var(--fuma-primary); color: black; font-weight: bold;">
-            <i class="fas fa-user-edit"></i> MY PROFILE
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FUMA CLUBS - PLAYERS DATABASE</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="fuma-wrapper">
+    <nav class="fuma-nav" id="main-nav"></nav>
+
+    <header class="fuma-hero" style="padding: 40px 20px; text-align: center;">
+        <h1 class="fuma-hero-subtitle">Players Database</h1>
+        <p style="color: var(--fuma-text-dim); max-width: 600px; margin: 0 auto 20px auto;">
+            Retrouvez tous les joueurs de la communauté FUMA. Consultez les statistiques, les archétypes et trouvez de nouvelles recrues pour votre club.
+        </p>
+        
+        <a href="#" id="btn-my-profile" class="fuma-cta">
+            <i class="fas fa-user-circle"></i> MY PROFILE
         </a>
+    </header>
+
+    <div class="fuma-container">
+        <section class="fuma-section">
+            <div class="fuma-search-container" style="display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap;">
+                <input type="text" id="player-search" class="fuma-search-input" placeholder="Rechercher un joueur (Game Tag)..." style="flex: 1; min-width: 250px;">
+                
+                <select id="filter-position" class="fuma-search-input" style="width: auto; cursor: pointer; background-color: var(--fuma-bg-card); color: white;">
+                    <option value="">Toutes les positions</option>
+                    <option value="GK">Gardien (GK)</option>
+                    <option value="DEF">Défenseur (DEF)</option>
+                    <option value="MID">Milieu (MID)</option>
+                    <option value="ATT">Attaquant (ATT)</option>
+                </select>
+            </div>
+
+            <div class="fuma-club-grid" id="fuma-js-players">
+                <div class="fuma-loading-wrapper" style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                    <div class="fuma-spinner" style="margin: 0 auto 15px;"></div>
+                    <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">Synchronisation des joueurs...</p>
+                </div>
+            </div>
+        </section>
     </div>
 
-    <div class="fuma-search-container" style="display: flex; gap: 10px; margin-bottom: 30px;">
-        <input type="text" id="player-search" class="fuma-search-input" placeholder="Search a player tag...">
-        <select id="filter-position" class="fuma-search-input" style="width: auto; cursor: pointer;">
-            <option value="">All Positions</option>
-            <option value="GK">Goalkeepers</option>
-            <option value="DEF">Defenders</option>
-            <option value="MID">Midfielders</option>
-            <option value="ATT">Attackers</option>
-        </select>
-    </div>
+    <footer class="fuma-credits" style="text-align: center; padding: 40px 20px; color: var(--fuma-text-dim); font-size: 0.8rem;">
+        &copy; 2026 FUMA CLUBS | ALL RIGHTS RESERVED
+    </footer>
 
-    <div class="fuma-club-grid" id="fuma-js-players">
-        </div>
+    <button id="backTop" class="back-top"><i class="fas fa-chevron-up"></i></button>
 </div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
