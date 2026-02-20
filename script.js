@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const CLIENT_ID = '1473807551329079408'; 
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
     const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
+    const discordServerLink = 'https://discord.gg/xPz9FBkdtm';
 
     // --- 2. INJECTION DU HTML ---
     nav.innerHTML = `
@@ -48,12 +49,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a href="players.html">Players</a>
                 <a href="#">League</a>
                 <a href="#">Rules</a>
+                <a href="${discordServerLink}" target="_blank" style="color: #5865F2;">
+                    <i class="fab fa-discord"></i> Discord
+                </a>
             </div>
         </div>
     `;
 
     // --- 3. LOGIQUE DE L'ONGLET ACTIF (OR) ---
-    // On récupère le nom du fichier actuel (ex: players.html)
     const currentPage = window.location.pathname.split("/").pop() || 'index.html';
     const allLinks = nav.querySelectorAll('.nav-links a');
 
@@ -64,8 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 4. LOGIQUE DU BOUTON "MY PROFILE" (Si on est sur players.html) ---
-    // On cherche le bouton dans le header de la page players.html
+    // --- 4. LOGIQUE DU BOUTON "MY PROFILE" (Si présent sur la page) ---
     const myProfileBtn = document.getElementById('btn-my-profile') || document.querySelector('.players-header .fuma-cta');
     if (myProfileBtn) {
         myProfileBtn.setAttribute('href', discordAuthUrl);
@@ -363,6 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
