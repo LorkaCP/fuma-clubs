@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const CLIENT_ID = '1473807551329079408'; 
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
     const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
+    const DEFAULT_AVATAR = "https://i.ibb.co/KcQsBkmB/3715527-image-profil-icon-male-icon-human-or-people-sign-and-symbol-vector-vectoriel-removebg-previe.png";
 
     // --- 2. UTILITAIRES ---
     const parseCSVLine = (line) => {
@@ -143,42 +144,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 5. ENVOI DU FORMULAIRE ---
     function setupFormSubmission() {
-        const profileForm = document.getElementById('profile-form');
-        if (!profileForm) return;
+    const profileForm = document.getElementById('profile-form');
+    if (!profileForm) return;
 
-        profileForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const submitBtn = profileForm.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.innerText;
-            
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Updating...";
+    // URL de l'image générique par défaut
+    const DEFAULT_AVATAR = "https://i.ibb.co/KcQsBkmB/3715527-image-profil-icon-male-icon-human-or-people-sign-and-symbol-vector-vectoriel-removebg-previe.png";
 
-            const formData = new URLSearchParams();
-            formData.append('game_tag', document.getElementById('id-game')?.value || "");
-            formData.append('discord_id', document.getElementById('id-discord')?.value || "");
-            formData.append('discord_name', document.getElementById('discord-name')?.value || "");
-            formData.append('country', document.getElementById('country')?.value || "");
-            formData.append('avatar', document.getElementById('avatar')?.value || "");
-            formData.append('current_team', document.getElementById('team')?.value || "Free Agent");
-            formData.append('main_archetype', document.getElementById('main-archetype')?.value || "");
-            formData.append('main_position', document.getElementById('main-position')?.value || "");
+    profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = profileForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerText;
+        
+        // Verrouillage du bouton pendant l'envoi
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Updating...";
 
-            try {
-                await fetch(APP_SCRIPT_URL, {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-                });
+        // Récupération et vérification de l'avatar
+        const avatarInput = document.getElementById('avatar')?.value.trim();
+        const finalAvatar = (avatarInput === "" || avatarInput.toLowerCase() === "none") ? DEFAULT_AVATAR : avatarInput;
+
+        const formData = new URLSearchParams();
+        // Informations d'identité
+        formData.append('game_tag', document.getElementById('id-game')?.value || "");
+        formData.append('discord_id', document.getElementById('id-discord')?.value || "");
+        formData.append('discord_name', document.getElementById('discord-name')?.value || "");
+        formData.append('country', document.getElementById('country')?.value || "");
+        
+        // Utilisation de l'avatar validé
+        formData.append('avatar', finalAvatar);
+        
+        // Informations de club et style
+        formData.append('current_team', document.getElementById('team')?.value || "Free Agent");
+        formData.append('main_archetype', document.getElementById('main-archetype')?.value || "");
+        formData.append('main_position', document.getElementById('main-position')?.value || "");
+
+        try {
+            const response = await fetch(APP_SCRIPT_URL, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            });
+
+            if (response.ok) {
                 alert("Profile successfully updated!");
-            } catch (error) {
-                alert("Update sent (check your sheet).");
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerText = originalBtnText;
+            } else {
+                throw new Error("Server error");
             }
-        });
-    }
+        } catch (error) {
+            console.error("Submission error:", error);
+            // Message de secours car Google Apps Script peut parfois déclencher une erreur CORS même si l'envoi réussit
+            alert("Update sent (please check your profile in a few moments).");
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = originalBtnText;
+        }
+    });
+}
 
     // --- 6. LOGIQUE LISTE DES CLUBS (clubs.html) ---
     async function fetchFumaClubs() {
@@ -336,48 +357,69 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 8. LOGIQUE LISTE DES JOUEURS (players.html) ---
     async function fetchFumaPlayers() {
-        const playerContainer = document.getElementById('fuma-js-players');
-        if (!playerContainer) return;
+    const playerContainer = document.getElementById('fuma-js-players');
+    if (!playerContainer) return;
 
-        try {
-            const resp = await fetch(PLAYERS_SHEET_URL);
-            const text = await resp.text();
-            const lines = text.trim().split("\n");
-            const headers = lines[0].split(",");
+    // URL de l'image générique par défaut
+    const DEFAULT_AVATAR = "https://i.ibb.co/KcQsBkmB/3715527-image-profil-icon-male-icon-human-or-people-sign-and-symbol-vector-vectoriel-removebg-previe.png";
 
-            const idx = {
-                tag: headers.indexOf('GAME_TAG'), pos: headers.indexOf('MAIN_POSITION'),
-                team: headers.indexOf('CURRENT_TEAM'), rating: headers.indexOf('RATING'),
-                avatar: headers.indexOf('AVATAR'), arch: headers.indexOf('MAIN_ARCHETYPE'),
-                flag: headers.indexOf('FLAG')
+    try {
+        const resp = await fetch(PLAYERS_SHEET_URL);
+        const text = await resp.text();
+        const lines = text.trim().split("\n");
+        const headers = lines[0].split(",");
+
+        const idx = {
+            tag: headers.indexOf('GAME_TAG'), 
+            pos: headers.indexOf('MAIN_POSITION'),
+            team: headers.indexOf('CURRENT_TEAM'), 
+            rating: headers.indexOf('RATING'),
+            avatar: headers.indexOf('AVATAR'), 
+            arch: headers.indexOf('MAIN_ARCHETYPE'),
+            flag: headers.indexOf('FLAG')
+        };
+
+        allPlayers = lines.slice(1).map(line => {
+            const v = parseCSVLine(line);
+            
+            // Logique de l'avatar : 
+            // On vérifie si l'URL existe, n'est pas "none" et commence bien par http
+            const rawAvatar = v[idx.avatar] ? v[idx.avatar].trim() : "";
+            const isValidAvatar = rawAvatar !== "" && rawAvatar.toLowerCase() !== "none" && rawAvatar.startsWith('http');
+            const finalAvatar = isValidAvatar ? rawAvatar : DEFAULT_AVATAR;
+
+            return {
+                tag: v[idx.tag], 
+                pos: v[idx.pos], 
+                team: v[idx.team] || "Free Agent",
+                rating: v[idx.rating] || "0.0", 
+                avatar: finalAvatar,
+                arch: v[idx.arch] || "Standard", 
+                flag: v[idx.flag] || ""
             };
+        }).filter(p => p.tag);
 
-            allPlayers = lines.slice(1).map(line => {
-                const v = parseCSVLine(line);
-                return {
-                    tag: v[idx.tag], pos: v[idx.pos], team: v[idx.team] || "Free Agent",
-                    rating: v[idx.rating] || "0.0", avatar: v[idx.avatar] || "https://placehold.co/150x150?text=PLAYER",
-                    arch: v[idx.arch] || "Standard", flag: v[idx.flag] || ""
-                };
-            }).filter(p => p.tag);
+        renderPlayers(allPlayers);
 
-            renderPlayers(allPlayers);
+        // --- Configuration des Filtres ---
+        
+        // Recherche par nom (Tag)
+        document.getElementById('player-search')?.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            renderPlayers(allPlayers.filter(p => p.tag.toLowerCase().includes(term)));
+        });
 
-            // Filtres
-            document.getElementById('player-search')?.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                renderPlayers(allPlayers.filter(p => p.tag.toLowerCase().includes(term)));
-            });
+        // Filtre par position
+        document.getElementById('filter-position')?.addEventListener('change', (e) => {
+            const pos = e.target.value;
+            renderPlayers(pos === "" ? allPlayers : allPlayers.filter(p => p.pos === pos));
+        });
 
-            document.getElementById('filter-position')?.addEventListener('change', (e) => {
-                const pos = e.target.value;
-                renderPlayers(pos === "" ? allPlayers : allPlayers.filter(p => p.pos === pos));
-            });
-
-        } catch (e) {
-            playerContainer.innerHTML = "Erreur de chargement des joueurs.";
-        }
+    } catch (e) {
+        console.error("Erreur lors du chargement des joueurs:", e);
+        playerContainer.innerHTML = "<p style='color:red; text-align:center;'>Erreur de chargement des joueurs.</p>";
     }
+}
 
     function renderPlayers(list) {
         const container = document.getElementById('fuma-js-players');
@@ -418,4 +460,5 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
