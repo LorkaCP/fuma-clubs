@@ -404,6 +404,26 @@ body, .fuma-wrapper {
     letter-spacing: 1px;
 }
 
+
+/* À ajouter/modifier dans style.css */
+
+.roster-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    word-break: break-word; /* Force le retour à la ligne si un nom est trop long */
+}
+
+.roster-list li a {
+    color: var(--fuma-text-main);
+    text-decoration: none;
+    flex: 1; /* Prend tout l'espace restant */
+}
+
+
+
 /* --- FORMULAIRE DE PROFIL --- */
 
 .fuma-profile-grid {
@@ -562,5 +582,6 @@ select option {
     .fuma-search-input { font-size: 16px !important; padding: 15px 20px; }
     .sidebar-box { padding: 20px 15px; }
 }
+
 
 
