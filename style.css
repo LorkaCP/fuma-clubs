@@ -595,8 +595,14 @@ select option {
 @media (max-width: 850px) {
     .club-grid-layout {
         display: flex;
-        flex-direction: column; /* Empile les sections verticalement */
+        flex-direction: column; 
         gap: 20px;
+        width: 100%; /* Force la largeur à 100% du parent */
+        overflow: hidden; /* Empêche tout dépassement résiduel */
+    }
+    
+    .fuma-container {
+        padding: 0 15px; /* Réduit les marges pour gagner de la place */
     }
 }
 
@@ -608,10 +614,33 @@ select option {
     }
 }
 
+/* À ajouter/modifier dans votre bloc @media (max-width: 600px) */
+
 @media (max-width: 600px) {
     .stats-bar {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 10px !important;
+        flex-direction: column; /* Empile W, D et L verticalement */
+        gap: 20px;
+        align-items: center;
+        text-align: center;
+    }
+
+    .stat-item {
+        width: 100%;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 10px;
+    }
+
+    .stat-item:last-child {
+        border-bottom: none;
     }
 }
+
+@media (max-width: 480px) {
+    .trophy-badge {
+        width: 100%; /* Un trophée par ligne sur très petit écran */
+        justify-content: center;
+    }
+}
+
+
 
