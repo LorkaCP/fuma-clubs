@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FUMA CLUBS - PROFIL JOUEUR</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="fuma-wrapper">
+    <nav class="fuma-nav" id="main-nav"></nav>
+
+    <div class="fuma-container" style="margin-top: 50px;">
+        <div id="player-header">
+            <div class="fuma-loading-wrapper" style="text-align: center; padding: 50px;">
+                <div class="fuma-spinner" style="margin: 0 auto 15px;"></div>
+                <p style="color: var(--fuma-primary); letter-spacing: 2px;">CHARGEMENT DU PROFIL...</p>
+            </div>
+        </div>
+
+        <section class="fuma-section">
+            <h2 class="fuma-section-title">Statistiques de Carrière</h2>
+            <div id="player-stats-container">
+                </div>
+        </section>
+        
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="players.html" class="fuma-cta" style="background: transparent; border: 1px solid var(--fuma-primary);">
+                <i class="fas fa-arrow-left"></i> RETOUR À LA LISTE
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // On récupère l'ID du joueur dans l'URL
+        const params = new URLSearchParams(window.location.search);
+        const playerId = params.get('id');
+
+        if (playerId) {
+            fetchPlayerData(playerId);
+        } else {
+            document.getElementById('player-header').innerHTML = "<p>Joueur non trouvé.</p>";
+        }
+    });
+</script>
+</body>
+</html>
