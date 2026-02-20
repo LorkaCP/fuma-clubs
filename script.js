@@ -614,42 +614,32 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
 
     // --- DÉCLENCHEMENT DES CHARGEMENTS SELON LA PAGE ---
 
-    // Page Liste des Clubs
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
-
-    // Page Liste des Joueurs
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
-
-    // Page Détails Club
     if (document.getElementById('club-details')) loadClubProfile();
 
-    // Page Profil Joueur (Correction Finale Roue de Chargement)
+    // Page Profil Joueur (Chargement avec délai forcé)
     const playerHeader = document.getElementById('player-header');
     if (playerHeader) {
-        // 1. On affiche la roue IMMÉDIATEMENT (avant même de vérifier l'URL)
+        const params = new URLSearchParams(window.location.search);
+        const playerId = params.get('id') || params.get('tag');
+        
+        // Affichage immédiat de la roue
         playerHeader.innerHTML = `
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; width: 100%;">
                 <div class="fuma-spinner"></div>
                 <p style="color: var(--fuma-primary); margin-top: 20px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600;">
-                    Loading Player Data...
+                    Loading Player Profile...
                 </p>
             </div>`;
 
-        const params = new URLSearchParams(window.location.search);
-        const playerId = params.get('id') || params.get('tag');
-        
-        // 2. On attend un tout petit peu (10ms) pour laisser le navigateur afficher la roue
-        // puis on lance la récupération des données
         if (playerId) {
+            // On attend 1500ms (1.5 sec) avant de lancer l'affichage des données
             setTimeout(() => {
                 fetchPlayerData(playerId);
-            }, 10);
+            }, 1500); 
         } else {
-            playerHeader.innerHTML = `
-                <div style="text-align:center; padding: 100px 20px;">
-                    <h2 style="color:var(--fuma-primary)">No player specified</h2>
-                    <p>Please return to the players database.</p>
-                </div>`;
+            playerHeader.innerHTML = `<div style="text-align:center; padding: 100px 20px;"><h2 style="color:var(--fuma-primary)">No player specified</h2></div>`;
         }
     }
 
