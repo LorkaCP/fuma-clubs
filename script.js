@@ -368,10 +368,10 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         }).filter(p => p.tag && p.tag !== "Unknown");
 
-        // Mise à jour du filtre équipe (on garde la valeur sélectionnée si possible)
+        // Mise à jour du filtre équipe en conservant la sélection si possible
         const teamFilter = document.getElementById('filter-team');
         if (teamFilter) {
-            const currentSelectedTeam = teamFilter.value;
+            const currentSelectedTeam = teamFilter.value; // On mémorise le choix actuel
             const teams = [...new Set(allPlayers.map(p => p.team))].sort();
             teamFilter.innerHTML = '<option value="">All Teams</option>';
             teams.forEach(team => {
@@ -380,10 +380,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 option.textContent = team;
                 teamFilter.appendChild(option);
             });
-            teamFilter.value = currentSelectedTeam; // Tente de restaurer l'équipe sélectionnée
+            teamFilter.value = currentSelectedTeam; // On restaure si l'équipe existe dans la nouvelle saison
         }
 
-        // AU LIEU DE renderPlayers(allPlayers), on applique les filtres existants
+        // --- LA MODIFICATION CLÉ ---
         applyPlayerFilters(); 
         
     } catch (e) {
@@ -464,4 +464,5 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
