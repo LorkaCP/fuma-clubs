@@ -446,11 +446,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const isFreeAgent = !p.team || p.team.toLowerCase().includes("free agent") || p.team === "";
         
-        // Préparation du badge d'équipe (Logo ou Emoji)
+        // Style du Badge d'équipe : Transparent et sans contour
         const teamBadge = isFreeAgent 
-            ? `<div style="position: absolute; top: -5px; left: -5px; background: rgba(0,0,0,0.6); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(2px);" title="Free Agent">🆓</div>` 
-            : `<div style="position: absolute; top: -5px; left: -5px; background: white; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--fuma-primary); box-shadow: 0 2px 5px rgba(0,0,0,0.3); overflow: hidden;">
-                <img src="${p.logo}" alt="${p.team}" title="${p.team}" style="width: 80%; height: 80%; object-fit: contain;">
+            ? `<div style="position: absolute; top: 0; left: 0; font-size: 1.5rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));" title="Free Agent">🆓</div>` 
+            : `<div style="position: absolute; top: 2px; left: 2px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                <img src="${p.logo}" alt="${p.team}" title="${p.team}" 
+                     style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));">
                </div>`;
 
         return `
@@ -465,12 +466,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     ${teamBadge}
                     
-                    <div style="position: absolute; bottom: 0; right: 0; font-size: 1.2rem; background: rgba(0,0,0,0.5); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px); border: 1px solid rgba(255,255,255,0.1);">
+                    <div style="position: absolute; bottom: 0; right: 0; font-size: 1.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));">
                         ${p.flag}
                     </div>
                 </div>
                 
-                <h3 style="margin:0; font-size: 1.1rem; text-transform: uppercase;">${p.tag}</h3>
+                <h3 style="margin:0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">${p.tag}</h3>
                 <p style="font-size: 0.75rem; color: var(--fuma-text-dim); margin: 5px 0;">${p.pos} | ${p.arch}</p>
                 
                 <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: black; font-weight: 800; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">
@@ -506,6 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
