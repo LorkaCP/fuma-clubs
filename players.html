@@ -1,0 +1,22 @@
+<div class="fuma-container" style="margin-top: 50px;">
+    <div class="players-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h2 class="fuma-section-title" style="margin: 0;">Players Database</h2>
+        <a href="profile.html" class="fuma-cta" style="background: var(--fuma-primary); color: black; font-weight: bold;">
+            <i class="fas fa-user-edit"></i> MY PROFILE
+        </a>
+    </div>
+
+    <div class="fuma-search-container" style="display: flex; gap: 10px; margin-bottom: 30px;">
+        <input type="text" id="player-search" class="fuma-search-input" placeholder="Search a player tag...">
+        <select id="filter-position" class="fuma-search-input" style="width: auto; cursor: pointer;">
+            <option value="">All Positions</option>
+            <option value="GK">Goalkeepers</option>
+            <option value="DEF">Defenders</option>
+            <option value="MID">Midfielders</option>
+            <option value="ATT">Attackers</option>
+        </select>
+    </div>
+
+    <div class="fuma-club-grid" id="fuma-js-players">
+        </div>
+</div>
