@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,7 +18,7 @@
     <header class="fuma-hero" style="padding: 40px 20px; text-align: center;">
         <h1 class="fuma-hero-subtitle">Players Database</h1>
         <p style="color: var(--fuma-text-dim); max-width: 600px; margin: 0 auto 20px auto;">
-            Retrouvez tous les joueurs de la communauté FUMA. Consultez les statistiques, les archétypes et trouvez de nouvelles recrues pour votre club.
+            Find all players from the FUMA community. Check stats, archetypes, and scout new recruits for your club.
         </p>
         
         <a href="#" id="btn-my-profile" class="fuma-cta">
@@ -29,21 +29,21 @@
     <div class="fuma-container">
         <section class="fuma-section">
             <div class="fuma-search-container" style="display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap;">
-                <input type="text" id="player-search" class="fuma-search-input" placeholder="Rechercher un joueur (Game Tag)..." style="flex: 1; min-width: 250px;">
+                <input type="text" id="player-search" class="fuma-search-input" placeholder="Search player (Game Tag)..." style="flex: 1; min-width: 250px;">
                 
                 <select id="filter-position" class="fuma-search-input" style="width: auto; cursor: pointer; background-color: var(--fuma-bg-card); color: white;">
-                    <option value="">Toutes les positions</option>
-                    <option value="GK">Gardien (GK)</option>
-                    <option value="DEF">Défenseur (DEF)</option>
-                    <option value="MID">Milieu (MID)</option>
-                    <option value="ATT">Attaquant (ATT)</option>
+                    <option value="">All Positions</option>
+                    <option value="GK">Goalkeeper (GK)</option>
+                    <option value="DEF">Defender (DEF)</option>
+                    <option value="MID">Midfielder (MID)</option>
+                    <option value="ATT">Forward (ATT)</option>
                 </select>
             </div>
 
             <div class="fuma-club-grid" id="fuma-js-players">
                 <div class="fuma-loading-wrapper" style="grid-column: 1/-1; text-align: center; padding: 50px;">
                     <div class="fuma-spinner" style="margin: 0 auto 15px;"></div>
-                    <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">Synchronisation des joueurs...</p>
+                    <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">Syncing players...</p>
                 </div>
             </div>
         </section>
