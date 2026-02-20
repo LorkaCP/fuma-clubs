@@ -357,6 +357,14 @@ body, .fuma-wrapper {
 .roster-list li {
     padding: 8px 0;
     border-bottom: 1px solid rgba(255,255,255,0.02);
+    word-break: break-all; /* Coupe le mot si trop long */
+    overflow-wrap: break-word;
+    display: flex;
+    align-items: center;
+}
+
+.roster-list li a {
+    white-space: normal; /* Autorise le retour à la ligne */
 }
 
 .roster-list li:last-child { border: none; }
@@ -584,4 +592,26 @@ select option {
 }
 
 
+@media (max-width: 850px) {
+    .club-grid-layout {
+        display: flex;
+        flex-direction: column; /* Empile les sections verticalement */
+        gap: 20px;
+    }
+}
+
+@media (max-width: 850px) {
+    .sidebar-box {
+        position: static !important; /* Annule le sticky du script.js */
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+}
+
+@media (max-width: 600px) {
+    .stats-bar {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+}
 
