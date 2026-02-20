@@ -439,38 +439,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('fuma-js-players');
     if (!container) return;
 
-    const DEFAULT_AVATAR = "https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png";
+    const DEFAULT_AVATAR = "https://i.ibb.co/KcQsBkmB/3715527-image-profil-icon-male-icon-human-or-people-sign-and-symbol-vector-vectoriel-removebg-previe.png";
 
     container.innerHTML = list.map(p => {
         const playerImg = (p.avatar && p.avatar !== "none" && p.avatar !== "") ? p.avatar : DEFAULT_AVATAR;
         
         const isFreeAgent = !p.team || p.team.toLowerCase().includes("free agent") || p.team === "";
-        const teamDisplay = isFreeAgent 
-            ? `<span style="font-size: 1.5rem;" title="Free Agent">🆓</span>` 
-            : `<img src="${p.logo}" alt="${p.team}" title="${p.team}" style="height: 35px; width: auto; object-fit: contain;">`;
+        
+        // Préparation du badge d'équipe (Logo ou Emoji)
+        const teamBadge = isFreeAgent 
+            ? `<div style="position: absolute; top: -5px; left: -5px; background: rgba(0,0,0,0.6); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(2px);" title="Free Agent">🆓</div>` 
+            : `<div style="position: absolute; top: -5px; left: -5px; background: white; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--fuma-primary); box-shadow: 0 2px 5px rgba(0,0,0,0.3); overflow: hidden;">
+                <img src="${p.logo}" alt="${p.team}" title="${p.team}" style="width: 80%; height: 80%; object-fit: contain;">
+               </div>`;
 
         return `
             <div class="club-card" style="text-align:center; padding: 25px; position: relative;">
                 
-                <div style="position: relative; width: 85px; height: 85px; margin: 0 auto 15px auto;">
+                <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 15px auto;">
+                    
                     <img src="${playerImg}" 
                          alt="${p.tag}" 
                          style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary);"
                          onerror="this.src='${DEFAULT_AVATAR}'">
+                    
+                    ${teamBadge}
                     
                     <div style="position: absolute; bottom: 0; right: 0; font-size: 1.2rem; background: rgba(0,0,0,0.5); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px); border: 1px solid rgba(255,255,255,0.1);">
                         ${p.flag}
                     </div>
                 </div>
                 
-                <h3 style="margin:0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">${p.tag}</h3>
+                <h3 style="margin:0; font-size: 1.1rem; text-transform: uppercase;">${p.tag}</h3>
+                <p style="font-size: 0.75rem; color: var(--fuma-text-dim); margin: 5px 0;">${p.pos} | ${p.arch}</p>
                 
-                <p style="font-size: 0.75rem; color: var(--fuma-text-dim); margin: 5px 0 15px 0;">${p.pos} | ${p.arch}</p>
-                
-                <div style="height: 40px; display: flex; align-items: center; justify-content: center; margin-top: 10px;">
-                    ${teamDisplay}
-                </div>
-
                 <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: black; font-weight: 800; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">
                     ${p.rating}
                 </div>
@@ -504,6 +506,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
