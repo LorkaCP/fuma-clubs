@@ -618,7 +618,7 @@ select option {
 
 @media (max-width: 600px) {
     .stats-bar {
-        flex-direction: column; /* Empile W, D et L verticalement */
+        flex-direction: row; /* Empile W, D et L verticalement */
         gap: 20px;
         align-items: center;
         text-align: center;
@@ -655,5 +655,6 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
