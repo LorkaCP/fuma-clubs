@@ -409,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             <a href="player.html?id=${encodeURIComponent(playerId)}" class="player-link-wrapper" style="text-decoration: none; color: inherit; display: block; transition: transform 0.3s ease;">
                 <div class="club-card" style="text-align:center; padding: 25px; position: relative; height: 100%;">
-                    <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 15px auto;">
+                    <div style="position: relative; width: 90px; height: 50px; margin: 0 auto 15px auto;">
                         <img src="${p.avatar}" alt="${p.tag}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary);" onerror="this.src='${PLACEHOLDER_AVATAR}'">
                         ${teamBadge}
                         <div style="position: absolute; bottom: 0; right: 0; font-size: 1.1rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.7));">${p.flag}</div>
@@ -566,6 +566,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
