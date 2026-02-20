@@ -395,6 +395,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!container) return;
 
     container.innerHTML = list.map(p => {
+        // --- ÉTAPE CRUCIALE : On définit l'ID à envoyer ---
+        // On cherche p.id, sinon p.GAME_ID (nom CSV), sinon le pseudo (tag)
+        const playerId = p.id || p.GAME_ID || p.tag; 
+
         const isFreeAgent = !p.team || p.team.toLowerCase().includes("free agent") || p.team === "";
         const teamBadge = isFreeAgent 
             ? `<div style="position: absolute; top: 0; left: 0; font-size: 1.2rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));" title="Free Agent">🆓</div>` 
@@ -402,9 +406,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <img src="${p.logo}" alt="${p.team}" title="${p.team}" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.7));">
                </div>`;
 
-        // Utilisation de p.id (GAME_ID) pour le lien vers le profil détaillé
         return `
-            <a href="player.html?id=${encodeURIComponent(p.id)}" class="player-link-wrapper" style="text-decoration: none; color: inherit; display: block; transition: transform 0.3s ease;">
+            <a href="player.html?id=${encodeURIComponent(playerId)}" class="player-link-wrapper" style="text-decoration: none; color: inherit; display: block; transition: transform 0.3s ease;">
                 <div class="club-card" style="text-align:center; padding: 25px; position: relative; height: 100%;">
                     <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 15px auto;">
                         <img src="${p.avatar}" alt="${p.tag}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary);" onerror="this.src='${PLACEHOLDER_AVATAR}'">
@@ -414,10 +417,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h3 style="margin:0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">${p.tag}</h3>
                     <p style="font-size: 0.75rem; color: var(--fuma-text-dim); margin: 5px 0;">${p.pos} | ${p.arch}</p>
                     <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: black; font-weight: 800; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">${p.rating}</div>
-                    
-                    <div class="view-profile-hover" style="margin-top: 10px; font-size: 0.65rem; color: var(--fuma-primary); opacity: 0; transition: opacity 0.3s ease; text-transform: uppercase; letter-spacing: 1px;">
-                        Voir Profil Détaillé <i class="fas fa-arrow-right" style="font-size: 0.5rem;"></i>
-                    </div>
                 </div>
             </a>`;
     }).join('');
@@ -567,6 +566,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
