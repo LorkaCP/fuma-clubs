@@ -568,7 +568,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     if (playerId) fetchPlayerData(playerId, e.target.value);
 });
 
-    // --- 9. INITIALISATION ---
+  // --- 9. INITIALISATION ---
     injectNavigation();
     handleProfilePage();
     setupFormSubmission();
@@ -623,13 +623,19 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     // Page Détails Club
     if (document.getElementById('club-details')) loadClubProfile();
 
-    // Page Profil Joueur (Correctif pour Lorka_CP)
+    // Page Profil Joueur (Avec Loader)
     if (document.getElementById('player-header')) {
         const params = new URLSearchParams(window.location.search);
-        // On récupère 'id' OU 'tag' pour accepter player.html?tag=Lorka_CP
         const playerId = params.get('id') || params.get('tag');
         
         if (playerId) {
+            // ON AFFICHE LE LOADER AVANT DE CHARGER
+            document.getElementById('player-header').innerHTML = `
+                <div class="fuma-loading-wrapper" style="text-align: center; padding: 100px;">
+                    <div class="fuma-spinner" style="margin: 0 auto 15px;"></div>
+                    <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">Loading Player Profile...</p>
+                </div>`;
+            
             fetchPlayerData(playerId);
         } else {
             document.getElementById('player-header').innerHTML = "<h2 style='text-align:center;margin-top:50px;'>No player specified.</h2>";
@@ -637,6 +643,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
