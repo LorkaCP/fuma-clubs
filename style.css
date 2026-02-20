@@ -439,6 +439,8 @@ body, .fuma-wrapper {
     min-width: 0;
 }
 
+
+
 /* --- INPUTS SPÉCIFIQUES & SELECTS --- */
 
 input[list], select.fuma-search-input {
@@ -503,6 +505,29 @@ select option {
     font-size: 0.7rem; letter-spacing: 2px; opacity: 0.5;
 }
 
+#fuma-js-players {
+    display: grid;
+    /* On réduit la taille minimale des colonnes pour en mettre plus par ligne */
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+    gap: 12px; /* Espacement entre les boîtes réduit */
+    padding: 10px;
+}
+
+.club-card {
+    /* On s'assure que la box ne dépasse pas une certaine hauteur */
+    height: auto;
+    max-height: 200px; 
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+.club-card:hover {
+    transform: scale(1.03);
+}
+
 /* --- RESPONSIVE --- */
 
 @media (max-width: 850px) {
@@ -537,4 +562,5 @@ select option {
     .fuma-search-input { font-size: 16px !important; padding: 15px 20px; }
     .sidebar-box { padding: 20px 15px; }
 }
+
 
