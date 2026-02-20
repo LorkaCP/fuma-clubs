@@ -356,11 +356,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 8. LOGIQUE LISTE DES JOUEURS (players.html) ---
-    async function fetchFumaPlayers() {
+   async function fetchFumaPlayers() {
     const playerContainer = document.getElementById('fuma-js-players');
     if (!playerContainer) return;
 
-    // URL de l'image générique par défaut
     const DEFAULT_AVATAR = "https://i.ibb.co/KcQsBkmB/3715527-image-profil-icon-male-icon-human-or-people-sign-and-symbol-vector-vectoriel-removebg-previe.png";
 
     try {
@@ -369,58 +368,74 @@ document.addEventListener('DOMContentLoaded', () => {
         const lines = text.trim().split("\n");
         const headers = lines[0].split(",");
 
-        // Définition des index basés sur les colonnes de votre Google Sheet
         const idx = {
-            tag: headers.indexOf('GAME_TAG'),      // Col A
-            pos: headers.indexOf('MAIN_POSITION'), // Col B
-            team: headers.indexOf('CURRENT_TEAM'), // Col H
-            logo: headers.indexOf('LOGO'),         // Col I
-            rating: headers.indexOf('RATING'),     // Col E
-            avatar: headers.indexOf('AVATAR'),     // Col G
-            arch: headers.indexOf('MAIN_ARCHETYPE'), // Col D
-            flag: headers.indexOf('FLAG')          // Col F
+            tag: headers.indexOf('GAME_TAG'),
+            pos: headers.indexOf('MAIN_POSITION'),
+            team: headers.indexOf('CURRENT_TEAM'),
+            logo: headers.indexOf('LOGO'),
+            rating: headers.indexOf('RATING'),
+            avatar: headers.indexOf('AVATAR'),
+            arch: headers.indexOf('MAIN_ARCHETYPE'),
+            flag: headers.indexOf('FLAG')
         };
 
         allPlayers = lines.slice(1).map(line => {
             const v = parseCSVLine(line);
-            
-            // Logique de l'avatar par défaut
             const rawAvatar = v[idx.avatar] ? v[idx.avatar].trim() : "";
             const isValidAvatar = rawAvatar !== "" && rawAvatar.toLowerCase() !== "none" && rawAvatar.startsWith('http');
-            const finalAvatar = isValidAvatar ? rawAvatar : DEFAULT_AVATAR;
-
+            
             return {
-                tag: v[idx.tag] || "Unknown", 
-                pos: v[idx.pos] || "N/A", 
+                tag: v[idx.tag], 
+                pos: v[idx.pos], 
                 team: v[idx.team] || "Free Agent",
-                logo: v[idx.logo] || "", // Récupération du lien du logo
+                logo: v[idx.logo] || "",
                 rating: v[idx.rating] || "0.0", 
-                avatar: finalAvatar,
+                avatar: isValidAvatar ? rawAvatar : DEFAULT_AVATAR,
                 arch: v[idx.arch] || "Standard", 
                 flag: v[idx.flag] || ""
             };
-        }).filter(p => p.tag && p.tag !== "Unknown");
+        }).filter(p => p.tag);
 
-        // Appel de la fonction de rendu (qui affichera les logos)
+        // --- NOUVEAU : Remplissage dynamique du filtre équipe ---
+        const teamFilter = document.getElementById('filter-team');
+        if (teamFilter) {
+            // Extraire les noms uniques, trier, et s'assurer que "Free Agent" est bien présent
+            const teams = [...new Set(allPlayers.map(p => p.team))].sort();
+            
+            // On garde "All Teams" et on ajoute les autres
+            teamFilter.innerHTML = '<option value="">All Teams</option>';
+            teams.forEach(team => {
+                const option = document.createElement('option');
+                option.value = team;
+                option.textContent = team;
+                teamFilter.appendChild(option);
+            });
+        }
+
         renderPlayers(allPlayers);
 
-        // --- Configuration des Filtres ---
-        
-        // Recherche par Game Tag
-        document.getElementById('player-search')?.addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            renderPlayers(allPlayers.filter(p => p.tag.toLowerCase().includes(term)));
-        });
+        // --- Gestion des Filtres Combinés ---
+        const applyFilters = () => {
+            const searchTerm = document.getElementById('player-search')?.value.toLowerCase() || "";
+            const posFilter = document.getElementById('filter-position')?.value || "";
+            const teamFilterVal = document.getElementById('filter-team')?.value || "";
 
-        // Filtre par Position (GK, DEF, MID, ATT)
-        document.getElementById('filter-position')?.addEventListener('change', (e) => {
-            const pos = e.target.value;
-            renderPlayers(pos === "" ? allPlayers : allPlayers.filter(p => p.pos === pos));
-        });
+            const filtered = allPlayers.filter(p => {
+                const matchName = p.tag.toLowerCase().includes(searchTerm);
+                const matchPos = posFilter === "" || p.pos === posFilter;
+                const matchTeam = teamFilterVal === "" || p.team === teamFilterVal;
+                return matchName && matchPos && matchTeam;
+            });
+            renderPlayers(filtered);
+        };
+
+        document.getElementById('player-search')?.addEventListener('input', applyFilters);
+        document.getElementById('filter-position')?.addEventListener('change', applyFilters);
+        document.getElementById('filter-team')?.addEventListener('change', applyFilters);
 
     } catch (e) {
-        console.error("Erreur lors du chargement des joueurs:", e);
-        playerContainer.innerHTML = "<p style='color:red; text-align:center; padding:20px;'>Erreur de chargement de la base de données joueurs.</p>";
+        console.error("Erreur:", e);
+        playerContainer.innerHTML = "Erreur de chargement.";
     }
 }
 
@@ -490,6 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
