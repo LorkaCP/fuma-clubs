@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FUMA CLUBS - LEAGUE DASHBOARD</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Styles spécifiques au Dashboard League */
+        .league-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: var(--fuma-bg-card);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--fuma-text-dim);
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        .tab-btn.active {
+            background: var(--fuma-primary);
+            color: black;
+            border-color: var(--fuma-primary);
+        }
+
+        .league-content { display: none; }
+        .league-content.active { display: block; }
+
+        .match-card {
+            background: var(--fuma-bg-card);
+            border: var(--fuma-border);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .match-card:hover { border-color: var(--fuma-primary); transform: translateY(-3px); }
+
+        .match-team { width: 35%; font-weight: 600; }
+        .match-score { 
+            width: 20%; 
+            text-align: center; 
+            font-size: 1.5rem; 
+            font-weight: 800; 
+            color: var(--fuma-primary); 
+        }
+
+        .report-form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--fuma-bg-card);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid var(--fuma-primary);
+        }
+    </style>
+</head>
+<body>
+
+<div class="fuma-wrapper">
+    <nav class="fuma-nav" id="main-nav"></nav>
+
+    <header class="fuma-hero" style="padding: 60px 20px;">
+        <h1 class="fuma-hero-subtitle">FUMA Official League</h1>
+        <p style="color: var(--fuma-text-dim);">Season 1 | Competition & Statistics</p>
+    </header>
+
+    <div class="fuma-container">
+        <div class="league-tabs">
+            <button class="tab-btn active" onclick="openTab(event, 'standings')">Standings</button>
+            <button class="tab-btn" onclick="openTab(event, 'fixtures')">Fixtures & Results</button>
+            <button class="tab-btn" onclick="openTab(event, 'stats')">Top Players</button>
+            <button class="tab-btn" onclick="openTab(event, 'report')"><i class="fas fa-edit"></i> Match Report</button>
+        </div>
+
+        <div id="standings" class="league-content active">
+            <h2 class="fuma-section-title">League Table</h2>
+            <table class="fuma-table">
+                <thead>
+                    <tr>
+                        <th>Pos</th>
+                        <th>Club</th>
+                        <th>PL</th>
+                        <th>W</th>
+                        <th>D</th>
+                        <th>L</th>
+                        <th>GD</th>
+                        <th>PTS</th>
+                    </tr>
+                </thead>
+                <tbody id="league-table-body">
+                    <tr>
+                        <td>1</td>
+                        <td style="color: var(--fuma-primary);">Lions FC FUMA</td>
+                        <td>5</td><td>4</td><td>1</td><td>0</td><td>+10</td><td>13</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="fixtures" class="league-content">
+            <h2 class="fuma-section-title">Match Results</h2>
+            <div id="fixtures-list">
+                <div class="match-card">
+                    <div class="match-team" style="text-align: right;">Eagles SC</div>
+                    <div class="match-score">2 - 0</div>
+                    <div class="match-team">Lions FC</div>
+                    <div style="font-size: 0.7rem; color: var(--fuma-text-dim);">Détails <i class="fas fa-chevron-right"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="stats" class="league-content">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div class="sidebar-box">
+                    <h3><i class="fas fa-futbol"></i> Top Scorers</h3>
+                    <ul id="top-scorers-list" style="list-style: none; padding: 0;">
+                        <li style="display:flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span>1. Ibrahimovic</span> <strong>8 Goals</strong>
+                        </li>
+                    </ul>
+                </div>
+                <div class="sidebar-box">
+                    <h3><i class="fas fa-star"></i> Best Rating (MVP)</h3>
+                    <ul id="top-mvp-list" style="list-style: none; padding: 0;">
+                        <li style="display:flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <span>1. Pirlo</span> <strong>8.4 Avg</strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="report" class="league-content">
+            <div class="report-form-container">
+                <h2 style="color: var(--fuma-primary); text-align: center;">Submit Match Report</h2>
+                <p style="text-align: center; font-size: 0.8rem; margin-bottom: 30px;">This form is for Captains only. Credentials will be verified.</p>
+                
+                <form id="matchReportForm">
+                    <div class="form-group">
+                        <label>Select Match ID</label>
+                        <select class="fuma-search-input" required>
+                            <option>GW1 - Lions FC vs Eagles SC</option>
+                            <option>GW1 - Dragons FC vs Wolves SC</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; gap: 20px; align-items: center; margin-top: 20px;">
+                        <input type="number" placeholder="Home Score" class="fuma-search-input" style="text-align: center;">
+                        <span style="font-weight: 800;">VS</span>
+                        <input type="number" placeholder="Away Score" class="fuma-search-input" style="text-align: center;">
+                    </div>
+
+                    <h3 style="margin-top: 30px; font-size: 1rem; border-bottom: 1px solid var(--fuma-primary);">Player Stats (Your Team)</h3>
+                    <div id="roster-inputs" style="margin-top: 15px;">
+                        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; align-items: center;">
+                            <span style="font-size: 0.8rem;">Player Name</span>
+                            <input type="number" placeholder="Gls" class="fuma-search-input" style="padding: 5px;">
+                            <input type="number" placeholder="Ast" class="fuma-search-input" style="padding: 5px;">
+                            <input type="number" step="0.1" placeholder="Note" class="fuma-search-input" style="padding: 5px;">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="fuma-cta" style="width: 100%; margin-top: 30px;">Send Official Report</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Logique de switch d'onglets
+    function openTab(evt, tabName) {
+        var i, content, tabs;
+        content = document.getElementsByClassName("league-content");
+        for (i = 0; i < content.length; i++) {
+            content[i].classList.remove("active");
+        }
+        tabs = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tabs.length; i++) {
+            tabs[i].classList.remove("active");
+        }
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+
+    // Ici tu devras appeler tes fonctions fetch de script.js 
+    // pour remplir les tableaux dynamiquement.
+</script>
+<script src="script.js"></script>
+</body>
+</html>
