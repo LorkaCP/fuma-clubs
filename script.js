@@ -443,22 +443,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     container.innerHTML = list.map(p => {
         const playerImg = (p.avatar && p.avatar !== "none" && p.avatar !== "") ? p.avatar : DEFAULT_AVATAR;
-        
         const isFreeAgent = !p.team || p.team.toLowerCase().includes("free agent") || p.team === "";
         
-        // Style du Badge d'équipe : Transparent et sans contour
+        // --- TAILLE RÉDUITE ICI (28px au lieu de 38px) ---
         const teamBadge = isFreeAgent 
-            ? `<div style="position: absolute; top: 0; left: 0; font-size: 1.5rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));" title="Free Agent">🆓</div>` 
-            : `<div style="position: absolute; top: 2px; left: 2px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+            ? `<div style="position: absolute; top: 0; left: 0; font-size: 1.2rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));" title="Free Agent">🆓</div>` 
+            : `<div style="position: absolute; top: 2px; left: 2px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
                 <img src="${p.logo}" alt="${p.team}" title="${p.team}" 
-                     style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));">
+                     style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.7));">
                </div>`;
 
         return `
             <div class="club-card" style="text-align:center; padding: 25px; position: relative;">
                 
                 <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 15px auto;">
-                    
                     <img src="${playerImg}" 
                          alt="${p.tag}" 
                          style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary);"
@@ -466,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     ${teamBadge}
                     
-                    <div style="position: absolute; bottom: 0; right: 0; font-size: 1.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));">
+                    <div style="position: absolute; bottom: 0; right: 0; font-size: 1.1rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.7));">
                         ${p.flag}
                     </div>
                 </div>
@@ -507,6 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
