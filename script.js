@@ -588,23 +588,16 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
         renderPlayers(filtered);
     };
 
-    // Écouteurs pour les filtres joueurs
     document.getElementById('player-search')?.addEventListener('input', applyPlayerFilters);
     document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
     document.getElementById('filter-team')?.addEventListener('change', applyPlayerFilters);
-    
-    // Filtre de Saison
-    document.getElementById('filter-season')?.addEventListener('change', (e) => {
-        fetchFumaPlayers(e.target.value);
-    });
+    document.getElementById('filter-season')?.addEventListener('change', (e) => fetchFumaPlayers(e.target.value));
 
-    // Recherche clubs
     document.getElementById('fuma-search')?.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
         renderClubs(allClubs.filter(c => c.name.toLowerCase().includes(term)));
     });
 
-    // Retour en haut (Scroll button)
     const backBtn = document.getElementById('backTop');
     window.addEventListener('scroll', () => {
         if (window.scrollY > 400) backBtn?.classList.add('visible');
@@ -612,34 +605,39 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     });
     backBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-    // --- DÉCLENCHEMENT DES CHARGEMENTS SELON LA PAGE ---
-
+    // --- DÉCLENCHEMENT DES CHARGEMENTS ---
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 
-    // Page Profil Joueur (Chargement avec délai forcé)
+    // --- LOGIQUE PROFIL JOUEUR (VOTRE SOLUTION OPTIMISÉE) ---
     const playerHeader = document.getElementById('player-header');
     if (playerHeader) {
         const params = new URLSearchParams(window.location.search);
         const playerId = params.get('id') || params.get('tag');
         
-        // Affichage immédiat de la roue
-        playerHeader.innerHTML = `
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; width: 100%;">
-                <div class="fuma-spinner"></div>
-                <p style="color: var(--fuma-primary); margin-top: 20px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600;">
-                    Loading Player Profile...
-                </p>
-            </div>`;
-
         if (playerId) {
-            // On attend 1500ms (1.5 sec) avant de lancer l'affichage des données
+            // On remplace le contenu par la structure de la carte + la roue
+            playerHeader.innerHTML = `
+                <div class="player-card-header" style="min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div class="fuma-spinner"></div>
+                    <p style="color: var(--fuma-primary); margin-top: 20px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600;">
+                        Loading Profile...
+                    </p>
+                </div>`;
+            
+            // Délai pour laisser la roue tourner
             setTimeout(() => {
                 fetchPlayerData(playerId);
-            }, 1500); 
+            }, 1500);
+
         } else {
-            playerHeader.innerHTML = `<div style="text-align:center; padding: 100px 20px;"><h2 style="color:var(--fuma-primary)">No player specified</h2></div>`;
+            // Si vraiment pas d'ID, on affiche le message d'erreur proprement
+            playerHeader.innerHTML = `
+                <div class="player-card-header">
+                    <h2 style="color: var(--fuma-primary);">No Player Specified</h2>
+                    <p>Please return to the database.</p>
+                </div>`;
         }
     }
 
