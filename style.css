@@ -642,5 +642,18 @@ select option {
     }
 }
 
+.club-title-responsive {
+    font-size: 3.5rem;
+    color: var(--fuma-primary);
+    margin-bottom: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+@media (max-width: 600px) {
+    .club-title-responsive {
+        font-size: 2rem; /* Taille réduite pour mobile */
+    }
+}
 
 
