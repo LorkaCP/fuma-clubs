@@ -360,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerContainer = document.getElementById('fuma-js-players');
     if (!playerContainer) return;
 
-    const DEFAULT_AVATAR = "https://i.ibb.co/KcQsBkmB/3715527-image-profil-icon-male-icon-human-or-people-sign-and-symbol-vector-vectoriel-removebg-previe.png";
+    const DEFAULT_AVATAR = "https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png";
 
     try {
         const resp = await fetch(PLAYERS_SHEET_URL);
@@ -439,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('fuma-js-players');
     if (!container) return;
 
-    const DEFAULT_AVATAR = "https://i.ibb.co/KcQsBkmB/3715527-image-profil-icon-male-icon-human-or-people-sign-and-symbol-vector-vectoriel-removebg-previe.png";
+    const DEFAULT_AVATAR = "https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png";
 
     container.innerHTML = list.map(p => {
         const playerImg = (p.avatar && p.avatar !== "none" && p.avatar !== "") ? p.avatar : DEFAULT_AVATAR;
@@ -504,6 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
