@@ -452,8 +452,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- AFFICHAGE HEADER ---
         headerContainer.innerHTML = `
+            headerContainer.innerHTML = `
             <div class="player-profile-card" style="background: var(--fuma-bg-card); padding: 40px; border-radius: 20px; border: var(--fuma-border); text-align: center; position: relative; overflow: hidden;">
-                <div style="position: absolute; top: 20px; right: 20px; font-size: 3rem; font-weight: 800; color: var(--fuma-primary); opacity: 0.2;">${player.RATING}</div>
                 <img src="${player.AVATAR || 'https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png'}" style="width: 150px; height: 150px; border-radius: 50%; border: 3px solid var(--fuma-primary); object-fit: cover; margin-bottom: 20px;">
                 <h1 style="font-size: 2.5rem; margin: 0;">${player.GAME_TAG} ${player.FLAG || ''}</h1>
                 <p style="color: var(--fuma-primary); letter-spacing: 3px; font-weight: 600;">${player.MAIN_POSITION} | ${player.MAIN_ARCHETYPE}</p>
@@ -566,6 +566,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
