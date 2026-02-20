@@ -623,17 +623,17 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     // Page Détails Club
     if (document.getElementById('club-details')) loadClubProfile();
 
-    // Page Profil Joueur (Correctif avec roue de chargement forcée)
+    // Page Profil Joueur (Correctif avec ta roue de chargement)
     if (document.getElementById('player-header')) {
         const params = new URLSearchParams(window.location.search);
         const playerId = params.get('id') || params.get('tag');
         
         if (playerId) {
-            // On vide le contenu et on met la roue immédiatement
+            // Utilisation de ta classe fuma-spinner avec un wrapper centré
             document.getElementById('player-header').innerHTML = `
-                <div class="fuma-loading-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; width: 100%;">
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; width: 100%;">
                     <div class="fuma-spinner"></div>
-                    <p style="color: var(--fuma-primary); margin-top: 20px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600;">
+                    <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase; font-weight: 600; font-size: 0.9rem;">
                         Loading Player Data...
                     </p>
                 </div>`;
@@ -649,6 +649,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
