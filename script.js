@@ -324,69 +324,72 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 8. LOGIQUE LISTE DES JOUEURS (players.html) ---
-    async function fetchFumaPlayers(gid = "1342244083") {
-        const playerContainer = document.getElementById('fuma-js-players');
-        if (!playerContainer) return;
+   async function fetchFumaPlayers(gid = "1342244083") {
+    const playerContainer = document.getElementById('fuma-js-players');
+    if (!playerContainer) return;
 
-        playerContainer.innerHTML = `
-            <div class="fuma-loading-wrapper" style="grid-column: 1/-1; text-align: center; padding: 50px;">
-                <div class="fuma-spinner" style="margin: 0 auto 15px;"></div>
-                <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">Loading season data...</p>
-            </div>`;
+    playerContainer.innerHTML = `
+        <div class="fuma-loading-wrapper" style="grid-column: 1/-1; text-align: center; padding: 50px;">
+            <div class="fuma-spinner" style="margin: 0 auto 15px;"></div>
+            <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">Loading season data...</p>
+        </div>`;
 
-        try {
-            const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}`);
-            const text = await resp.text();
-            const lines = text.trim().split("\n");
-            const headers = lines[0].split(",");
+    try {
+        const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}`);
+        const text = await resp.text();
+        const lines = text.trim().split("\n");
+        const headers = lines[0].split(",");
 
-            const idx = {
-                tag: headers.indexOf('GAME_TAG'),
-                pos: headers.indexOf('MAIN_POSITION'),
-                team: headers.indexOf('CURRENT_TEAM'),
-                logo: headers.indexOf('LOGO'),
-                rating: headers.indexOf('RATING'),
-                avatar: headers.indexOf('AVATAR'),
-                arch: headers.indexOf('MAIN_ARCHETYPE'),
-                flag: headers.indexOf('FLAG')
+        const idx = {
+            tag: headers.indexOf('GAME_TAG'),
+            pos: headers.indexOf('MAIN_POSITION'),
+            team: headers.indexOf('CURRENT_TEAM'),
+            logo: headers.indexOf('LOGO'),
+            rating: headers.indexOf('RATING'),
+            avatar: headers.indexOf('AVATAR'),
+            arch: headers.indexOf('MAIN_ARCHETYPE'),
+            flag: headers.indexOf('FLAG')
+        };
+
+        allPlayers = lines.slice(1).map(line => {
+            const v = parseCSVLine(line);
+            const rawAvatar = v[idx.avatar] ? v[idx.avatar].trim() : "";
+            const isValidAvatar = rawAvatar !== "" && rawAvatar.toLowerCase() !== "none" && rawAvatar.startsWith('http');
+            
+            return {
+                tag: v[idx.tag] || "Unknown", 
+                pos: v[idx.pos] || "N/A", 
+                team: v[idx.team] || "Free Agent",
+                logo: v[idx.logo] || "",
+                rating: v[idx.rating] || "0.0", 
+                avatar: isValidAvatar ? rawAvatar : DEFAULT_AVATAR,
+                arch: v[idx.arch] || "Standard", 
+                flag: v[idx.flag] || ""
             };
+        }).filter(p => p.tag && p.tag !== "Unknown");
 
-            allPlayers = lines.slice(1).map(line => {
-                const v = parseCSVLine(line);
-                const rawAvatar = v[idx.avatar] ? v[idx.avatar].trim() : "";
-                const isValidAvatar = rawAvatar !== "" && rawAvatar.toLowerCase() !== "none" && rawAvatar.startsWith('http');
-                
-                return {
-                    tag: v[idx.tag] || "Unknown", 
-                    pos: v[idx.pos] || "N/A", 
-                    team: v[idx.team] || "Free Agent",
-                    logo: v[idx.logo] || "",
-                    rating: v[idx.rating] || "0.0", 
-                    avatar: isValidAvatar ? rawAvatar : DEFAULT_AVATAR,
-                    arch: v[idx.arch] || "Standard", 
-                    flag: v[idx.flag] || ""
-                };
-            }).filter(p => p.tag && p.tag !== "Unknown");
-
-            // Mise à jour du filtre équipe
-            const teamFilter = document.getElementById('filter-team');
-            if (teamFilter) {
-                const teams = [...new Set(allPlayers.map(p => p.team))].sort();
-                teamFilter.innerHTML = '<option value="">All Teams</option>';
-                teams.forEach(team => {
-                    const option = document.createElement('option');
-                    option.value = team;
-                    option.textContent = team;
-                    teamFilter.appendChild(option);
-                });
-            }
-
-            renderPlayers(allPlayers);
-        } catch (e) {
-            playerContainer.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:red;'>Error loading players.</p>";
+        // Mise à jour du filtre équipe (on garde la valeur sélectionnée si possible)
+        const teamFilter = document.getElementById('filter-team');
+        if (teamFilter) {
+            const currentSelectedTeam = teamFilter.value;
+            const teams = [...new Set(allPlayers.map(p => p.team))].sort();
+            teamFilter.innerHTML = '<option value="">All Teams</option>';
+            teams.forEach(team => {
+                const option = document.createElement('option');
+                option.value = team;
+                option.textContent = team;
+                teamFilter.appendChild(option);
+            });
+            teamFilter.value = currentSelectedTeam; // Tente de restaurer l'équipe sélectionnée
         }
-    }
 
+        // AU LIEU DE renderPlayers(allPlayers), on applique les filtres existants
+        applyPlayerFilters(); 
+        
+    } catch (e) {
+        playerContainer.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:red;'>Error loading players.</p>";
+    }
+}
     function renderPlayers(list) {
         const container = document.getElementById('fuma-js-players');
         if (!container) return;
@@ -461,3 +464,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
