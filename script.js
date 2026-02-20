@@ -385,8 +385,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const isValidAvatar = rawAvatar !== "" && rawAvatar.toLowerCase() !== "none" && rawAvatar.startsWith('http');
             
             return {
-                tag: v[idx.tag], 
-                pos: v[idx.pos], 
+                tag: v[idx.tag] || "Unknown", 
+                pos: v[idx.pos] || "N/A", 
                 team: v[idx.team] || "Free Agent",
                 logo: v[idx.logo] || "",
                 rating: v[idx.rating] || "0.0", 
@@ -394,15 +394,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 arch: v[idx.arch] || "Standard", 
                 flag: v[idx.flag] || ""
             };
-        }).filter(p => p.tag);
+        }).filter(p => p.tag && p.tag !== "Unknown");
 
-        // --- NOUVEAU : Remplissage dynamique du filtre équipe ---
+        // Remplissage du filtre équipe
         const teamFilter = document.getElementById('filter-team');
         if (teamFilter) {
-            // Extraire les noms uniques, trier, et s'assurer que "Free Agent" est bien présent
             const teams = [...new Set(allPlayers.map(p => p.team))].sort();
-            
-            // On garde "All Teams" et on ajoute les autres
             teamFilter.innerHTML = '<option value="">All Teams</option>';
             teams.forEach(team => {
                 const option = document.createElement('option');
@@ -414,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         renderPlayers(allPlayers);
 
-        // --- Gestion des Filtres Combinés ---
+        // Logique de filtrage combinée
         const applyFilters = () => {
             const searchTerm = document.getElementById('player-search')?.value.toLowerCase() || "";
             const posFilter = document.getElementById('filter-position')?.value || "";
@@ -434,37 +431,39 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('filter-team')?.addEventListener('change', applyFilters);
 
     } catch (e) {
-        console.error("Erreur:", e);
-        playerContainer.innerHTML = "Erreur de chargement.";
+        console.error("Erreur de chargement:", e);
+        playerContainer.innerHTML = "Error loading players.";
     }
 }
-
     function renderPlayers(list) {
     const container = document.getElementById('fuma-js-players');
     if (!container) return;
 
-    // Image par défaut si le lien d'avatar est mort ou vide
     const DEFAULT_AVATAR = "https://i.ibb.co/KcQsBkmB/3715527-image-profil-icon-male-icon-human-or-people-sign-and-symbol-vector-vectoriel-removebg-previe.png";
 
     container.innerHTML = list.map(p => {
-        // 1. Gestion de l'avatar du joueur
         const playerImg = (p.avatar && p.avatar !== "none" && p.avatar !== "") ? p.avatar : DEFAULT_AVATAR;
-
-        // 2. Gestion du Logo de l'équipe
-        // Si l'équipe est "Free Agent" ou vide, on affiche l'emoji 🆓, sinon on affiche le logo
+        
         const isFreeAgent = !p.team || p.team.toLowerCase().includes("free agent") || p.team === "";
         const teamDisplay = isFreeAgent 
             ? `<span style="font-size: 1.5rem;" title="Free Agent">🆓</span>` 
-            : `<img src="${p.logo}" alt="${p.team}" title="${p.team}" style="height: 35px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">`;
+            : `<img src="${p.logo}" alt="${p.team}" title="${p.team}" style="height: 35px; width: auto; object-fit: contain;">`;
 
         return `
-            <div class="club-card" style="text-align:center; padding: 25px; position: relative; transition: transform 0.3s ease;">
-                <img src="${playerImg}" 
-                     alt="${p.tag}" 
-                     style="width: 85px; height: 85px; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary); margin-bottom:10px;"
-                     onerror="this.src='${DEFAULT_AVATAR}'">
+            <div class="club-card" style="text-align:center; padding: 25px; position: relative;">
                 
-                <h3 style="margin:0; font-size: 1.1rem;">${p.tag} ${p.flag}</h3>
+                <div style="position: relative; width: 85px; height: 85px; margin: 0 auto 15px auto;">
+                    <img src="${playerImg}" 
+                         alt="${p.tag}" 
+                         style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary);"
+                         onerror="this.src='${DEFAULT_AVATAR}'">
+                    
+                    <div style="position: absolute; bottom: 0; right: 0; font-size: 1.2rem; background: rgba(0,0,0,0.5); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px); border: 1px solid rgba(255,255,255,0.1);">
+                        ${p.flag}
+                    </div>
+                </div>
+                
+                <h3 style="margin:0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">${p.tag}</h3>
                 
                 <p style="font-size: 0.75rem; color: var(--fuma-text-dim); margin: 5px 0 15px 0;">${p.pos} | ${p.arch}</p>
                 
@@ -472,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${teamDisplay}
                 </div>
 
-                <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: black; font-weight: 800; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: black; font-weight: 800; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">
                     ${p.rating}
                 </div>
             </div>
@@ -505,6 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
