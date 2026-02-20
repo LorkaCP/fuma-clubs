@@ -28,38 +28,55 @@ document.addEventListener('DOMContentLoaded', () => {
     const nav = document.getElementById('main-nav');
     if (!nav) return;
 
-    // 1. On définit le HTML du menu
+    // --- 1. CONFIGURATION DES LIENS ---
+    const CLIENT_ID = '1473807551329079408'; 
+    const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
+    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
+
+    // --- 2. INJECTION DU HTML ---
     nav.innerHTML = `
         <div class="nav-container">
             <a href="index.html" class="fuma-logo">FUMA<span>CLUBS</span></a>
-            <div class="fuma-burger" id="burger-menu"><span></span><span></span><span></span></div>
+            
+            <div class="fuma-burger" id="burger-menu">
+                <span></span><span></span><span></span>
+            </div>
+
             <div class="nav-links" id="nav-links-container">
-                <a href="index.html" data-page="index">Home</a>
-                <a href="clubs.html" data-page="clubs">Clubs</a>
-                <a href="players.html" data-page="players">Players</a>
-                <a href="league.html" data-page="league">League</a>
-                <a href="rules.html" data-page="rules">Rules</a>
+                <a href="index.html">Home</a>
+                <a href="clubs.html">Clubs</a>
+                <a href="players.html">Players</a>
+                <a href="#">League</a>
+                <a href="#">Rules</a>
             </div>
         </div>
     `;
 
-    // 2. LOGIQUE DE L'ONGLET ACTIF (OR)
+    // --- 3. LOGIQUE DE L'ONGLET ACTIF (OR) ---
+    // On récupère le nom du fichier actuel (ex: players.html)
     const currentPage = window.location.pathname.split("/").pop() || 'index.html';
     const allLinks = nav.querySelectorAll('.nav-links a');
 
     allLinks.forEach(link => {
-        const linkPage = link.getAttribute('href');
-        // Si la page actuelle contient le nom du lien, on ajoute la classe 'active'
-        if (currentPage === linkPage || (currentPage === '' && linkPage === 'index.html')) {
+        const linkHref = link.getAttribute('href');
+        if (currentPage === linkHref) {
             link.classList.add('active');
         }
     });
 
-    // 3. Logique du Burger Menu (Mobile)
+    // --- 4. LOGIQUE DU BOUTON "MY PROFILE" (Si on est sur players.html) ---
+    // On cherche le bouton dans le header de la page players.html
+    const myProfileBtn = document.getElementById('btn-my-profile') || document.querySelector('.players-header .fuma-cta');
+    if (myProfileBtn) {
+        myProfileBtn.setAttribute('href', discordAuthUrl);
+    }
+
+    // --- 5. LOGIQUE DU MENU BURGER (MOBILE) ---
     const burger = document.getElementById('burger-menu');
     const linksContainer = document.getElementById('nav-links-container');
+    
     if (burger && linksContainer) {
-        burger.onclick = () => {
+        burger.onclick = function() {
             burger.classList.toggle('active');
             linksContainer.classList.toggle('active');
         };
@@ -346,6 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
