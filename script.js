@@ -573,12 +573,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     handleProfilePage();
     setupFormSubmission();
 
-    // Filtre de Saison
-    document.getElementById('filter-season')?.addEventListener('change', (e) => {
-        fetchFumaPlayers(e.target.value);
-    });
-
-    // Filtres combinés Joueurs
+    // --- LOGIQUE DES FILTRES JOUEURS ---
     const applyPlayerFilters = () => {
         const searchTerm = document.getElementById('player-search')?.value.toLowerCase() || "";
         const posFilter = document.getElementById('filter-position')?.value || "";
@@ -593,9 +588,15 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
         renderPlayers(filtered);
     };
 
+    // Écouteurs pour les filtres joueurs
     document.getElementById('player-search')?.addEventListener('input', applyPlayerFilters);
     document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
     document.getElementById('filter-team')?.addEventListener('change', applyPlayerFilters);
+    
+    // Filtre de Saison
+    document.getElementById('filter-season')?.addEventListener('change', (e) => {
+        fetchFumaPlayers(e.target.value);
+    });
 
     // Recherche clubs
     document.getElementById('fuma-search')?.addEventListener('input', (e) => {
@@ -603,7 +604,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
         renderClubs(allClubs.filter(c => c.name.toLowerCase().includes(term)));
     });
 
-    // Retour en haut
+    // Retour en haut (Scroll button)
     const backBtn = document.getElementById('backTop');
     window.addEventListener('scroll', () => {
         if (window.scrollY > 400) backBtn?.classList.add('visible');
@@ -611,11 +612,32 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     });
     backBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-    // Déclenchement des chargements selon l'ID du container présent
+    // --- DÉCLENCHEMENT DES CHARGEMENTS SELON LA PAGE ---
+
+    // Page Liste des Clubs
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
+
+    // Page Liste des Joueurs
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
+
+    // Page Détails Club
     if (document.getElementById('club-details')) loadClubProfile();
-});
+
+    // Page Profil Joueur (Correctif pour Lorka_CP)
+    if (document.getElementById('player-header')) {
+        const params = new URLSearchParams(window.location.search);
+        // On récupère 'id' OU 'tag' pour accepter player.html?tag=Lorka_CP
+        const playerId = params.get('id') || params.get('tag');
+        
+        if (playerId) {
+            fetchPlayerData(playerId);
+        } else {
+            document.getElementById('player-header').innerHTML = "<h2 style='text-align:center;margin-top:50px;'>No player specified.</h2>";
+        }
+    }
+
+}); // FIN DU DOMContentLoaded
+
 
 
 
