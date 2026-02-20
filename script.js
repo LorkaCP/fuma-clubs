@@ -24,31 +24,33 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- 3. INJECTION DU MENU ---
+
     function injectNavigation() {
-    const nav = document.getElementById('main-nav');
-    if (!nav) return;
+        const nav = document.getElementById('main-nav');
+        if (!nav) return;
 
-    nav.innerHTML = `
-        <div class="nav-container">
-            <a href="index.html" class="fuma-logo">FUMA<span>CLUBS</span></a>
-            <div class="fuma-burger"><span></span><span></span><span></span></div>
-            <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="clubs.html">Clubs</a>
-                <a href="players.html">Players</a> <a href="#">League</a>
-                <a href="#">Rules</a>
+        nav.innerHTML = `
+            <div class="nav-container">
+                <a href="index.html" class="fuma-logo">FUMA<span>CLUBS</span></a>
+                <div class="fuma-burger" id="burger-menu"><span></span><span></span><span></span></div>
+                <div class="nav-links" id="nav-links-container">
+                    <a href="index.html">Home</a>
+                    <a href="clubs.html">Clubs</a>
+                    <a href="players.html">Players</a>
+                    <a href="#">League</a>
+                    <a href="#">Rules</a>
+                </div>
             </div>
-        </div>
-    `;
+        `;
 
-    function setupBurger() {
-        const burger = document.getElementById('burger');
-        const navLinks = document.getElementById('navLinks');
-        if (burger && navLinks) {
-            burger.addEventListener('click', () => {
+        // Logique du Burger Menu
+        const burger = document.getElementById('burger-menu');
+        const links = document.getElementById('nav-links-container');
+        if (burger && links) {
+            burger.onclick = () => {
                 burger.classList.toggle('active');
-                navLinks.classList.toggle('active');
-            });
+                links.classList.toggle('active');
+            };
         }
     }
 
@@ -332,6 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
