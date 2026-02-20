@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FUMA CLUBS - PROFIL JOUEUR</title>
+    <title>FUMA CLUBS - PLAYER PROFILE</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Styles spécifiques pour l'élégance du profil */
+        /* Specific styles for profile elegance */
         .player-card-header {
             background: var(--fuma-bg-card);
             border: var(--fuma-border);
@@ -107,30 +107,30 @@
     <div class="fuma-container" style="margin-top: 50px;">
         
         <div class="season-filter-container">
-            <label for="season-selector" style="margin-right: 15px; align-self: center; color: var(--fuma-text-dim);">Saison :</label>
+            <label for="season-selector" style="margin-right: 15px; align-self: center; color: var(--fuma-text-dim);">Season:</label>
             <select id="season-selector">
-                <option value="1342244083">Toutes les Saisons</option>
-                <option value="2074996595">Saison 1</option>
-                <option value="1996803561">Saison 2</option>
+                <option value="1342244083">All Seasons</option>
+                <option value="2074996595">Season 1</option>
+                <option value="1996803561">Season 2</option>
             </select>
         </div>
 
         <div id="player-header">
             <div class="fuma-loading-wrapper" style="text-align: center; padding: 50px;">
                 <div class="fuma-spinner" style="margin: 0 auto 15px;"></div>
-                <p style="color: var(--fuma-primary); letter-spacing: 2px;">RÉCUPÉRATION DU PROFIL...</p>
+                <p style="color: var(--fuma-primary); letter-spacing: 2px;">FETCHING PROFILE...</p>
             </div>
         </div>
 
         <section class="fuma-section">
-            <h2 class="fuma-section-title">Analyse des Performances</h2>
+            <h2 class="fuma-section-title">Performance Analysis</h2>
             <div id="player-stats-container" class="stats-grid-detailed">
                 </div>
         </section>
         
         <div style="text-align: center; margin-top: 40px; margin-bottom: 60px;">
             <a href="players.html" class="fuma-cta" style="background: transparent; border: 1px solid var(--fuma-primary); color: var(--fuma-primary);">
-    <i class="fas fa-arrow-left"></i> RETOUR À LA LISTE
+    <i class="fas fa-arrow-left"></i> BACK TO LIST
 </a>
         </div>
     </div>
@@ -144,17 +144,17 @@
         const seasonSelector = document.getElementById('season-selector');
 
         if (playerId) {
-            // Chargement initial (Toutes saisons par défaut)
+            // Initial load (All seasons by default)
             loadPlayerData(playerId, seasonSelector.value);
 
-            // Changement de saison
+            // Season change
             seasonSelector.addEventListener('change', (e) => {
                 loadPlayerData(playerId, e.target.value);
             });
         } else {
             document.getElementById('player-header').innerHTML = `
                 <div class="player-card-header">
-                    <p>Aucun identifiant de joueur spécifié.</p>
+                    <p>No player ID specified.</p>
                 </div>`;
         }
     });
@@ -163,7 +163,6 @@
         const header = document.getElementById('player-header');
         const statsContainer = document.getElementById('player-stats-container');
         
-        // On utilise la base URL définie dans script.js ou on la reconstruit
         const PLAYERS_SHEET_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=';
 
         try {
@@ -172,7 +171,6 @@
             const lines = text.trim().split("\n");
             const headers = lines[0].split(",").map(h => h.trim());
 
-            // Fonction helper interne pour parser les lignes CSV
             const parseCSVLine = (line) => {
                 const result = [];
                 let cell = '';
@@ -194,18 +192,17 @@
                 return p;
             });
 
-            // On cherche par GAME_ID ou GAME_TAG
             const player = players.find(p => p.GAME_ID === id || p.GAME_TAG === id);
 
             if (player) {
                 renderProfile(player);
             } else {
-                header.innerHTML = "<p style='text-align:center;'>Données non trouvées pour cette saison.</p>";
+                header.innerHTML = "<p style='text-align:center;'>Data not found for this season.</p>";
                 statsContainer.innerHTML = "";
             }
         } catch (e) {
             console.error(e);
-            header.innerHTML = "<p style='text-align:center; color:red;'>Erreur lors du chargement des données.</p>";
+            header.innerHTML = "<p style='text-align:center; color:red;'>Error while loading data.</p>";
         }
     }
 
@@ -228,41 +225,41 @@
                 </p>
                 <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 25px;">
                     <img src="${p.LOGO || ''}" style="height: 45px; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));">
-                    <span style="font-size: 1.3rem; font-weight: 300;">${p.CURRENT_TEAM || 'Agent Libre'}</span>
+                    <span style="font-size: 1.3rem; font-weight: 300;">${p.CURRENT_TEAM || 'Free Agent'}</span>
                 </div>
             </div>
         `;
 
-        // Statistiques détaillées
+        // Detailed Statistics
         statsContainer.innerHTML = `
             <div class="stat-block">
-                <h3><i class="fas fa-info-circle"></i> Général</h3>
+                <h3><i class="fas fa-info-circle"></i> General</h3>
                 <div class="stat-row">
-                    <span class="stat-label">Matchs joués</span>
+                    <span class="stat-label">Matches Played</span>
                     <span class="stat-value">${p.GAME_PLAYED || '0'}</span>
                 </div>
                 <div class="stat-row">
-                    <span class="stat-label">Note Moyenne</span>
+                    <span class="stat-label">Average Rating</span>
                     <span class="stat-value highlight">${p.RATING || '0.0'}</span>
                 </div>
                 <div class="stat-row">
-                    <span class="stat-label">Cartons</span>
+                    <span class="stat-label">Cards</span>
                     <span class="stat-value">${p.CARDS || '0'}</span>
                 </div>
             </div>
 
             <div class="stat-block">
-                <h3><i class="fas fa-fire"></i> Attaque</h3>
+                <h3><i class="fas fa-fire"></i> Attack</h3>
                 <div class="stat-row">
-                    <span class="stat-label">Buts</span>
+                    <span class="stat-label">Goals</span>
                     <span class="stat-value highlight">${p.GOALS || '0'}</span>
                 </div>
                 <div class="stat-row">
-                    <span class="stat-label">Passes D.</span>
+                    <span class="stat-label">Assists</span>
                     <span class="stat-value highlight">${p.ASSISTS || '0'}</span>
                 </div>
                 <div class="stat-row">
-                    <span class="stat-label">Tirs</span>
+                    <span class="stat-label">Shots</span>
                     <span class="stat-value">${p.SHOTS || '0'}</span>
                 </div>
             </div>
@@ -270,23 +267,23 @@
             <div class="stat-block">
                 <h3><i class="fas fa-share-alt"></i> Distribution</h3>
                 <div class="stat-row">
-                    <span class="stat-label">Passes réussies</span>
+                    <span class="stat-label">Successful Passes</span>
                     <span class="stat-value">${p.SUCCESSFUL_PASSES || '0'}</span>
                 </div>
                 <div class="stat-row">
-                    <span class="stat-label">Précision Passes</span>
+                    <span class="stat-label">Pass Accuracy</span>
                     <span class="stat-value">${p['%SUCCESSFUL_PASSES'] || '0%'}</span>
                 </div>
             </div>
 
             <div class="stat-block">
-                <h3><i class="fas fa-shield-alt"></i> Défense</h3>
+                <h3><i class="fas fa-shield-alt"></i> Defense</h3>
                 <div class="stat-row">
-                    <span class="stat-label">Tacles réussis</span>
+                    <span class="stat-label">Successful Tackles</span>
                     <span class="stat-value">${p.SUCCESSFUL_TACKLES || '0'}</span>
                 </div>
                 <div class="stat-row">
-                    <span class="stat-label">Précision Tacles</span>
+                    <span class="stat-label">Tackle Accuracy</span>
                     <span class="stat-value">${p['%SUCCESSFUL_TACKLES'] || '0%'}</span>
                 </div>
             </div>
