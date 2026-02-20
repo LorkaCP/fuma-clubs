@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <a href="index.html">Home</a>
                     <a href="clubs.html">Clubs</a>
                     <a href="players.html">Players</a>
-                    <a href="#">League</a>
+                    <a href="league.html">League</a>
                     <a href="#">Rules</a>
                     <a href="${discordServerLink}" target="_blank" style="color: #5865F2;">
                         <i class="fab fa-discord"></i> Discord
@@ -642,6 +642,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
