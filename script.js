@@ -332,11 +332,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 detailContainer.innerHTML = `
                     <div class="club-profile-header" style="text-align: center; margin-bottom: 60px;">
                         <img src="${v[idx.crest] || ''}" style="width: 160px; height: 160px; object-fit: contain; margin-bottom: 25px;" alt="Crest">
-                        <h1 style="font-size: 3.5rem; color: var(--fuma-primary); margin-bottom:10px; font-weight:800; text-transform:uppercase;">${v[idx.team]}</h1>
+                        <h1 class="club-title-responsive">${v[idx.team]}</h1>
                         <div class="status-badge">${statusHTML}</div>
                     </div>
                     
-                    <div class="club-grid-layout" style="display: grid; grid-template-columns: 2fr 1fr; gap: 40px;">
+                    <div class="club-grid-layout">
                         <div class="club-main-info">
                             ${trophiesHTML}
                             <section>
@@ -344,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div style="font-style: italic; color: var(--fuma-text-dim); line-height: 1.8; font-size: 0.95rem;">${formattedHistory}</div>
                             </section>
                             
-                            <div class="stats-bar" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; background: var(--fuma-bg-card); padding: 25px; border-radius: 15px; margin-top: 40px; border: var(--fuma-border);">
+                            <div class="stats-bar"> 
                                 <div class="stat-item" style="text-align: center;"><strong style="display: block; font-size: 1.8rem;">${v[idx.gp] || 0}</strong><span style="font-size: 0.65rem; color: var(--fuma-text-dim); text-transform: uppercase; letter-spacing:1px;">Games</span></div>
                                 <div class="stat-item" style="text-align: center; color: #4caf50;"><strong style="display: block; font-size: 1.8rem;">${v[idx.win] || 0}</strong><span style="font-size: 0.65rem; color: var(--fuma-text-dim); text-transform: uppercase; letter-spacing:1px;">Win</span></div>
                                 <div class="stat-item" style="text-align: center; color: #ffeb3b;"><strong style="display: block; font-size: 1.8rem;">${v[idx.draw] || 0}</strong><span style="font-size: 0.65rem; color: var(--fuma-text-dim); text-transform: uppercase; letter-spacing:1px;">Draw</span></div>
@@ -642,6 +642,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
