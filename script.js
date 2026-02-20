@@ -369,47 +369,50 @@ document.addEventListener('DOMContentLoaded', () => {
         const lines = text.trim().split("\n");
         const headers = lines[0].split(",");
 
+        // Définition des index basés sur les colonnes de votre Google Sheet
         const idx = {
-            tag: headers.indexOf('GAME_TAG'), 
-            pos: headers.indexOf('MAIN_POSITION'),
-            team: headers.indexOf('CURRENT_TEAM'), 
-            rating: headers.indexOf('RATING'),
-            avatar: headers.indexOf('AVATAR'), 
-            arch: headers.indexOf('MAIN_ARCHETYPE'),
-            flag: headers.indexOf('FLAG')
+            tag: headers.indexOf('GAME_TAG'),      // Col A
+            pos: headers.indexOf('MAIN_POSITION'), // Col B
+            team: headers.indexOf('CURRENT_TEAM'), // Col H
+            logo: headers.indexOf('LOGO'),         // Col I
+            rating: headers.indexOf('RATING'),     // Col E
+            avatar: headers.indexOf('AVATAR'),     // Col G
+            arch: headers.indexOf('MAIN_ARCHETYPE'), // Col D
+            flag: headers.indexOf('FLAG')          // Col F
         };
 
         allPlayers = lines.slice(1).map(line => {
             const v = parseCSVLine(line);
             
-            // Logique de l'avatar : 
-            // On vérifie si l'URL existe, n'est pas "none" et commence bien par http
+            // Logique de l'avatar par défaut
             const rawAvatar = v[idx.avatar] ? v[idx.avatar].trim() : "";
             const isValidAvatar = rawAvatar !== "" && rawAvatar.toLowerCase() !== "none" && rawAvatar.startsWith('http');
             const finalAvatar = isValidAvatar ? rawAvatar : DEFAULT_AVATAR;
 
             return {
-                tag: v[idx.tag], 
-                pos: v[idx.pos], 
+                tag: v[idx.tag] || "Unknown", 
+                pos: v[idx.pos] || "N/A", 
                 team: v[idx.team] || "Free Agent",
+                logo: v[idx.logo] || "", // Récupération du lien du logo
                 rating: v[idx.rating] || "0.0", 
                 avatar: finalAvatar,
                 arch: v[idx.arch] || "Standard", 
                 flag: v[idx.flag] || ""
             };
-        }).filter(p => p.tag);
+        }).filter(p => p.tag && p.tag !== "Unknown");
 
+        // Appel de la fonction de rendu (qui affichera les logos)
         renderPlayers(allPlayers);
 
         // --- Configuration des Filtres ---
         
-        // Recherche par nom (Tag)
+        // Recherche par Game Tag
         document.getElementById('player-search')?.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             renderPlayers(allPlayers.filter(p => p.tag.toLowerCase().includes(term)));
         });
 
-        // Filtre par position
+        // Filtre par Position (GK, DEF, MID, ATT)
         document.getElementById('filter-position')?.addEventListener('change', (e) => {
             const pos = e.target.value;
             renderPlayers(pos === "" ? allPlayers : allPlayers.filter(p => p.pos === pos));
@@ -417,23 +420,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (e) {
         console.error("Erreur lors du chargement des joueurs:", e);
-        playerContainer.innerHTML = "<p style='color:red; text-align:center;'>Erreur de chargement des joueurs.</p>";
+        playerContainer.innerHTML = "<p style='color:red; text-align:center; padding:20px;'>Erreur de chargement de la base de données joueurs.</p>";
     }
 }
 
     function renderPlayers(list) {
-        const container = document.getElementById('fuma-js-players');
-        if (!container) return;
-        container.innerHTML = list.map(p => `
-            <div class="club-card" style="text-align:center; padding: 25px; position: relative;">
-                <img src="${p.avatar}" alt="${p.tag}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary); margin-bottom:10px;">
-                <h3 style="margin:0;">${p.tag} ${p.flag}</h3>
-                <p style="font-size: 0.8rem; color: var(--fuma-text-dim);">${p.pos} | ${p.arch}</p>
-                <p style="margin-top:10px; font-weight:bold; color:var(--fuma-primary);">${p.team}</p>
-                <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: black; font-weight: 800; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">${p.rating}</div>
+    const container = document.getElementById('fuma-js-players');
+    if (!container) return;
+
+    // Image par défaut si le lien d'avatar est mort ou vide
+    const DEFAULT_AVATAR = "https://i.ibb.co/KcQsBkmB/3715527-image-profil-icon-male-icon-human-or-people-sign-and-symbol-vector-vectoriel-removebg-previe.png";
+
+    container.innerHTML = list.map(p => {
+        // 1. Gestion de l'avatar du joueur
+        const playerImg = (p.avatar && p.avatar !== "none" && p.avatar !== "") ? p.avatar : DEFAULT_AVATAR;
+
+        // 2. Gestion du Logo de l'équipe
+        // Si l'équipe est "Free Agent" ou vide, on affiche l'emoji 🆓, sinon on affiche le logo
+        const isFreeAgent = !p.team || p.team.toLowerCase().includes("free agent") || p.team === "";
+        const teamDisplay = isFreeAgent 
+            ? `<span style="font-size: 1.5rem;" title="Free Agent">🆓</span>` 
+            : `<img src="${p.logo}" alt="${p.team}" title="${p.team}" style="height: 35px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">`;
+
+        return `
+            <div class="club-card" style="text-align:center; padding: 25px; position: relative; transition: transform 0.3s ease;">
+                <img src="${playerImg}" 
+                     alt="${p.tag}" 
+                     style="width: 85px; height: 85px; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary); margin-bottom:10px;"
+                     onerror="this.src='${DEFAULT_AVATAR}'">
+                
+                <h3 style="margin:0; font-size: 1.1rem;">${p.tag} ${p.flag}</h3>
+                
+                <p style="font-size: 0.75rem; color: var(--fuma-text-dim); margin: 5px 0 15px 0;">${p.pos} | ${p.arch}</p>
+                
+                <div style="height: 40px; display: flex; align-items: center; justify-content: center; margin-top: 10px;">
+                    ${teamDisplay}
+                </div>
+
+                <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: black; font-weight: 800; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                    ${p.rating}
+                </div>
             </div>
-        `).join('');
-    }
+        `;
+    }).join('');
+}
 
     // --- 9. INITIALISATION ---
     injectNavigation();
@@ -460,5 +490,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
