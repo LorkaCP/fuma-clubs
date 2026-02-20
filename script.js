@@ -24,35 +24,47 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- 3. INJECTION DU MENU ---
-
     function injectNavigation() {
-        const nav = document.getElementById('main-nav');
-        if (!nav) return;
+    const nav = document.getElementById('main-nav');
+    if (!nav) return;
 
-        nav.innerHTML = `
-            <div class="nav-container">
-                <a href="index.html" class="fuma-logo">FUMA<span>CLUBS</span></a>
-                <div class="fuma-burger" id="burger-menu"><span></span><span></span><span></span></div>
-                <div class="nav-links" id="nav-links-container">
-                    <a href="index.html">Home</a>
-                    <a href="clubs.html">Clubs</a>
-                    <a href="players.html">Players</a>
-                    <a href="#">League</a>
-                    <a href="#">Rules</a>
-                </div>
+    // 1. On définit le HTML du menu
+    nav.innerHTML = `
+        <div class="nav-container">
+            <a href="index.html" class="fuma-logo">FUMA<span>CLUBS</span></a>
+            <div class="fuma-burger" id="burger-menu"><span></span><span></span><span></span></div>
+            <div class="nav-links" id="nav-links-container">
+                <a href="index.html" data-page="index">Home</a>
+                <a href="clubs.html" data-page="clubs">Clubs</a>
+                <a href="players.html" data-page="players">Players</a>
+                <a href="league.html" data-page="league">League</a>
+                <a href="rules.html" data-page="rules">Rules</a>
             </div>
-        `;
+        </div>
+    `;
 
-        // Logique du Burger Menu
-        const burger = document.getElementById('burger-menu');
-        const links = document.getElementById('nav-links-container');
-        if (burger && links) {
-            burger.onclick = () => {
-                burger.classList.toggle('active');
-                links.classList.toggle('active');
-            };
+    // 2. LOGIQUE DE L'ONGLET ACTIF (OR)
+    const currentPage = window.location.pathname.split("/").pop() || 'index.html';
+    const allLinks = nav.querySelectorAll('.nav-links a');
+
+    allLinks.forEach(link => {
+        const linkPage = link.getAttribute('href');
+        // Si la page actuelle contient le nom du lien, on ajoute la classe 'active'
+        if (currentPage === linkPage || (currentPage === '' && linkPage === 'index.html')) {
+            link.classList.add('active');
         }
+    });
+
+    // 3. Logique du Burger Menu (Mobile)
+    const burger = document.getElementById('burger-menu');
+    const linksContainer = document.getElementById('nav-links-container');
+    if (burger && linksContainer) {
+        burger.onclick = () => {
+            burger.classList.toggle('active');
+            linksContainer.classList.toggle('active');
+        };
     }
+}
 
     // --- 4. LOGIQUE PAGE PROFIL ---
     function handleProfilePage() {
@@ -334,6 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
