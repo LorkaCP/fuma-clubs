@@ -407,20 +407,18 @@ document.addEventListener('DOMContentLoaded', () => {
                </div>`;
 
         return `
-            <a href="player.html?id=${encodeURIComponent(playerId)}" class="player-link-wrapper" style="text-decoration: none; color: inherit; display: block; transition: transform 0.3s ease;">
-                <div class="club-card" style="text-align:center; padding: 25px; position: relative; height: 100%;">
-                    <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 15px auto;">
-                        <img src="${p.avatar}" alt="${p.tag}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary);" onerror="this.src='${PLACEHOLDER_AVATAR}'">
-                        ${teamBadge}
-                        <div style="position: absolute; bottom: 0; right: 0; font-size: 1.1rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.7));">${p.flag}</div>
-                    </div>
-                    <h3 style="margin:0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">${p.tag}</h3>
-                    <p style="font-size: 0.75rem; color: var(--fuma-text-dim); margin: 5px 0;">${p.pos} | ${p.arch}</p>
-                    <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: black; font-weight: 800; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">${p.rating}</div>
-                </div>
-            </a>`;
-    }).join('');
-}
+            headerContainer.innerHTML = `
+    <div class="player-profile-card" style="background: var(--fuma-bg-card); padding: 40px; border-radius: 20px; border: var(--fuma-border); text-align: center; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 20px; right: 20px; font-size: 3rem; font-weight: 800; color: var(--fuma-primary); opacity: 0.2;">${player.RATING}</div>
+        
+        <img src="${player.AVATAR || 'https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png'}" style="width: 150px; height: 150px; border-radius: 50%; border: 3px solid var(--fuma-primary); object-fit: cover; margin-bottom: 20px;">
+        <h1 style="font-size: 2.5rem; margin: 0;">${player.GAME_TAG} ${player.FLAG || ''}</h1>
+        <p style="color: var(--fuma-primary); letter-spacing: 3px; font-weight: 600;">${player.MAIN_POSITION} | ${player.MAIN_ARCHETYPE}</p>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 20px;">
+            <img src="${player.LOGO}" style="height: 40px;" alt="Club">
+            <span style="font-size: 1.2rem;">${player.CURRENT_TEAM}</span>
+        </div>
+    </div>
 
 
     async function fetchPlayerData(playerId, gid = "1342244083") {
@@ -566,6 +564,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
