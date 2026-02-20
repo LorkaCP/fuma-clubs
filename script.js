@@ -25,27 +25,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. INJECTION DU MENU ---
     function injectNavigation() {
-        const navElement = document.getElementById('main-nav');
-        if (!navElement) return;
-        const page = window.location.pathname.split("/").pop() || 'index.html';
+    const nav = document.getElementById('main-nav');
+    if (!nav) return;
 
-        navElement.innerHTML = `
-            <div class="nav-container">
-                <a href="index.html" class="nav-logo">FUMA CLUBS</a>
-                <button class="fuma-burger" id="burger">
-                    <span></span><span></span><span></span>
-                </button>
-                <div class="nav-links" id="navLinks">
-                    <a href="index.html" class="${page === 'index.html' ? 'active' : ''}">Home</a>
-                    <a href="clubs.html" class="${page === 'clubs.html' ? 'active' : ''}">Clubs</a>
-                    <a href="#">League</a>
-                    <a href="#">Rules</a>
-                    <a href="https://discord.gg/xPz9FBkdtm" target="_blank"><i class="fab fa-discord"></i> Discord</a>
-                    <a href="${authUrl}" class="${page === 'profile.html' ? 'active' : ''}">Profile</a>
-                </div>
-            </div>`;
-        setupBurger();
-    }
+    nav.innerHTML = `
+        <div class="nav-container">
+            <a href="index.html" class="fuma-logo">FUMA<span>CLUBS</span></a>
+            <div class="fuma-burger"><span></span><span></span><span></span></div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="clubs.html">Clubs</a>
+                <a href="players.html">Players</a> <a href="#">League</a>
+                <a href="#">Rules</a>
+            </div>
+        </div>
+    `;
 
     function setupBurger() {
         const burger = document.getElementById('burger');
@@ -338,6 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
     if (document.getElementById('club-details')) loadClubProfile();
 });
+
 
 
 
