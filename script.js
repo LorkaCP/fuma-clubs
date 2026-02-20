@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
-    const PLAYERS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=1342244083&single=true&output=csv';
+    const PLAYERS_SHEET_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=';
     const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzieuE-AiE2XSwE7anpAeDzLhe-rHpgA8eV7TMS3RRbUuzESLt40zBmIDqi9N6mxbdkqA/exec'; 
     const CLIENT_ID = '1473807551329079408'; 
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
@@ -356,143 +356,154 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 8. LOGIQUE LISTE DES JOUEURS (players.html) ---
-   async function fetchFumaPlayers() {
-    const playerContainer = document.getElementById('fuma-js-players');
-    if (!playerContainer) return;
+    // URL de base sans le GID pour permettre le switch entre saisons
+    const PLAYERS_SHEET_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=';
 
-    const DEFAULT_AVATAR = "https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png";
+    async function fetchFumaPlayers(gid = "1342244083") {
+        const playerContainer = document.getElementById('fuma-js-players');
+        if (!playerContainer) return;
 
-    try {
-        const resp = await fetch(PLAYERS_SHEET_URL);
-        const text = await resp.text();
-        const lines = text.trim().split("\n");
-        const headers = lines[0].split(",");
+        // Affichage d'un état de chargement lors du changement de saison
+        playerContainer.innerHTML = `
+            <div class="fuma-loading-wrapper" style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                <div class="fuma-spinner" style="margin: 0 auto 15px;"></div>
+                <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">Loading season data...</p>
+            </div>`;
 
-        const idx = {
-            tag: headers.indexOf('GAME_TAG'),
-            pos: headers.indexOf('MAIN_POSITION'),
-            team: headers.indexOf('CURRENT_TEAM'),
-            logo: headers.indexOf('LOGO'),
-            rating: headers.indexOf('RATING'),
-            avatar: headers.indexOf('AVATAR'),
-            arch: headers.indexOf('MAIN_ARCHETYPE'),
-            flag: headers.indexOf('FLAG')
-        };
+        const DEFAULT_AVATAR = "https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png";
 
-        allPlayers = lines.slice(1).map(line => {
-            const v = parseCSVLine(line);
-            const rawAvatar = v[idx.avatar] ? v[idx.avatar].trim() : "";
-            const isValidAvatar = rawAvatar !== "" && rawAvatar.toLowerCase() !== "none" && rawAvatar.startsWith('http');
-            
-            return {
-                tag: v[idx.tag] || "Unknown", 
-                pos: v[idx.pos] || "N/A", 
-                team: v[idx.team] || "Free Agent",
-                logo: v[idx.logo] || "",
-                rating: v[idx.rating] || "0.0", 
-                avatar: isValidAvatar ? rawAvatar : DEFAULT_AVATAR,
-                arch: v[idx.arch] || "Standard", 
-                flag: v[idx.flag] || ""
+        try {
+            const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}`);
+            const text = await resp.text();
+            const lines = text.trim().split("\n");
+            const headers = lines[0].split(",");
+
+            const idx = {
+                tag: headers.indexOf('GAME_TAG'),
+                pos: headers.indexOf('MAIN_POSITION'),
+                team: headers.indexOf('CURRENT_TEAM'),
+                logo: headers.indexOf('LOGO'),
+                rating: headers.indexOf('RATING'),
+                avatar: headers.indexOf('AVATAR'),
+                arch: headers.indexOf('MAIN_ARCHETYPE'),
+                flag: headers.indexOf('FLAG')
             };
-        }).filter(p => p.tag && p.tag !== "Unknown");
 
-        // Remplissage du filtre équipe
-        const teamFilter = document.getElementById('filter-team');
-        if (teamFilter) {
-            const teams = [...new Set(allPlayers.map(p => p.team))].sort();
-            teamFilter.innerHTML = '<option value="">All Teams</option>';
-            teams.forEach(team => {
-                const option = document.createElement('option');
-                option.value = team;
-                option.textContent = team;
-                teamFilter.appendChild(option);
-            });
+            allPlayers = lines.slice(1).map(line => {
+                const v = parseCSVLine(line);
+                const rawAvatar = v[idx.avatar] ? v[idx.avatar].trim() : "";
+                const isValidAvatar = rawAvatar !== "" && rawAvatar.toLowerCase() !== "none" && rawAvatar.startsWith('http');
+                
+                return {
+                    tag: v[idx.tag] || "Unknown", 
+                    pos: v[idx.pos] || "N/A", 
+                    team: v[idx.team] || "Free Agent",
+                    logo: v[idx.logo] || "",
+                    rating: v[idx.rating] || "0.0", 
+                    avatar: isValidAvatar ? rawAvatar : DEFAULT_AVATAR,
+                    arch: v[idx.arch] || "Standard", 
+                    flag: v[idx.flag] || ""
+                };
+            }).filter(p => p.tag && p.tag !== "Unknown");
+
+            // Mise à jour dynamique du filtre équipe selon les joueurs de la saison chargée
+            const teamFilter = document.getElementById('filter-team');
+            if (teamFilter) {
+                const teams = [...new Set(allPlayers.map(p => p.team))].sort();
+                teamFilter.innerHTML = '<option value="">All Teams</option>';
+                teams.forEach(team => {
+                    const option = document.createElement('option');
+                    option.value = team;
+                    option.textContent = team;
+                    teamFilter.appendChild(option);
+                });
+            }
+
+            renderPlayers(allPlayers);
+
+            // Logique de filtrage combinée (Recherche + Position + Équipe)
+            const applyFilters = () => {
+                const searchTerm = document.getElementById('player-search')?.value.toLowerCase() || "";
+                const posFilter = document.getElementById('filter-position')?.value || "";
+                const teamFilterVal = document.getElementById('filter-team')?.value || "";
+
+                const filtered = allPlayers.filter(p => {
+                    const matchName = p.tag.toLowerCase().includes(searchTerm);
+                    const matchPos = posFilter === "" || p.pos === posFilter;
+                    const matchTeam = teamFilterVal === "" || p.team === teamFilterVal;
+                    return matchName && matchPos && matchTeam;
+                });
+                renderPlayers(filtered);
+            };
+
+            // Attribution des écouteurs pour les filtres existants
+            document.getElementById('player-search')?.addEventListener('input', applyFilters);
+            document.getElementById('filter-position')?.addEventListener('change', applyFilters);
+            document.getElementById('filter-team')?.addEventListener('change', applyFilters);
+
+        } catch (e) {
+            console.error("Erreur de chargement des joueurs:", e);
+            playerContainer.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:red;'>Error loading players data.</p>";
         }
-
-        renderPlayers(allPlayers);
-
-        // Logique de filtrage combinée
-        const applyFilters = () => {
-            const searchTerm = document.getElementById('player-search')?.value.toLowerCase() || "";
-            const posFilter = document.getElementById('filter-position')?.value || "";
-            const teamFilterVal = document.getElementById('filter-team')?.value || "";
-
-            const filtered = allPlayers.filter(p => {
-                const matchName = p.tag.toLowerCase().includes(searchTerm);
-                const matchPos = posFilter === "" || p.pos === posFilter;
-                const matchTeam = teamFilterVal === "" || p.team === teamFilterVal;
-                return matchName && matchPos && matchTeam;
-            });
-            renderPlayers(filtered);
-        };
-
-        document.getElementById('player-search')?.addEventListener('input', applyFilters);
-        document.getElementById('filter-position')?.addEventListener('change', applyFilters);
-        document.getElementById('filter-team')?.addEventListener('change', applyFilters);
-
-    } catch (e) {
-        console.error("Erreur de chargement:", e);
-        playerContainer.innerHTML = "Error loading players.";
     }
-}
+
     function renderPlayers(list) {
-    const container = document.getElementById('fuma-js-players');
-    if (!container) return;
+        const container = document.getElementById('fuma-js-players');
+        if (!container) return;
 
-    const DEFAULT_AVATAR = "https://i.ibb.co/KcQsBkmB/3715527-image-profil-icon-male-icon-human-or-people-sign-and-symbol-vector-vectoriel-removebg-previe.png";
+        const PLACEHOLDER_AVATAR = "https://i.ibb.co/KcQsBkmB/3715527-image-profil-icon-male-icon-human-or-people-sign-and-symbol-vector-vectoriel-removebg-previe.png";
 
-    container.innerHTML = list.map(p => {
-        const playerImg = (p.avatar && p.avatar !== "none" && p.avatar !== "") ? p.avatar : DEFAULT_AVATAR;
-        const isFreeAgent = !p.team || p.team.toLowerCase().includes("free agent") || p.team === "";
-        
-        // --- TAILLE RÉDUITE ICI (28px au lieu de 38px) ---
-        const teamBadge = isFreeAgent 
-            ? `<div style="position: absolute; top: 0; left: 0; font-size: 1.2rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));" title="Free Agent">🆓</div>` 
-            : `<div style="position: absolute; top: 2px; left: 2px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
-                <img src="${p.logo}" alt="${p.team}" title="${p.team}" 
-                     style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.7));">
-               </div>`;
+        container.innerHTML = list.map(p => {
+            const isFreeAgent = !p.team || p.team.toLowerCase().includes("free agent") || p.team === "";
+            
+            const teamBadge = isFreeAgent 
+                ? `<div style="position: absolute; top: 0; left: 0; font-size: 1.2rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));" title="Free Agent">🆓</div>` 
+                : `<div style="position: absolute; top: 2px; left: 2px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
+                    <img src="${p.logo}" alt="${p.team}" title="${p.team}" 
+                         style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.7));">
+                   </div>`;
 
-        return `
-            <div class="club-card" style="text-align:center; padding: 25px; position: relative;">
-                
-                <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 15px auto;">
-                    <img src="${playerImg}" 
-                         alt="${p.tag}" 
-                         style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary);"
-                         onerror="this.src='${DEFAULT_AVATAR}'">
-                    
-                    ${teamBadge}
-                    
-                    <div style="position: absolute; bottom: 0; right: 0; font-size: 1.1rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.7));">
-                        ${p.flag}
+            return `
+                <div class="club-card" style="text-align:center; padding: 25px; position: relative;">
+                    <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 15px auto;">
+                        <img src="${p.avatar}" 
+                             alt="${p.tag}" 
+                             style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary);"
+                             onerror="this.src='${PLACEHOLDER_AVATAR}'">
+                        ${teamBadge}
+                        <div style="position: absolute; bottom: 0; right: 0; font-size: 1.1rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.7));">
+                            ${p.flag}
+                        </div>
                     </div>
-                </div>
-                
-                <h3 style="margin:0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">${p.tag}</h3>
-                <p style="font-size: 0.75rem; color: var(--fuma-text-dim); margin: 5px 0;">${p.pos} | ${p.arch}</p>
-                
-                <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: black; font-weight: 800; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">
-                    ${p.rating}
-                </div>
-            </div>
-        `;
-    }).join('');
-}
+                    <h3 style="margin:0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">${p.tag}</h3>
+                    <p style="font-size: 0.75rem; color: var(--fuma-text-dim); margin: 5px 0;">${p.pos} | ${p.arch}</p>
+                    <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: black; font-weight: 800; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">
+                        ${p.rating}
+                    </div>
+                </div>`;
+        }).join('');
+    }
 
     // --- 9. INITIALISATION ---
+    // Injection du menu et gestion globale
     injectNavigation();
     handleProfilePage();
     setupFormSubmission();
 
-    // Recherche clubs (index/clubs)
+    // Écouteur pour le nouveau filtre de Saison
+    const seasonFilter = document.getElementById('filter-season');
+    seasonFilter?.addEventListener('change', (e) => {
+        fetchFumaPlayers(e.target.value);
+    });
+
+    // Recherche globale de clubs (utilisée sur index.html ou clubs.html)
     const searchInput = document.getElementById('fuma-search');
     searchInput?.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
         renderClubs(allClubs.filter(c => c.name.toLowerCase().includes(term)));
     });
 
-    // Back to top
+    // Bouton retour en haut
     const backBtn = document.getElementById('backTop');
     window.addEventListener('scroll', () => {
         if (window.scrollY > 400) backBtn?.classList.add('visible');
@@ -500,9 +511,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     backBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-    // Chargements spécifiques aux pages
+    // Chargements initiaux selon la page active
     if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
-    if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
+    if (document.getElementById('fuma-js-players')) fetchFumaPlayers(); // Charge la saison par défaut (All Seasons)
     if (document.getElementById('club-details')) loadClubProfile();
 });
 
