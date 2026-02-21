@@ -226,42 +226,46 @@
     }
 
     .match-teams-container {
-        flex-direction: column; /* Empilement vertical des lignes d'équipes */
-        align-items: flex-start;
-        gap: 8px;
+        flex-direction: column !important; /* Empile les deux équipes */
+        align-items: stretch !important;   /* Force à prendre toute la largeur */
+        gap: 10px;
     }
 
     .match-team {
-        width: 100%;
-        justify-content: space-between; /* Nom à gauche, Score à droite */
-        flex-direction: row; 
-        text-align: left;
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important;    /* Aligne logo+nom horizontalement */
+        justify-content: flex-start !important; /* Aligne tout à gauche par défaut */
+        align-items: center;
+        text-align: left !important;
     }
 
-    .match-team.home { justify-content: space-between; }
-
-    /* On cache la box de score centrale sur mobile */
-    .match-score-box {
-        display: none; 
+    /* Force l'équipe du haut (Home) à s'aligner comme celle du bas */
+    .match-team.home {
+        justify-content: flex-start !important;
     }
 
-    /* On crée un affichage spécifique pour le score à droite sur mobile */
+    /* Le score est poussé tout à fait à droite grâce au margin-left: auto */
     .mobile-score {
         display: block !important;
+        margin-left: auto; 
         font-weight: 800;
         color: var(--fuma-primary);
         font-size: 1.1rem;
+        min-width: 30px;
+        text-align: right;
     }
-    
+
+    /* On s'assure que le logo est toujours avant le texte */
     .match-team img {
-        order: -1; /* Logo toujours à gauche du nom */
+        order: -1 !important; 
         margin: 0 10px 0 0 !important;
     }
-}
 
-/* Cache le score mobile par défaut sur Desktop */
-.mobile-score {
-    display: none;
+    /* Cache la boîte de score centrale du mode Desktop */
+    .match-score-box {
+        display: none !important;
+    }
 }
 
     /* --- 7. RESPONSIVE MOBILE --- */
