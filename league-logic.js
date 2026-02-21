@@ -205,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('fixtures-list');
     if (!container) return;
 
+    // Récupération des IDs pour le lien dynamique
     const sSel = document.getElementById('season-master-select').value;
     const dSel = document.getElementById('division-master-select').value;
     const currentGid = LEAGUE_CONFIG[sSel][dSel].fixtures;
@@ -216,13 +217,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const scoreAway = (row[col.sa] !== "" && !isNaN(row[col.sa])) ? row[col.sa] : "-";
         const played = scoreHome !== "-";
 
+        // URL vers la page de détails
         const detailsUrl = `info-match.html?gid=${currentGid}&home=${encodeURIComponent(row[col.h])}&away=${encodeURIComponent(row[col.a])}`;
 
         return `
-        <a href="${detailsUrl}" class="match-card" style="opacity: ${played ? '1' : '0.8'}">
+        <a href="${detailsUrl}" class="match-card" style="opacity: ${played ? '1' : '0.7'}">
             <div class="match-teams-container">
                 <div class="match-team home">
-                    <img src="${row[col.lh]}" style="width:25px; height:25px; object-fit:contain;">
+                    <img src="${row[col.lh]}" style="width:28px; height:28px; object-fit:contain;">
                     <span>${row[col.h]}</span>
                     <span class="mobile-score">${scoreHome}</span>
                 </div>
@@ -232,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
 
                 <div class="match-team away">
-                    <img src="${row[col.la]}" style="width:25px; height:25px; object-fit:contain;">
+                    <img src="${row[col.la]}" style="width:28px; height:28px; object-fit:contain;">
                     <span>${row[col.a]}</span>
                     <span class="mobile-score">${scoreAway}</span>
                 </div>
@@ -240,7 +242,6 @@ document.addEventListener('DOMContentLoaded', () => {
         </a>`;
     }).join('');
 }
-
     function parseCSVLine(l) {
         let v=[], c="", q=false;
         for (let char of l) {
