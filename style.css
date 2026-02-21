@@ -467,7 +467,44 @@ body, .fuma-wrapper {
     min-width: 0;
 }
 
+.division-filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    align-items: flex-end;
+    margin-bottom: 40px;
+    padding: 25px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
 
+.selector-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.selector-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--fuma-primary);
+    font-weight: 600;
+    margin-left: 5px;
+}
+
+/* On surcharge la classe existante pour correspondre au look League */
+.fuma-search-input {
+    min-width: 160px;
+    width: auto !important;
+    background: rgba(255, 255, 255, 0.07) !important;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    padding: 10px 15px !important;
+}
 
 /* --- INPUTS SPÉCIFIQUES & SELECTS --- */
 
@@ -655,6 +692,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
