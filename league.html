@@ -1,89 +1,118 @@
 <!DOCTYPE html>
 <html lang="fr">
-     </head>
-<style>
-    /* --- MISE EN PAGE SPÉCIFIQUE LEAGUE --- */
-
-/* Conteneur des filtres (Saison, Division, Journée) */
-.division-filter-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 40px;
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 15px;
-}
-
-/* Forcer la largeur auto pour que les menus ne prennent pas toute la ligne */
-.division-filter-container select {
-    min-width: 180px;
-    width: auto !important;
-}
-
-/* Onglets (Tabs) de la page League */
-.league-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 30px;
-}
-
-.tab-btn {
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--fuma-text-dim);
-    padding: 10px 25px;
-    border-radius: 30px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: 0.3s;
-}
-
-.tab-btn.active {
-    background: var(--fuma-primary);
-    color: black;
-    border-color: var(--fuma-primary);
-}
-
-/* Match Cards */
-.match-card {
-    background: var(--fuma-bg-card);
-    border: var(--fuma-border);
-    border-radius: 12px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 15px;
-    transition: transform 0.2s;
-}
-
-.match-card:hover {
-    transform: translateY(-3px);
-    border-color: rgba(212, 175, 55, 0.3);
-}
-<style>
-    
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FUMA CLUBS - LEAGUE DASHBOARD</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
     <link rel="stylesheet" href="style.css">
     
-    </head>
+    <style>
+        /* --- CORRECTIFS DE MISE EN PAGE --- */
+
+        .division-filter-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            align-items: flex-end; /* Aligne les menus avec leurs labels */
+            margin-bottom: 40px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .selector-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .selector-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--fuma-primary);
+            font-weight: 600;
+            margin-left: 5px;
+        }
+
+        /* Forcer la largeur des menus pour la cohérence */
+        .fuma-search-input {
+            min-width: 160px;
+            width: auto !important;
+        }
+
+        /* Onglets (Tabs) */
+        .league-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--fuma-text-dim);
+            padding: 10px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--fuma-primary);
+            color: black;
+            border-color: var(--fuma-primary);
+        }
+
+        .league-content {
+            display: none; /* Masqué par défaut */
+        }
+        
+        .league-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Match Cards */
+        .match-card {
+            background: var(--fuma-bg-card);
+            border: var(--fuma-border);
+            border-radius: 12px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .match-card:hover {
+            transform: translateX(5px);
+            border-color: var(--fuma-primary);
+        }
+    </style>
+</head>
 <body>
 
 <div class="fuma-wrapper">
     <nav class="fuma-nav" id="main-nav"></nav>
 
-    <header class="fuma-hero" style="padding: 80px 20px 120px;">
-        <h1 class="fuma-hero-subtitle" style="font-size: 3.5rem; margin-bottom: 10px;">PRO CLUBS</h1>
-        <p id="current-league-display" style="background: var(--fuma-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; letter-spacing: 4px; text-transform: uppercase; font-size: 1.2rem;">CHARGEMENT...</p>
+    <header class="fuma-hero" style="padding: 60px 20px 80px;">
+        <h1 class="fuma-hero-subtitle" style="font-size: 3rem; margin-bottom: 10px;">PRO CLUBS</h1>
+        <p id="current-league-display" style="color: var(--fuma-primary); font-weight: 800; letter-spacing: 3px; text-transform: uppercase;">CHARGEMENT...</p>
     </header>
 
     <div class="fuma-container">
@@ -96,10 +125,7 @@
                 <span class="selector-label">Division</span>
                 <select id="division-master-select" class="fuma-search-input"></select>
             </div>
-            <div class="selector-wrapper">
-                <span class="selector-label">Journée</span>
-                </div>
-        </div>
+            </div>
 
         <div class="league-tabs">
             <button class="tab-btn active" onclick="openTab(event, 'standings')"><i class="fas fa-list-ol"></i> Classement</button>
@@ -112,7 +138,7 @@
                 <table class="fuma-table">
                     <thead>
                         <tr>
-                            <th style="width: 80px;">Tendance</th>
+                            <th style="width: 80px;">Pos.</th>
                             <th>Club</th>
                             <th>MJ</th>
                             <th class="fuma-hide-mobile">V</th>
@@ -132,12 +158,10 @@
         </div>
 
         <div id="stats" class="league-content">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
                 <div class="sidebar-box">
                     <h3><i class="fas fa-futbol"></i> Meilleurs Buteurs</h3>
-                    <div id="top-scorers-list">
-                        <div class="stat-item"><span>Joueur Exemple</span> <b>12</b></div>
-                    </div>
+                    <div id="top-scorers-list"></div>
                 </div>
                 <div class="sidebar-box">
                     <h3><i class="fas fa-magic"></i> Meilleurs Passeurs</h3>
@@ -154,15 +178,14 @@
     function openTab(evt, tabName) {
         let content = document.getElementsByClassName("league-content");
         for (let i = 0; i < content.length; i++) {
-            content[i].style.display = "none";
             content[i].classList.remove("active");
         }
         let tabs = document.getElementsByClassName("tab-btn");
-        for (let i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
+        for (let i = 0; i < tabs.length; i++) {
+            tabs[i].classList.remove("active");
+        }
         
-        const target = document.getElementById(tabName);
-        target.style.display = "block";
-        setTimeout(() => target.classList.add("active"), 10);
+        document.getElementById(tabName).classList.add("active");
         evt.currentTarget.classList.add("active");
     }
 </script>
