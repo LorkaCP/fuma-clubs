@@ -9,11 +9,13 @@
     <link rel="stylesheet" href="style.css">
     
     <style>
-        /* --- Styles spécifiques aux Divisions --- */
+        /* --- Styles spécifiques au Dashboard --- */
         .division-filter-container {
             display: flex;
             justify-content: center;
-            margin-bottom: 20px;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
             animation: fadeInDown 0.5s ease;
         }
 
@@ -21,20 +23,20 @@
             background: var(--fuma-bg-card);
             color: var(--fuma-primary);
             border: 2px solid var(--fuma-primary);
-            padding: 12px 25px;
+            padding: 10px 20px;
             border-radius: 12px;
             font-family: 'Poppins', sans-serif;
-            font-weight: 800;
+            font-weight: 700;
             cursor: pointer;
             outline: none;
             transition: 0.3s;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-top:15px;
         }
 
         .division-selector:hover {
             box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+            transform: translateY(-2px);
         }
 
         /* --- Onglets --- */
@@ -50,7 +52,7 @@
             background: var(--fuma-bg-card);
             border: 1px solid rgba(255,255,255,0.1);
             color: var(--fuma-text-dim);
-            padding: 10px 20px;
+            padding: 10px 25px;
             border-radius: 50px;
             cursor: pointer;
             transition: 0.3s;
@@ -79,31 +81,25 @@
             align-items: center;
             justify-content: space-between;
             transition: 0.3s;
+            position: relative;
         }
 
         .match-card:hover { border-color: var(--fuma-primary); transform: translateY(-3px); }
 
-        .match-team { width: 35%; font-weight: 600; }
+        .match-team { width: 38%; font-weight: 600; font-size: 0.95rem; }
         .match-score { 
             width: 20%; 
             text-align: center; 
-            font-size: 1.5rem; 
+            font-size: 1.4rem; 
             font-weight: 800; 
             color: var(--fuma-primary); 
         }
 
-        /* --- Indicateurs de classement --- */
-        .pos-up { border-left: 4px solid #00ff88 !important; } /* Zone Promotion */
-        .pos-down { border-left: 4px solid #ff4d4d !important; } /* Zone Relégation */
+        .match-logo { width: 30px; height: 30px; object-fit: contain; }
 
-        .report-form-container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: var(--fuma-bg-card);
-            padding: 30px;
-            border-radius: 20px;
-            border: 1px solid var(--fuma-primary);
-        }
+        /* --- Indicateurs de classement --- */
+        .pos-up { border-left: 4px solid #00ff88 !important; } 
+        .pos-down { border-left: 4px solid #ff4d4d !important; } 
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
@@ -116,13 +112,18 @@
 
     <header class="fuma-hero" style="padding: 60px 20px;">
         <h1 class="fuma-hero-subtitle">FUMA League Clubs</h1>
-        <p id="current-division-title" style="color: var(--fuma-primary); font-weight: 800; letter-spacing: 2px;">DIVISION 1</p>
+        <p id="current-league-display" style="color: var(--fuma-primary); font-weight: 800; letter-spacing: 2px; text-transform: uppercase;">Saison 1 - Division 1</p>
     </header>
 
     <div class="fuma-container">
         
         <div class="division-filter-container">
-            <select id="division-master-select" class="division-selector" onchange="changeDivision(this.value)">
+            <select id="season-master-select" class="division-selector" onchange="updateLeagueDashboard()">
+                <option value="S1">Saison 1</option>
+                <option value="S2">Saison 2</option>
+            </select>
+
+            <select id="division-master-select" class="division-selector" onchange="updateLeagueDashboard()">
                 <option value="D1">🏆 Division 1</option>
                 <option value="D2">🥈 Division 2</option>
             </select>
@@ -132,7 +133,7 @@
             <button class="tab-btn active" onclick="openTab(event, 'standings')">Classement</button>
             <button class="tab-btn" onclick="openTab(event, 'fixtures')">Calendrier & Résultats</button>
             <button class="tab-btn" onclick="openTab(event, 'stats')">Statistiques</button>
-            <button class="tab-btn" onclick="openTab(event, 'report')"><i class="fas fa-edit"></i> Rapport de Match</button>
+            <button class="tab-btn" onclick="openTab(event, 'report')"><i class="fas fa-edit"></i> Rapport</button>
         </div>
 
         <div id="standings" class="league-content active">
@@ -151,73 +152,42 @@
                     </tr>
                 </thead>
                 <tbody id="league-table-body">
-                    <tr class="pos-up">
-                        <td>1</td>
-                        <td style="color: var(--fuma-primary);">Chargement...</td>
-                        <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
-                    </tr>
-                </tbody>
+                    </tbody>
             </table>
-            <div style="margin-top: 15px; font-size: 0.75rem; color: var(--fuma-text-dim); display: flex; gap: 20px;">
-                <span><i class="fas fa-square" style="color: #00ff88;"></i> Promotion / Champion</span>
-                <span><i class="fas fa-square" style="color: #ff4d4d;"></i> Relégation</span>
-            </div>
         </div>
 
         <div id="fixtures" class="league-content">
-            <h2 class="fuma-section-title">Matchs de la Division</h2>
+            <h2 class="fuma-section-title">Matchs & Résultats</h2>
             <div id="fixtures-list">
-                <p style="text-align: center; color: var(--fuma-text-dim);">Sélectionnez une journée ou une division...</p>
-            </div>
+                </div>
         </div>
 
         <div id="stats" class="league-content">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
                 <div class="sidebar-box">
                     <h3><i class="fas fa-futbol"></i> Meilleurs Buteurs</h3>
-                    <ul id="top-scorers-list" style="list-style: none; padding: 0;">
-                        </ul>
+                    <ul id="top-scorers-list" style="list-style: none; padding: 0;"></ul>
                 </div>
                 <div class="sidebar-box">
                     <h3><i class="fas fa-star"></i> Meilleurs Passeurs</h3>
-                    <ul id="top-assists-list" style="list-style: none; padding: 0;">
-                        </ul>
+                    <ul id="top-assists-list" style="list-style: none; padding: 0;"></ul>
                 </div>
             </div>
         </div>
 
         <div id="report" class="league-content">
-            <div class="report-form-container">
-                <h2 style="color: var(--fuma-primary); text-align: center;">Soumettre un Rapport de Match</h2>
-                <p style="text-align: center; font-size: 0.8rem; margin-bottom: 30px;">Réservé aux Capitaines. Les données seront vérifiées par l'administration.</p>
-                
+            <div class="report-form-container" style="max-width: 800px; margin: 0 auto; background: var(--fuma-bg-card); padding: 30px; border-radius: 20px; border: 1px solid var(--fuma-primary);">
+                <h2 style="color: var(--fuma-primary); text-align: center;">Soumettre un Rapport</h2>
                 <form id="matchReportForm">
                     <div class="form-group">
-                        <label>Match Concerné</label>
-                        <select id="report-match-id" class="fuma-search-input" required>
-                            </select>
+                        <label>Sélectionner le Match</label>
+                        <select id="report-match-id" class="fuma-search-input" required></select>
                     </div>
-
-                    <div style="display: flex; gap: 20px; align-items: center; margin: 20px 0;">
-                        <div style="flex: 1; text-align: center;">
-                            <label id="home-team-label">Domicile</label>
-                            <input type="number" id="home-score" placeholder="0" class="fuma-search-input" style="text-align: center; font-size: 2rem;">
-                        </div>
-                        <span style="font-weight: 800; margin-top: 20px;">VS</span>
-                        <div style="flex: 1; text-align: center;">
-                            <label id="away-team-label">Extérieur</label>
-                            <input type="number" id="away-score" placeholder="0" class="fuma-search-input" style="text-align: center; font-size: 2rem;">
-                        </div>
-                    </div>
-
-                    <h3 style="margin-top: 30px; font-size: 1rem; border-bottom: 1px solid var(--fuma-primary); padding-bottom: 5px;">Stats de vos joueurs</h3>
-                    <div id="roster-inputs-container" style="margin-top: 15px;">
-                        </div>
-
-                    <button type="submit" class="fuma-cta" style="width: 100%; margin-top: 30px;">Envoyer le Rapport Officiel</button>
+                    <button type="submit" class="fuma-cta" style="width: 100%; margin-top: 20px;">Envoyer le Rapport</button>
                 </form>
             </div>
         </div>
+
     </div>
 </div>
 
@@ -237,18 +207,25 @@
         evt.currentTarget.classList.add("active");
     }
 
-    // --- LOGIQUE DE CHANGEMENT DE DIVISION ---
-    function changeDivision(divValue) {
-        // Mise à jour du titre visuel
-        document.getElementById('current-division-title').innerText = divValue === 'D1' ? 'DIVISION 1' : 'DIVISION 2';
+    // --- MISE À JOUR DU DASHBOARD ---
+    function updateLeagueDashboard() {
+        const season = document.getElementById('season-master-select').value;
+        const division = document.getElementById('division-master-select').value;
         
-        // Appel des fonctions globales définies dans script.js
+        // Mise à jour visuelle du titre
+        const display = document.getElementById('current-league-display');
+        if (display) display.innerText = `Saison ${season.replace('S','')} - Division ${division.replace('D','')}`;
+        
+        // Appel de la fonction de chargement globale dans script.js
         if (typeof loadLeagueData === "function") {
-            loadLeagueData(divValue);
-        } else {
-            console.log("Fonction loadLeagueData non trouvée dans script.js");
+            loadLeagueData(season, division);
         }
     }
+
+    // Initialisation automatique au chargement de la page
+    window.addEventListener('DOMContentLoaded', () => {
+        updateLeagueDashboard();
+    });
 </script>
 
 <script src="script.js"></script>
