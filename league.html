@@ -172,22 +172,97 @@
     }
 
     /* --- 6. MATCH CARDS (CALENDRIER) --- */
+    ./* --- OPTIMISATION CALENDRIER MOBILE --- */
+
+/* Conteneur de la carte de match */
+/* --- CALENDRIER OPTIMISÉ (ÉQUIPES EMPILÉES SUR MOBILE) --- */
+
+.match-card {
+    background: var(--fuma-bg-card);
+    border: var(--fuma-border);
+    border-radius: 12px;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+}
+
+/* Conteneur qui regroupe les deux équipes */
+.match-teams-container {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    justify-content: center; /* Centré sur grand écran */
+    gap: 20px;
+}
+
+.match-team {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    width: 40%; /* Largeur fixe pour l'alignement desktop */
+}
+
+.match-team.home { justify-content: flex-end; text-align: right; }
+.match-team.away { justify-content: flex-start; text-align: left; }
+
+.match-score-box {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-weight: 800;
+    color: var(--fuma-primary);
+    min-width: 60px;
+    text-align: center;
+}
+
+/* --- RESPONSIVE MOBILE (Équipes l'une sur l'autre) --- */
+@media (max-width: 768px) {
     .match-card {
-        background: var(--fuma-bg-card);
-        border: var(--fuma-border);
-        border-radius: 12px;
-        padding: 15px 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 12px;
-        transition: all 0.3s ease;
+        padding: 12px 15px;
     }
 
-    .match-card:hover {
-        transform: translateX(5px);
-        border-color: var(--fuma-primary);
+    .match-teams-container {
+        flex-direction: column; /* Empilement vertical des lignes d'équipes */
+        align-items: flex-start;
+        gap: 8px;
     }
+
+    .match-team {
+        width: 100%;
+        justify-content: space-between; /* Nom à gauche, Score à droite */
+        flex-direction: row; 
+        text-align: left;
+    }
+
+    .match-team.home { justify-content: space-between; }
+
+    /* On cache la box de score centrale sur mobile */
+    .match-score-box {
+        display: none; 
+    }
+
+    /* On crée un affichage spécifique pour le score à droite sur mobile */
+    .mobile-score {
+        display: block !important;
+        font-weight: 800;
+        color: var(--fuma-primary);
+        font-size: 1.1rem;
+    }
+    
+    .match-team img {
+        order: -1; /* Logo toujours à gauche du nom */
+        margin: 0 10px 0 0 !important;
+    }
+}
+
+/* Cache le score mobile par défaut sur Desktop */
+.mobile-score {
+    display: none;
+}
 
     /* --- 7. RESPONSIVE MOBILE --- */
     @media (max-width: 768px) {
