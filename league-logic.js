@@ -205,32 +205,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('fixtures-list');
     if (!container) return;
 
+    // Récupérer le GID actuel depuis votre logique de sélection
+    const sSel = document.getElementById('season-master-select').value;
+    const dSel = document.getElementById('division-master-select').value;
+    const currentGid = LEAGUE_CONFIG[sSel][dSel].fixtures;
+
     container.innerHTML = data.map(row => {
         if(!row[col.h]) return '';
         
-        const scoreHome = row[col.sh] !== "" && !isNaN(row[col.sh]) ? row[col.sh] : "-";
-        const scoreAway = row[col.sa] !== "" && !isNaN(row[col.sa]) ? row[col.sa] : "-";
-        const played = scoreHome !== "-";
+        const scoreHome = (row[col.sh] !== "" && !isNaN(row[col.sh])) ? row[col.sh] : "-";
+        const scoreAway = (row[col.sa] !== "" && !isNaN(row[col.sa])) ? row[col.sa] : "-";
+
+        // ON AJOUTE LE GID ICI DANS L'URL
+        const detailsUrl = `info-match.html?gid=${currentGid}&home=${encodeURIComponent(row[col.h])}&away=${encodeURIComponent(row[col.a])}`;
 
         return `
-        <div class="match-card" style="opacity: ${played ? '1' : '0.7'}">
+        <div class="match-card">
             <div class="match-teams-container">
                 <div class="match-team home">
-                    <img src="${row[col.lh]}" onerror="this.style.opacity='0'" style="width:24px; height:24px; object-fit:contain;">
+                    <img src="${row[col.lh]}" style="width:25px; height:25px; object-fit:contain;">
                     <span>${row[col.h]}</span>
                     <span class="mobile-score">${scoreHome}</span>
                 </div>
-
-                <div class="match-score-box">
-                    ${scoreHome} : ${scoreAway}
-                </div>
-
+                <div class="match-score-box">${scoreHome} : ${scoreAway}</div>
                 <div class="match-team away">
-                    <img src="${row[col.la]}" onerror="this.style.opacity='0'" style="width:24px; height:24px; object-fit:contain;">
+                    <img src="${row[col.la]}" style="width:25px; height:25px; object-fit:contain;">
                     <span>${row[col.a]}</span>
                     <span class="mobile-score">${scoreAway}</span>
                 </div>
             </div>
+            <a href="${detailsUrl}" class="btn-match-details">
+                <i class="fas fa-plus-circle"></i>
+            </a>
         </div>`;
     }).join('');
 }
