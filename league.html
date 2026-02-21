@@ -177,6 +177,8 @@
 /* Conteneur de la carte de match */
 /* --- CALENDRIER OPTIMISÉ (ÉQUIPES EMPILÉES SUR MOBILE) --- */
 
+/* --- CALENDRIER : CARTES CLIQUABLES --- */
+
 .match-card {
     background: var(--fuma-bg-card);
     border: var(--fuma-border);
@@ -185,18 +187,27 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 25px; /* Écart augmenté pour plus de clarté */
     transition: all 0.3s ease;
+    cursor: pointer; /* Indique que c'est cliquable */
+    position: relative;
+    text-decoration: none; /* Enlève le soulignement du texte si entouré par un <a> */
 }
 
-/* Conteneur qui regroupe les deux équipes */
+/* Effet au survol */
+.match-card:hover {
+    background: rgba(212, 175, 55, 0.05);
+    border-color: rgba(212, 175, 55, 0.3);
+    transform: translateX(5px); /* Petit décalage vers la droite */
+}
+
 .match-teams-container {
     display: flex;
     align-items: center;
     flex: 1;
-    justify-content: center; /* Centré sur grand écran */
+    justify-content: center;
     gap: 20px;
-    margin-bottom: 20px;
+    /* margin-bottom supprimé ici car il créait un vide inutile avec la carte cliquable */
 }
 
 .match-team {
@@ -204,7 +215,7 @@
     align-items: center;
     gap: 10px;
     font-weight: 600;
-    width: 40%; /* Largeur fixe pour l'alignement desktop */
+    width: 40%;
 }
 
 .match-team.home { justify-content: flex-end; text-align: right; }
@@ -220,9 +231,60 @@
     text-align: center;
 }
 
-   .mobile-score {
-        display: none;
-          }
+/* La pastille de score mobile */
+.mobile-score {
+    display: none;
+}
+
+/* Flèche discrète à droite (Desktop) */
+.match-card::after {
+    content: '\f105';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    color: var(--fuma-text-dim);
+    margin-left: 15px;
+    transition: color 0.3s;
+}
+
+.match-card:hover::after {
+    color: var(--fuma-primary);
+}
+
+/* --- RESPONSIVE MOBILE --- */
+@media (max-width: 768px) {
+    .match-card {
+        padding: 15px;
+    }
+
+    .match-teams-container {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px;
+    }
+
+    .match-team {
+        width: 100% !important;
+        justify-content: flex-start !important;
+    }
+
+    .match-team.home { justify-content: flex-start !important; }
+
+    .match-score-box {
+        display: none !important;
+    }
+
+    .mobile-score {
+        display: block !important;
+        margin-left: auto;
+        font-weight: 800;
+        color: var(--fuma-primary);
+    }
+
+    .match-team img {
+        order: -1 !important;
+        margin: 0 10px 0 0 !important;
+    }
+}
 
         @media (max-width: 768px) {
     /* On cache la boîte de score centrale */
