@@ -1,6 +1,6 @@
 /**
  * FUMA CLUBS - LEAGUE LOGIC SYSTEM
- * Calcul du classement + Gestion automatique des Matchdays
+ * Classement historique, Tendances et Indice de retard (Matchs en moins)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -67,14 +67,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const resp = await fetch(`${BASE_CSV_URL}${gid}`);
             const text = await resp.text();
             const rows = text.split('\n').map(parseCSVLine);
-            const headers = rows[0].map(h => h.trim()); // Nettoyage des espaces
+            const headers = rows[0].map(h => h.trim());
             currentMatchesData = rows.slice(1);
 
-            // --- MAPPING DES COLONNES (Vérifie bien l'orthographe exacte dans ton Sheet) ---
             col = {
-                day: headers.indexOf('Matchday'),    // Ton nouveau nom
-                start: headers.indexOf('StartDate'), // Ton nouveau nom
-                end: headers.indexOf('EndDate'),     // Ton nouveau nom
+                day: headers.indexOf('Matchday'),
+                start: headers.indexOf('StartDate'),
+                end: headers.indexOf('EndDate'),
                 h: headers.indexOf('TeamHome'),
                 a: headers.indexOf('TeamAway'),
                 sh: headers.indexOf('ScoreHome'),
@@ -83,11 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 la: headers.indexOf('CrestAway')
             };
 
-            // Debug en console pour vérifier si les colonnes sont trouvées (-1 = non trouvé)
-            console.log("Index des colonnes:", col);
-
             initMatchdaySelect();
-            calculateStandings(currentMatchesData, col);
 
         } catch (e) {
             console.error("Erreur:", e);
@@ -102,7 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         .sort((a, b) => parseInt(a) - parseInt(b));
         
         if (days.length === 0) return;
-
         mSel.innerHTML = days.map(d => `<option value="${d}">Journée ${d}</option>`).join('');
 
         const now = new Date();
@@ -113,7 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!row[col.start] || !row[col.end]) continue;
             const startDate = new Date(row[col.start]);
             const endDate = new Date(row[col.end]);
-            
             if (now >= startDate && now <= endDate) {
                 autoDay = row[col.day];
                 break;
@@ -125,61 +118,110 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function filterMatchesByDay() {
-        const selectedDay = document.getElementById('matchday-select').value;
-        const filtered = currentMatchesData.filter(r => r[col.day] === selectedDay);
-        renderMatches(filtered);
+        const selectedDay = parseInt(document.getElementById('matchday-select').value);
+        
+        // 1. Calendrier
+        const matchesToDisplay = currentMatchesData.filter(r => parseInt(r[col.day]) === selectedDay);
+        renderMatches(matchesToDisplay);
+
+        // 2. Classement Actuel
+        const currentStandings = calculateStandingsData(currentMatchesData.filter(r => parseInt(r[col.day]) <= selectedDay));
+        
+        // 3. Classement Précédent (pour tendance)
+        const previousStandings = (selectedDay > 1) 
+            ? calculateStandingsData(currentMatchesData.filter(r => parseInt(r[col.day]) <= (selectedDay - 1)))
+            : null;
+
+        renderStandingsTable(currentStandings, previousStandings);
     }
 
-    function renderMatches(data) {
-        const container = document.getElementById('fixtures-list');
-        if (data.length === 0) {
-            container.innerHTML = "<p style='text-align:center;'>Aucun match pour cette journée.</p>";
-            return;
-        }
-
-        container.innerHTML = data.map(row => {
-            if(!row[col.h]) return '';
-            return `
-            <div class="match-card">
-                <div class="match-team" style="justify-content:flex-end; text-align:right;">
-                    ${row[col.h]} <img src="${row[col.lh]}" style="width:25px; height:25px; object-fit:contain;">
-                </div>
-                <div class="match-score">${row[col.sh] || '-'} : ${row[col.sa] || '-'}</div>
-                <div class="match-team">
-                    <img src="${row[col.la]}" style="width:25px; height:25px; object-fit:contain;"> ${row[col.a]}
-                </div>
-            </div>`;
-        }).join('');
-    }
-
-    function calculateStandings(data, c) {
+    function calculateStandingsData(matches) {
         const stats = {};
-        data.forEach(row => {
-            const h = row[c.h], a = row[c.a];
-            const sh = parseInt(row[c.sh]), sa = parseInt(row[c.sa]);
+        matches.forEach(row => {
+            const h = row[col.h], a = row[col.a];
+            const sh = parseInt(row[col.sh]), sa = parseInt(row[col.sa]);
             if (h && a) {
                 [h, a].forEach(t => { if (!stats[t]) stats[t] = { name: t, mj:0, v:0, n:0, d:0, bp:0, bc:0, pts:0 }; });
                 if (!isNaN(sh) && !isNaN(sa)) {
                     stats[h].mj++; stats[a].mj++;
                     stats[h].bp += sh; stats[h].bc += sa;
-                    stats[a].bp += sa; stats[a].bc += sh;
+                    stats[away] ? null : null; // Safety check
+                    stats[h].bp += sh; // BP
                     if (sh > sa) { stats[h].v++; stats[h].pts += 3; stats[a].d++; }
                     else if (sh < sa) { stats[a].v++; stats[a].pts += 3; stats[h].d++; }
                     else { stats[h].n++; stats[a].n++; stats[h].pts += 1; stats[a].pts += 1; }
                 }
             }
         });
-        const sorted = Object.values(stats).sort((a,b) => b.pts - a.pts || (b.bp-b.bc) - (a.bp-a.bc));
+        return Object.values(stats).sort((a,b) => b.pts - a.pts || (b.bp-b.bc) - (a.bp-a.bc) || b.bp - a.bp);
+    }
+
+    function renderStandingsTable(current, previous) {
         const tbody = document.getElementById('league-table-body');
-        if (tbody) {
-            tbody.innerHTML = sorted.map((t, i) => `
-                <tr class="${i < 2 ? 'pos-up' : (i >= sorted.length - 2 ? 'pos-down' : '')}">
-                    <td>${i+1}</td>
-                    <td style="color:var(--fuma-primary); font-weight:800;">${t.name}</td>
-                    <td>${t.mj}</td><td>${t.v}</td><td>${t.n}</td><td>${t.d}</td>
-                    <td>${t.bp - t.bc}</td><td style="color:white; font-weight:800;">${t.pts}</td>
-                </tr>`).join('');
+        if (!tbody) return;
+
+        // On trouve le nombre max de matchs joués pour l'indice de retard
+        const maxMJ = Math.max(...current.map(t => t.mj));
+
+        tbody.innerHTML = current.map((team, index) => {
+            // Logique Tendance
+            let trendHtml = '<span style="color:gray; opacity:0.3; font-size:0.7rem;">-</span>';
+            if (previous) {
+                const oldPos = previous.findIndex(t => t.name === team.name);
+                if (oldPos !== -1) {
+                    if (index < oldPos) trendHtml = '<i class="fas fa-caret-up" style="color:#00ff88;"></i>';
+                    else if (index > oldPos) trendHtml = '<i class="fas fa-caret-down" style="color:#ff4d4d;"></i>';
+                }
+            }
+
+            // Logique Indice Retard (-1, -2...)
+            let delayHtml = "";
+            const delay = maxMJ - team.mj;
+            if (delay > 0) {
+                delayHtml = `<span style="color:#ffae00; font-size:0.7rem; margin-left:5px; font-weight:800;">(-${delay})</span>`;
+            }
+
+            return `
+                <tr class="${index < 2 ? 'pos-up' : (index >= current.length - 2 ? 'pos-down' : '')}">
+                    <td style="text-align:center;">
+                        <div style="display:flex; flex-direction:column; align-items:center;">
+                            ${trendHtml}
+                            <span style="font-weight:800; font-size:1.1rem;">${index + 1}</span>
+                        </div>
+                    </td>
+                    <td style="color:var(--fuma-primary); font-weight:800;">${team.name}</td>
+                    <td>${team.mj}${delayHtml}</td>
+                    <td class="fuma-hide-mobile">${team.v}</td>
+                    <td class="fuma-hide-mobile">${team.n}</td>
+                    <td class="fuma-hide-mobile">${team.d}</td>
+                    <td>${team.bp - team.bc}</td>
+                    <td style="color:white; font-weight:800; background: rgba(0,255,136,0.1);">${team.pts}</td>
+                </tr>`;
+        }).join('');
+    }
+
+    function renderMatches(data) {
+        const container = document.getElementById('fixtures-list');
+        if (data.length === 0) {
+            container.innerHTML = "<p style='text-align:center; padding:20px; color:var(--fuma-text-dim);'>Aucun match.</p>";
+            return;
         }
+        container.innerHTML = data.map(row => {
+            if(!row[col.h]) return '';
+            const played = !isNaN(parseInt(row[col.sh]));
+            return `
+            <div class="match-card" style="opacity: ${played ? '1' : '0.6'}">
+                <div class="match-team" style="justify-content:flex-end; text-align:right;">
+                    ${row[col.h]} <img src="${row[col.lh]}" style="width:25px; height:25px; object-fit:contain; margin-left:10px;">
+                </div>
+                <div class="match-score" style="min-width:70px; text-align:center;">
+                    ${row[col.sh] || '-'} : ${row[col.sa] || '-'}
+                </div>
+                <div class="match-team">
+                    <img src="${row[col.la]}" style="width:25px; height:25px; object-fit:contain; margin-right:10px;"> ${row[col.a]}
+                </div>
+            </div>`;
+        }).join('');
     }
 
     function parseCSVLine(l) {
