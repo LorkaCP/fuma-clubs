@@ -286,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             return `
                                 <li style="margin-bottom: 8px;">
                                     <i class="fas fa-user-circle" style="font-size:0.8rem; margin-right:10px; color:var(--fuma-primary);"></i>
-                                    <a href="player.html?tag=${encodeURIComponent(p)}" style="color: var(--fuma-text-main); text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='var(--fuma-primary)'" onmouseout="this.style.color='var(--fuma-text-main)'">
+                                    <a href="player.html?id=${encodeURIComponent(p)}" style="color: var(--fuma-text-main); text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='var(--fuma-primary)'" onmouseout="this.style.color='var(--fuma-text-main)'">
                                         ${p}
                                     </a>
                                 </li>`;
@@ -643,6 +643,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
