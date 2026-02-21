@@ -11,172 +11,209 @@
     <link rel="stylesheet" href="style.css">
     
     <style>
-        /* --- CORRECTIFS DE MISE EN PAGE --- */
+    /* --- 1. FILTRES ET FILTRE DE DIVISION --- */
+    .division-filter-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+        align-items: flex-end;
+        margin-bottom: 40px;
+        padding: 25px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
 
-        .division-filter-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            align-items: flex-end; /* Aligne les menus avec leurs labels */
-            margin-bottom: 40px;
-            padding: 25px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
+    .selector-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
 
-        .selector-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+    .selector-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--fuma-primary);
+        font-weight: 600;
+        margin-left: 5px;
+    }
 
-        .selector-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--fuma-primary);
-            font-weight: 600;
-            margin-left: 5px;
-        }
+    .fuma-search-input {
+        min-width: 160px;
+        width: auto !important;
+        background: rgba(255, 255, 255, 0.07);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 8px;
+    }
 
-        /* Forcer la largeur des menus pour la cohérence */
-        .fuma-search-input {
-            min-width: 160px;
-            width: auto !important;
-        }
+    /* --- 2. ONGLETS (TABS) --- */
+    .league-tabs {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 30px;
+    }
 
-        /* Onglets (Tabs) */
-        .league-tabs {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 30px;
-        }
+    .tab-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--fuma-text-dim);
+        padding: 10px 25px;
+        border-radius: 30px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.3s;
+    }
 
-        .tab-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--fuma-text-dim);
-            padding: 10px 25px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.3s;
-        }
+    .tab-btn.active {
+        background: var(--fuma-primary);
+        color: black;
+        border-color: var(--fuma-primary);
+    }
 
-        .tab-btn.active {
-            background: var(--fuma-primary);
-            color: black;
-            border-color: var(--fuma-primary);
-        }
+    .league-content {
+        display: none;
+    }
+    
+    .league-content.active {
+        display: block;
+        animation: fadeIn 0.4s ease;
+    }
 
-        .league-content {
-            display: none; /* Masqué par défaut */
-        }
-        
-        .league-content.active {
-            display: block;
-            animation: fadeIn 0.4s ease;
-        }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    /* --- 3. STRUCTURE DU TABLEAU DE CLASSEMENT --- */
+    .fuma-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: auto; /* Permet aux colonnes de chiffres de se serrer */
+    }
 
-        /* Match Cards */
-        .match-card {
-            background: var(--fuma-bg-card);
-            border: var(--fuma-border);
-            border-radius: 12px;
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            transition: all 0.3s ease;
-        }
+    /* Style des lignes et Couleur alternée (Zebra Stripes) */
+    .fuma-table tbody tr {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        transition: background 0.2s;
+    }
 
-        .match-card:hover {
-            transform: translateX(5px);
-            border-color: var(--fuma-primary);
-        }
+    .fuma-table tbody tr:nth-child(even) {
+        background: rgba(255, 255, 255, 0.02);
+    }
 
-.fuma-table {
-    table-layout: fixed; /* Force le respect des largeurs sur mobile */
-    width: 100%;
-}
+    .fuma-table tbody tr:hover {
+        background: rgba(0, 255, 136, 0.05);
+    }
 
-/* Colonne Nom du Club */
-.team-cell {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-.team-name {
-    overflow: hidden;
-    text-overflow: ellipsis; /* Ajoute le "..." */
-    white-space: nowrap;
-    max-width: 120px; /* Ajustable selon vos besoins */
-}
-
-/* Ajustement des largeurs de colonnes sur mobile */
-@media (max-width: 768px) {
+    /* --- 4. MODULATION DES COLONNES --- */
+    
+    /* Cellules générales */
     .fuma-table th, .fuma-table td {
-        padding: 8px 4px;
-        font-size: 0.75rem; /* Texte plus petit pour tout faire tenir */
+        padding: 12px 8px;
+        vertical-align: middle;
+    }
+
+    /* Colonne Position (étroite) */
+    .fuma-table th:first-child,
+    .fuma-table td:first-child {
+        width: 50px;
         text-align: center;
     }
 
-    /* On cache uniquement ce qui est vraiment secondaire */
-    .fuma-hide-mobile {
-        display: none;
+    /* Colonne Club (Prend tout l'espace disponible) */
+    .fuma-table th:nth-child(2),
+    .fuma-table td:nth-child(2) {
+        text-align: left;
+        width: auto;
     }
 
-    /* Largeurs fixes pour les colonnes de stats pour gagner de la place */
-    .col-stat {
-        width: 25px;
+    /* Colonnes Chiffres (Serrées et centrées) */
+    .fuma-table th:nth-child(n+3),
+    .fuma-table td:nth-child(n+3) {
+        width: 45px;
+        text-align: center;
+        font-variant-numeric: tabular-nums; /* Chiffres alignés */
     }
-}
 
-
-        /* Conteneur pour Alignement Logo + Nom */
-.team-cell {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    max-width: 100%;
-}
-
-.team-crest {
-    width: 20px;
-    height: 20px;
-    object-fit: contain;
-    flex-shrink: 0; /* Empêche le logo de s'écraser */
-}
-
-.team-name {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis; /* Ajoute les "..." si le nom est trop long */
-    font-weight: 600;
-}
-
-@media (max-width: 600px) {
-    .fuma-table {
-        font-size: 0.75rem; /* Réduction globale pour mobile */
+    /* Colonne Points (Emphase) */
+    .fuma-table th:last-child,
+    .fuma-table td:last-child {
+        width: 55px;
+        font-weight: 800;
+        background: rgba(0, 255, 136, 0.03); /* Légère surbrillance sur la colonne PTS */
     }
+
+    /* --- 5. CELLULE ÉQUIPE (LOGO + NOM TRONQUÉ) --- */
+    .team-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        max-width: 100%;
+    }
+
+    .team-crest {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+        flex-shrink: 0;
+    }
+
     .team-name {
-        max-width: 80px; /* Limite la largeur sur très petit écran */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 600;
+        color: #fff;
     }
-}
+
+    /* --- 6. MATCH CARDS (CALENDRIER) --- */
+    .match-card {
+        background: var(--fuma-bg-card);
+        border: var(--fuma-border);
+        border-radius: 12px;
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .match-card:hover {
+        transform: translateX(5px);
+        border-color: var(--fuma-primary);
+    }
+
+    /* --- 7. RESPONSIVE MOBILE --- */
+    @media (max-width: 768px) {
+        .fuma-table th, .fuma-table td {
+            padding: 10px 4px;
+            font-size: 0.8rem;
+        }
+
+        .team-name {
+            max-width: 100px; /* Force le "..." plus tôt sur mobile */
+        }
+
+        .fuma-hide-mobile {
+            display: none;
+        }
+
+        .division-filter-container {
+            padding: 15px;
+            gap: 10px;
+        }
         
-    </style>
+        .fuma-search-input {
+            min-width: 120px;
+        }
+    }
+</style>
 </head>
 <body>
 
