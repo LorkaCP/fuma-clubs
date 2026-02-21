@@ -772,6 +772,39 @@ select option {
     border-radius: 4px;
 }
 
+
+.league-filters select.fuma-search-input {
+    appearance: none; /* Supprime le style Windows/Mac par défaut */
+    -webkit-appearance: none;
+    background-color: var(--fuma-bg-card);
+    border: var(--fuma-border);
+    color: var(--fuma-text-main);
+    padding: 10px 40px 10px 20px;
+    border-radius: 4px; /* Carré avec léger arrondi pour rester sobre */
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23d4af37' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: calc(100% - 15px) center;
+    transition: all 0.3s ease;
+    min-width: 150px;
+}
+
+.league-filters select.fuma-search-input:focus {
+    border-color: var(--fuma-primary);
+    outline: none;
+    box-shadow: 0 0 10px rgba(214, 175, 55, 0.1);
+}
+
+/* Style des options (le contenu du menu) */
+.league-filters select option {
+    background-color: #1a1c20;
+    color: white;
+    padding: 10px;
+}
+
 /* Utils */
 .league-content { display: none; }
 .league-content.active { display: block; animation: fadeIn 0.4s ease; }
@@ -788,5 +821,6 @@ select option {
     .match-team { justify-content: center !important; }
     .league-filters { flex-direction: column; align-items: stretch; }
 }
+
 
 
