@@ -25,14 +25,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const dSel = document.getElementById('division-master-select');
         
         if (!document.getElementById('matchday-select')) {
-            const container = document.querySelector('.division-filter-container');
+        const container = document.getElementById('matchday-container');
+        if (container) {
             const mSel = document.createElement('select');
             mSel.id = 'matchday-select';
-            mSel.className = 'division-selector';
-            mSel.style.marginLeft = "10px";
+            mSel.className = 'fuma-search-input'; // On applique la classe ici
             container.appendChild(mSel);
             mSel.addEventListener('change', filterMatchesByDay);
         }
+    }
 
         const seasons = Object.keys(LEAGUE_CONFIG);
         sSel.innerHTML = seasons.map(s => `<option value="${s}">Saison ${s.replace('S','')}</option>`).join('');
