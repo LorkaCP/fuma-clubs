@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const container = document.querySelector('.division-filter-container');
             const mSel = document.createElement('select');
             mSel.id = 'matchday-select';
-            mSel.className = 'division-selector';
+            mSel.className = 'fuma-search-input';
             mSel.style.marginLeft = "10px";
             container.appendChild(mSel);
             mSel.addEventListener('change', filterMatchesByDay);
