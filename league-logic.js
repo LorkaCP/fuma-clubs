@@ -179,14 +179,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="team-name" title="${team.name}">${team.name}</span>
                         </div>
                     </td>
-                    <td>${team.mj}${delayHtml}</td>
-                    <td>${team.v}</td>
-                    <td>${team.n}</td>
-                    <td>${team.d}</td>
-                    <td>${team.bp - team.bc}</td>
-                    <td style="color:var(--fuma-primary); font-weight:800; background:rgba(0,255,136,0.05);">${team.pts}</td>
-                </tr>`;
-        }).join('');
+            <td>${team.mj}</td>
+            <td>${team.v}</td>
+            <td>${team.n}</td>
+            <td>${team.d}</td>
+            <td class="fuma-hide-mobile">${team.bp}</td>
+            <td class="fuma-hide-mobile">${team.bc}</td>
+            <td>${team.bp - team.bc}</td>
+            <td style="color:var(--fuma-primary); font-weight:800;">${team.pts}</td>
+        </tr>`;
+}).join('');
     }
 
     function renderMatches(data) {
