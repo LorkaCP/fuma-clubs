@@ -254,6 +254,13 @@ body, .fuma-wrapper {
     text-align: center;
 }
 
+
+.team-cell .team-name:hover {
+    color: var(--fuma-primary) !important;
+    cursor: pointer;
+}
+
+
 /* --- CLUB PROFILE PAGE --- */
 
 .club-profile-header img {
@@ -684,6 +691,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
