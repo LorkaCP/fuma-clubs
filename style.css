@@ -474,6 +474,7 @@ body, .fuma-wrapper {
     justify-content: center;
     align-items: flex-end;
     margin-bottom: 40px;
+    margin-top:20px;
     padding: 25px;
     background: rgba(255, 255, 255, 0.03);
     border-radius: 15px;
@@ -692,6 +693,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
