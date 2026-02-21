@@ -27,23 +27,33 @@
     </header>
 
     <div class="fuma-container">
-        <section class="fuma-section">
-            <div class="fuma-search-container" style="display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap;">
-                <input type="text" id="player-search" class="fuma-search-input" placeholder="Search player (Game Tag)..." style="flex: 1; min-width: 250px;">
+    <section class="fuma-section">
+        <div class="division-filter-container" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; align-items: flex-end; margin-bottom: 40px; padding: 25px; background: rgba(255, 255, 255, 0.03); border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.05);">
+            
+            <div class="selector-wrapper">
+                <span class="selector-label">Joueur</span>
+                <input type="text" id="player-search" class="fuma-search-input" placeholder="Game Tag...">
+            </div>
 
-
-                <select id="filter-season" class="fuma-search-input" style="width: auto; cursor: pointer; background-color: var(--fuma-bg-card); color: white;">
-    <option value="1342244083">All Seasons</option>
-    <option value="2074996595">Season 1</option>
-    <option value="1996803561">Season 2</option>
-    </select>
-                
-               <select id="filter-team" class="fuma-search-input" style="width: auto; cursor: pointer; background-color: var(--fuma-bg-card); color: white;">
-    <option value="">All Teams</option>
-    </select>
-                
-                
-                <select id="filter-position" class="fuma-search-input" style="width: auto; cursor: pointer; background-color: var(--fuma-bg-card); color: white;">
+            <div class="selector-wrapper">
+                <span class="selector-label">Saison</span>
+                <select id="filter-season" class="fuma-search-input">
+                    <option value="1342244083">All Seasons</option>
+                    <option value="2074996595">Season 1</option>
+                    <option value="1996803561">Season 2</option>
+                </select>
+            </div>
+            
+            <div class="selector-wrapper">
+                <span class="selector-label">Équipe</span>
+                <select id="filter-team" class="fuma-search-input">
+                    <option value="">All Teams</option>
+                </select>
+            </div>
+            
+            <div class="selector-wrapper">
+                <span class="selector-label">Poste</span>
+                <select id="filter-position" class="fuma-search-input">
                     <option value="">All Positions</option>
                     <option value="GK">Goalkeeper (GK)</option>
                     <option value="DEF">Defender (DEF)</option>
@@ -51,15 +61,12 @@
                     <option value="ATT">Forward (ATT)</option>
                 </select>
             </div>
+        </div>
 
-            <div class="fuma-club-grid" id="fuma-js-players">
-                <div class="fuma-loading-wrapper" style="grid-column: 1/-1; text-align: center; padding: 50px;">
-                    <div class="fuma-spinner" style="margin: 0 auto 15px;"></div>
-                    <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">Syncing players...</p>
-                </div>
+        <div class="fuma-club-grid" id="fuma-js-players">
             </div>
-        </section>
-    </div>
+    </section>
+</div>
 
     <footer class="fuma-credits" style="text-align: center; padding: 40px 20px; color: var(--fuma-text-dim); font-size: 0.8rem;">
         &copy; 2026 FUMA CLUBS | ALL RIGHTS RESERVED
