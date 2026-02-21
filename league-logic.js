@@ -171,23 +171,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const delayHtml = delay > 0 ? `<span style="color:#ffae00; font-size:0.7rem; font-weight:800;"> (-${delay})</span>` : "";
 
             return `
-                <tr>
-                    <td style="text-align:center;">${trend}<br><b>${index+1}</b></td>
-                    <td>
-                        <div class="team-cell">
-                            <img src="${team.crest}" class="team-crest" onerror="this.style.display='none'">
-                            <span class="team-name" title="${team.name}">${team.name}</span>
-                        </div>
-                    </td>
-            <td>${team.mj}</td>
-            <td>${team.v}</td>
-            <td>${team.n}</td>
-            <td>${team.d}</td>
-            <td class="fuma-hide-mobile">${team.bp}</td>
-            <td class="fuma-hide-mobile">${team.bc}</td>
-            <td>${team.bp - team.bc}</td>
-            <td style="color:var(--fuma-primary); font-weight:800;">${team.pts}</td>
-        </tr>`;
+    <tr>
+        <td>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                <span style="width: 15px; display: flex; justify-content: center;">${trend}</span>
+                <b style="min-width: 20px;">${index+1}</b>
+            </div>
+        </td>
+        <td>
+            <div class="team-cell">
+                <img src="${team.crest}" class="team-crest" onerror="this.style.display='none'">
+                <span class="team-name" title="${team.name}">${team.name}</span>
+            </div>
+        </td>
+        <td>${team.mj}</td>
+        <td>${team.v}</td>
+        <td>${team.n}</td>
+        <td>${team.d}</td>
+        <td class="fuma-hide-mobile">${team.bp}</td>
+        <td class="fuma-hide-mobile">${team.bc}</td>
+        <td>${team.bp - team.bc}</td>
+        <td style="color:var(--fuma-primary); font-weight:800;">${team.pts}</td>
+    </tr>`;
 }).join('');
     }
 
