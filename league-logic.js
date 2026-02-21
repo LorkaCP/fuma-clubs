@@ -1,6 +1,6 @@
 /**
  * FUMA CLUBS - LEAGUE LOGIC SYSTEM
- * Version corrigée : Gestion robuste des colonnes et calcul historique
+ * Version optimisée : Mobile-friendly & Logo Support
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const headers = rows[0].map(h => h.trim());
             currentMatchesData = rows.slice(1);
 
-            // Mapping dynamique avec fallback manuel si le header est introuvable
+            // Mapping dynamique des colonnes
             col = {
                 day: headers.indexOf('Matchday') !== -1 ? headers.indexOf('Matchday') : 0,
                 start: headers.indexOf('StartDate') !== -1 ? headers.indexOf('StartDate') : 1,
@@ -95,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (days.length === 0) return;
         mSel.innerHTML = days.map(d => `<option value="${d}">Journée ${d}</option>`).join('');
 
-        // LOGIQUE DATE AUTO
         const now = new Date();
         now.setHours(0,0,0,0);
         let autoDay = days[0];
@@ -104,8 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!row[col.start] || !row[col.end]) continue;
             const sD = new Date(row[col.start]);
             const eD = new Date(row[col.end]);
-            
-            // Si la date est valide et qu'on est dedans
             if (!isNaN(sD) && !isNaN(eD) && now >= sD && now <= eD) {
                 autoDay = row[col.day];
                 break;
@@ -118,15 +115,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function filterMatchesByDay() {
         const selectedDay = parseInt(document.getElementById('matchday-select').value);
-        
-        // 1. Calendrier (Matchs de la journée)
         const dayMatches = currentMatchesData.filter(r => parseInt(r[col.day]) === selectedDay);
         renderMatches(dayMatches);
 
-        // 2. Classement (Matchs jusqu'à la journée sélectionnée)
         const standingsMatches = currentMatchesData.filter(r => parseInt(r[col.day]) <= selectedDay);
-        
-        // 3. Classement précédent (pour la flèche tendance)
         const prevStandingsMatches = currentMatchesData.filter(r => parseInt(r[col.day]) <= (selectedDay - 1));
 
         calculateAndRenderStandings(standingsMatches, prevStandingsMatches, selectedDay);
@@ -138,8 +130,13 @@ document.addEventListener('DOMContentLoaded', () => {
             matches.forEach(row => {
                 const h = row[col.h], a = row[col.a];
                 const sh = parseInt(row[col.sh]), sa = parseInt(row[col.sa]);
+                const lh = row[col.lh], la = row[col.la];
+
                 if (h && a) {
-                    [h, a].forEach(t => { if (!stats[t]) stats[t] = { name: t, mj:0, v:0, n:0, d:0, bp:0, bc:0, pts:0 }; });
+                    // Initialisation avec sauvegarde du logo
+                    if (!stats[h]) stats[h] = { name: h, crest: lh, mj:0, v:0, n:0, d:0, bp:0, bc:0, pts:0 };
+                    if (!stats[a]) stats[a] = { name: a, crest: la, mj:0, v:0, n:0, d:0, bp:0, bc:0, pts:0 };
+                    
                     if (!isNaN(sh) && !isNaN(sa)) {
                         stats[h].mj++; stats[a].mj++;
                         stats[h].bp += sh; stats[h].bc += sa;
@@ -161,7 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tbody) return;
 
         tbody.innerHTML = currentStandings.map((team, index) => {
-            // Tendance
             let trend = '<span style="color:gray; opacity:0.3;">-</span>';
             if (prevStandings) {
                 const oldIdx = prevStandings.findIndex(t => t.name === team.name);
@@ -171,29 +167,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // Retard
             const delay = maxMJ - team.mj;
             const delayHtml = delay > 0 ? `<span style="color:#ffae00; font-size:0.7rem; font-weight:800;"> (-${delay})</span>` : "";
 
             return `
-        <tr>
-            <td style="text-align:center;"><b>${index+1}</b></td>
-            <td>
-                <div class="team-cell">
-                    <img src="${team.crest || ''}" style="width:20px; height:20px; flex-shrink:0;">
-                    <span class="team-name" title="${team.name}">${team.name}</span>
-                </div>
-            </td>
-            <td>${team.mj}</td>
-            <td>${team.v}</td>
-            <td>${team.n}</td>
-            <td>${team.d}</td>
-            <td class="fuma-hide-mobile">${team.bp}</td>
-            <td class="fuma-hide-mobile">${team.bc}</td>
-            <td>${team.bp - team.bc}</td>
-            <td style="color:var(--fuma-primary); font-weight:800;">${team.pts}</td>
-        </tr>`;
-}).join('');
+                <tr>
+                    <td style="text-align:center;">${trend}<br><b>${index+1}</b></td>
+                    <td>
+                        <div class="team-cell">
+                            <img src="${team.crest}" class="team-crest" onerror="this.style.display='none'">
+                            <span class="team-name" title="${team.name}">${team.name}</span>
+                        </div>
+                    </td>
+                    <td>${team.mj}${delayHtml}</td>
+                    <td>${team.v}</td>
+                    <td>${team.n}</td>
+                    <td>${team.d}</td>
+                    <td>${team.bp - team.bc}</td>
+                    <td style="color:var(--fuma-primary); font-weight:800; background:rgba(0,255,136,0.05);">${team.pts}</td>
+                </tr>`;
+        }).join('');
     }
 
     function renderMatches(data) {
