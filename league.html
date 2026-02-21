@@ -103,6 +103,47 @@
             transform: translateX(5px);
             border-color: var(--fuma-primary);
         }
+
+.fuma-table {
+    table-layout: fixed; /* Force le respect des largeurs sur mobile */
+    width: 100%;
+}
+
+/* Colonne Nom du Club */
+.team-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.team-name {
+    overflow: hidden;
+    text-overflow: ellipsis; /* Ajoute le "..." */
+    white-space: nowrap;
+    max-width: 120px; /* Ajustable selon vos besoins */
+}
+
+/* Ajustement des largeurs de colonnes sur mobile */
+@media (max-width: 768px) {
+    .fuma-table th, .fuma-table td {
+        padding: 8px 4px;
+        font-size: 0.75rem; /* Texte plus petit pour tout faire tenir */
+        text-align: center;
+    }
+
+    /* On cache uniquement ce qui est vraiment secondaire */
+    .fuma-hide-mobile {
+        display: none;
+    }
+
+    /* Largeurs fixes pour les colonnes de stats pour gagner de la place */
+    .col-stat {
+        width: 25px;
+    }
+}
+        
     </style>
 </head>
 <body>
@@ -136,20 +177,17 @@
         <div id="standings" class="league-content active">
             <div style="overflow-x: auto;">
                 <table class="fuma-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 80px;">Pos.</th>
-                            <th>Club</th>
-                            <th>MJ</th>
-                            <th class="fuma-hide-mobile">V</th>
-                            <th class="fuma-hide-mobile">N</th>
-                            <th class="fuma-hide-mobile">D</th>
-                            <th>Diff</th>
-                            <th>PTS</th>
-                        </tr>
-                    </thead>
-                    <tbody id="league-table-body"></tbody>
-                </table>
+    <thead>
+        <tr>
+            <th style="width: 50px;">Pos.</th>
+            <th>Club</th>
+            <th>MJ</th>
+            <th>V</th> <th>N</th> <th>D</th> <th class="fuma-hide-mobile">BP</th> <th class="fuma-hide-mobile">BC</th> <th>Diff</th>
+            <th>PTS</th>
+        </tr>
+    </thead>
+    <tbody id="league-table-body"></tbody>
+</table>
             </div>
         </div>
 
