@@ -220,6 +220,16 @@
     text-align: center;
 }
 
+   .mobile-score {
+        display: none;
+          }
+
+        @media (max-width: 768px) {
+    /* On cache la boîte de score centrale */
+    .match-score-box {
+        display: none !important;
+    }
+
 /* --- RESPONSIVE MOBILE (Équipes l'une sur l'autre) --- */
 @media (max-width: 768px) {
     .match-card {
