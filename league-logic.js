@@ -181,7 +181,12 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>
             <div class="team-cell">
                 <img src="${team.crest}" class="team-crest" onerror="this.style.display='none'">
-                <span class="team-name" title="${team.name}">${team.name}</span>
+                <a href="club.html?name=${encodeURIComponent(team.name)}" 
+                   class="team-name" 
+                   title="${team.name}" 
+                   style="text-decoration: none; color: inherit; transition: color 0.2s;">
+                   ${team.name}
+                </a>
             </div>
         </td>
         <td>${team.mj}</td>
