@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="style.css">
     
     <style>
-    /* --- 1. FILTRES ET FILTRE DE DIVISION --- */
+    /* --- 1. FILTERS AND DIVISION FILTER --- */
     .division-filter-container {
         display: flex;
         flex-wrap: wrap;
@@ -50,7 +50,7 @@
         padding: 8px;
     }
 
-    /* --- 2. ONGLETS (TABS) --- */
+    /* --- 2. TABS --- */
     .league-tabs {
         display: flex;
         justify-content: center;
@@ -89,14 +89,13 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* --- 3. STRUCTURE DU TABLEAU DE CLASSEMENT --- */
+    /* --- 3. STANDINGS TABLE STRUCTURE --- */
     .fuma-table {
         width: 100%;
         border-collapse: collapse;
-        table-layout: auto; /* Permet aux colonnes de chiffres de se serrer */
+        table-layout: auto; 
     }
 
-    /* Style des lignes et Couleur alternée (Zebra Stripes) */
     .fuma-table tbody tr {
         border-bottom: 1px solid rgba(255, 255, 255, 0.02);
         transition: background 0.2s;
@@ -110,45 +109,39 @@
         background: rgba(0, 255, 136, 0.05);
     }
 
-    /* --- 4. MODULATION DES COLONNES --- */
-    
-    /* Cellules générales */
+    /* --- 4. COLUMN MODULATION --- */
     .fuma-table th, .fuma-table td {
         padding: 12px 8px;
         vertical-align: middle;
     }
 
-    /* Colonne Position (étroite) */
     .fuma-table th:first-child,
     .fuma-table td:first-child {
         width: 70px;
         text-align: center;
     }
 
-    /* Colonne Club (Prend tout l'espace disponible) */
     .fuma-table th:nth-child(2),
     .fuma-table td:nth-child(2) {
         text-align: left;
         width: auto;
     }
 
-    /* Colonnes Chiffres (Serrées et centrées) */
     .fuma-table th:nth-child(n+3),
     .fuma-table td:nth-child(n+3) {
         width: 45px;
         text-align: center;
-        font-variant-numeric: tabular-nums; /* Chiffres alignés */
+        font-variant-numeric: tabular-nums;
     }
 
-    /* Colonne Points (Emphase) */
     .fuma-table th:last-child,
     .fuma-table td:last-child {
         width: 55px;
         font-weight: 800;
-        background: rgba(0, 255, 136, 0.03); /* Légère surbrillance sur la colonne PTS */
+        background: rgba(0, 255, 136, 0.03);
     }
 
-    /* --- 5. CELLULE ÉQUIPE (LOGO + NOM TRONQUÉ) --- */
+    /* --- 5. TEAM CELL (LOGO + TRUNCATED NAME) --- */
     .team-cell {
         display: flex;
         align-items: center;
@@ -171,115 +164,104 @@
         color: #fff;
     }
 
-    /* --- 6. MATCH CARDS (CALENDRIER) --- */
-/* --- 6. MATCH CARDS (CALENDRIER) --- */
-
-/* L'élément <a> qui enveloppe tout le match */
-.match-card {
-    background: var(--fuma-bg-card);
-    border: var(--fuma-border);
-    border-radius: 12px;
-    padding: 15px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 25px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    position: relative;
-    text-decoration: none; /* Empêche le soulignement du nom des équipes */
-    display: block; /* Important pour que le lien prenne toute la largeur */
-}
-
-/* Effet au survol de la carte entière */
-.match-card:hover {
-    background: rgba(212, 175, 55, 0.08);
-    border-color: rgba(212, 175, 55, 0.4);
-    transform: translateY(-2px); /* Léger soulèvement au lieu du décalage latéral */
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
-.match-teams-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    width: 100%;
-}
-
-.match-team {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-weight: 600;
-    width: 40%;
-    color: var(--fuma-text-main); /* Force la couleur du texte malgré le lien <a> */
-}
-
-.match-team.home { justify-content: flex-end; text-align: right; }
-.match-team.away { justify-content: flex-start; text-align: left; }
-
-.match-score-box {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 8px 18px;
-    border-radius: 6px;
-    font-weight: 800;
-    color: var(--fuma-primary);
-    min-width: 70px;
-    text-align: center;
-}
-
-/* Masqué par défaut (Desktop) */
-.mobile-score {
-    display: none;
-}
-
-/* --- RESPONSIVE MOBILE --- */
-@media (max-width: 768px) {
+    /* --- 6. MATCH CARDS --- */
     .match-card {
-        padding: 18px 15px;
-        margin-bottom: 20px;
+        background: var(--fuma-bg-card);
+        border: var(--fuma-border);
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-bottom: 25px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        text-decoration: none;
+        display: block;
+    }
+
+    .match-card:hover {
+        background: rgba(212, 175, 55, 0.08);
+        border-color: rgba(212, 175, 55, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     }
 
     .match-teams-container {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        width: 100%;
     }
 
     .match-team {
-        width: 100%;
-        justify-content: flex-start;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 600;
+        width: 40%;
+        color: var(--fuma-text-main);
     }
 
-    /* Aligne l'équipe domicile à gauche comme l'équipe extérieur */
-    .match-team.home { 
-        justify-content: flex-start; 
-        text-align: left; 
-    }
+    .match-team.home { justify-content: flex-end; text-align: right; }
+    .match-team.away { justify-content: flex-start; text-align: left; }
 
-    /* Cache le score central sur mobile */
     .match-score-box {
-        display: none !important;
-    }
-
-    /* Affiche le score à droite de chaque ligne d'équipe */
-    .mobile-score {
-        display: block;
-        margin-left: auto; /* Pousse le score tout à droite */
+        background: rgba(255, 255, 255, 0.05);
+        padding: 8px 18px;
+        border-radius: 6px;
         font-weight: 800;
         color: var(--fuma-primary);
-        font-size: 1.1rem;
-        min-width: 35px;
-        text-align: right;
+        min-width: 70px;
+        text-align: center;
     }
 
-    .match-team img {
-        width: 30px;
-        height: 30px;
-        margin-right: 10px;
+    .mobile-score {
+        display: none;
     }
-}
+
+    /* --- RESPONSIVE MOBILE --- */
+    @media (max-width: 768px) {
+        .match-card {
+            padding: 18px 15px;
+            margin-bottom: 20px;
+        }
+
+        .match-teams-container {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+        }
+
+        .match-team {
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .match-team.home { 
+            justify-content: flex-start; 
+            text-align: left; 
+        }
+
+        .match-score-box {
+            display: none !important;
+        }
+
+        .mobile-score {
+            display: block;
+            margin-left: auto;
+            font-weight: 800;
+            color: var(--fuma-primary);
+            font-size: 1.1rem;
+            min-width: 35px;
+            text-align: right;
+        }
+
+        .match-team img {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+        }
+    }
     /* --- 7. RESPONSIVE MOBILE --- */
     @media (max-width: 768px) {
         .fuma-table th, .fuma-table td {
@@ -288,7 +270,7 @@
         }
 
         .team-name {
-            max-width: 100px; /* Force le "..." plus tôt sur mobile */
+            max-width: 100px;
         }
 
         .fuma-hide-mobile {
@@ -315,43 +297,42 @@
         <h1 class="fuma-hero-subtitle" >FUMA League Clubs</h1>
         <p style="color: var(--fuma-text-dim); max-width: 600px; margin: 0 auto;">
             Track the league table, upcoming fixtures, and top performer statistics for all FUMA League Clubs...
-             </p>
-</header>
-
+        </p>
+    </header>
 
    
     <div class="fuma-container">
         <div class="division-filter-container" id="selectors-container">
             <div class="selector-wrapper">
-                <span class="selector-label">Saison</span>
+                <span class="selector-label">Season</span>
                 <select id="season-master-select" class="fuma-search-input"></select>
             </div>
             <div class="selector-wrapper">
                 <span class="selector-label">Division</span>
                 <select id="division-master-select" class="fuma-search-input"></select>
             </div>
-            </div>
+        </div>
 
         <div class="league-tabs">
-            <button class="tab-btn active" onclick="openTab(event, 'standings')"><i class="fas fa-list-ol"></i> Classement</button>
-            <button class="tab-btn" onclick="openTab(event, 'fixtures')"><i class="fas fa-calendar-alt"></i> Calendrier</button>
+            <button class="tab-btn active" onclick="openTab(event, 'standings')"><i class="fas fa-list-ol"></i> Standings</button>
+            <button class="tab-btn" onclick="openTab(event, 'fixtures')"><i class="fas fa-calendar-alt"></i> Fixtures</button>
             <button class="tab-btn" onclick="openTab(event, 'stats')"><i class="fas fa-chart-bar"></i> Stats</button>
         </div>
 
         <div id="standings" class="league-content active">
             <div style="overflow-x: auto;">
                 <table class="fuma-table">
-    <thead>
-        <tr>
-            <th style="width: 50px;">Pos.</th>
-            <th>Club</th>
-            <th>MJ</th>
-            <th>V</th> <th>N</th> <th>D</th> <th class="fuma-hide-mobile">BP</th> <th class="fuma-hide-mobile">BC</th> <th>Diff</th>
-            <th>PTS</th>
-        </tr>
-    </thead>
-    <tbody id="league-table-body"></tbody>
-</table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">Pos.</th>
+                            <th>Club</th>
+                            <th>PL</th>
+                            <th>W</th> <th>D</th> <th>L</th> <th class="fuma-hide-mobile">GF</th> <th class="fuma-hide-mobile">GA</th> <th>GD</th>
+                            <th>PTS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="league-table-body"></tbody>
+                </table>
             </div>
         </div>
 
@@ -362,21 +343,19 @@
         <div id="stats" class="league-content">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
                 <div class="sidebar-box">
-                    <h3><i class="fas fa-futbol"></i> Meilleurs Buteurs</h3>
+                    <h3><i class="fas fa-futbol"></i> Top Scorers</h3>
                     <div id="top-scorers-list"></div>
                 </div>
                 <div class="sidebar-box">
-                    <h3><i class="fas fa-magic"></i> Meilleurs Passeurs</h3>
+                    <h3><i class="fas fa-magic"></i> Top Assists</h3>
                     <div id="top-assists-list"></div>
                 </div>
             </div>
         </div>
     </div>
- <footer class="fuma-credits">
-            &copy; 2026 FUMA CLUBS | ALL RIGHTS RESERVED
-        </footer>
-    </div>
-    
+    <footer class="fuma-credits">
+        &copy; 2026 FUMA CLUBS | ALL RIGHTS RESERVED
+    </footer>
 </div>
 
 <script src="script.js"></script>
