@@ -143,6 +143,38 @@
         width: 25px;
     }
 }
+
+
+        /* Conteneur pour Alignement Logo + Nom */
+.team-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+}
+
+.team-crest {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    flex-shrink: 0; /* Empêche le logo de s'écraser */
+}
+
+.team-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Ajoute les "..." si le nom est trop long */
+    font-weight: 600;
+}
+
+@media (max-width: 600px) {
+    .fuma-table {
+        font-size: 0.75rem; /* Réduction globale pour mobile */
+    }
+    .team-name {
+        max-width: 80px; /* Limite la largeur sur très petit écran */
+    }
+}
         
     </style>
 </head>
