@@ -656,5 +656,137 @@ select option {
     }
 }
 
+/* --- LEAGUE DASHBOARD SPECIFIC --- */
+
+.league-filters {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-group label {
+    font-size: 0.65rem;
+    color: var(--fuma-primary);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 600;
+    margin-left: 10px;
+}
+
+.league-tabs {
+    display: flex;
+    justify-content: center;
+    border-bottom: var(--fuma-border);
+    margin-bottom: 30px;
+    gap: 30px;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: var(--fuma-text-dim);
+    padding: 15px 5px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.3s;
+}
+
+.tab-btn.active {
+    color: var(--fuma-primary);
+}
+
+.tab-btn.active::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--fuma-primary);
+}
+
+/* Table Design */
+.fuma-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.fuma-table th {
+    text-align: left;
+    padding: 15px;
+    border-bottom: 2px solid rgba(255,255,255,0.05);
+    font-size: 0.7rem;
+    color: var(--fuma-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.fuma-table td {
+    padding: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+    font-size: 0.9rem;
+}
+
+.fuma-table tbody tr:hover {
+    background: rgba(255,255,255,0.01);
+}
+
+/* Fixtures Minimal */
+.match-card {
+    background: var(--fuma-bg-card);
+    border: var(--fuma-border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 12px;
+    display: grid;
+    grid-template-columns: 1fr 80px 1fr;
+    align-items: center;
+    transition: border-color 0.3s;
+}
+
+.match-card:hover {
+    border-color: rgba(214, 175, 55, 0.3);
+}
+
+.match-score {
+    text-align: center;
+    font-weight: 800;
+    color: var(--fuma-primary);
+    font-size: 1.1rem;
+    background: rgba(0,0,0,0.3);
+    padding: 5px;
+    border-radius: 4px;
+}
+
+/* Utils */
+.league-content { display: none; }
+.league-content.active { display: block; animation: fadeIn 0.4s ease; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.table-responsive { overflow-x: auto; }
+
+@media (max-width: 600px) {
+    .match-card { grid-template-columns: 1fr; gap: 10px; text-align: center; }
+    .match-team { justify-content: center !important; }
+    .league-filters { flex-direction: column; align-items: stretch; }
+}
 
 
