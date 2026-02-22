@@ -126,21 +126,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderTopList(players, colIdx, containerId, c, label, isFloat = false) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
+    const container = document.getElementById(containerId);
+    if (!container) return;
 
-        const top5 = players
-            .map(p => ({
-                name: p[c.name],
-                team: p[c.team],
-                avatar: p[c.avatar],
-                value: isFloat ? parseFloat(p[colIdx].replace(',', '.')) : parseInt(p[colIdx])
-            }))
-            .filter(p => !isNaN(p.value) && p.value > 0)
-            .sort((a, b) => b.value - a.value)
-            .slice(0, 5);
+    const top5 = players
+        .map(p => ({
+            name: p[c.name],
+            team: p[c.team],
+            avatar: p[c.avatar],
+            // Utilisation du nom/discord_name comme identifiant pour le lien si l'ID unique n'est pas dispo
+            id: p[c.name], 
+            value: isFloat ? parseFloat(p[colIdx].replace(',', '.')) : parseInt(p[colIdx])
+        }))
+        .filter(p => !isNaN(p.value) && p.value > 0)
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5);
 
-        container.innerHTML = top5.map((p, i) => `
+    container.innerHTML = top5.map((p, i) => `
+        <a href="player.html?id=${encodeURIComponent(p.id)}" style="text-decoration: none; color: inherit; display: block; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
             <div style="display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <span style="font-weight: 800; color: var(--fuma-primary); width: 20px;">${i+1}</span>
                 <img src="${p.avatar}" style="width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--fuma-primary);" onerror="this.src='https://via.placeholder.com/35'">
@@ -153,8 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="font-size: 0.6rem; text-transform: uppercase; color: var(--fuma-primary);">${label}</div>
                 </div>
             </div>
-        `).join('') || '<p style="font-size:0.8rem; color:gray; padding:10px;">Aucune donnée</p>';
-    }
+        </a>
+    `).join('') || '<p style="font-size:0.8rem; color:gray; padding:10px;">Aucune donnée</p>';
+}
 
     function initMatchdaySelect() {
         const mSel = document.getElementById('matchday-select');
