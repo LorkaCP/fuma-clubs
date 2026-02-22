@@ -502,67 +502,104 @@ document.addEventListener('DOMContentLoaded', () => {
         const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}`);
         const text = await resp.text();
         const lines = text.trim().split("\n");
-        const headers = lines[0].split(",");
+        const headers = lines[0].split(",").map(h => h.trim());
         
-        // On cherche la ligne du joueur
         const rows = lines.slice(1).map(line => {
             const v = parseCSVLine(line);
             let obj = {};
-            headers.forEach((h, i) => obj[h.trim()] = v[i]);
+            headers.forEach((h, i) => obj[h] = v[i]);
             return obj;
         });
 
-        const player = rows.find(p => p.GAME_ID === playerId || p.GAME_TAG === playerId);
+        const p = rows.find(player => player.GAME_ID === playerId || player.GAME_TAG === playerId);
 
-        if (!player) {
-            headerContainer.innerHTML = `<p style="text-align:center;">Joueur introuvable pour cette saison.</p>`;
+        if (!p) {
+            headerContainer.innerHTML = `<p style="text-align:center;">Data not found for this season.</p>`;
             statsContainer.innerHTML = "";
             return;
         }
 
-        // --- AFFICHAGE HEADER ---
+        // --- DESIGN PREMIÈRE MISE EN PAGE (HEADER) ---
         headerContainer.innerHTML = `
-            <div class="player-profile-card" style="background: var(--fuma-bg-card); padding: 40px; border-radius: 20px; border: var(--fuma-border); text-align: center; position: relative; overflow: hidden;">
-                <img src="${player.AVATAR || 'https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png'}" style="width: 150px; height: 150px; border-radius: 50%; border: 3px solid var(--fuma-primary); object-fit: cover; margin-bottom: 20px;">
-                <h1 style="font-size: 2.5rem; margin: 0;">${player.GAME_TAG} ${player.FLAG || ''}</h1>
-                <p style="color: var(--fuma-primary); letter-spacing: 3px; font-weight: 600;">${player.MAIN_POSITION} | ${player.MAIN_ARCHETYPE}</p>
-                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 20px;">
-                    <img src="${player.LOGO}" style="height: 40px;" alt="Club">
-                    <span style="font-size: 1.2rem;">${player.CURRENT_TEAM}</span>
+            <div class="player-card-header">
+               <img src="${p.AVATAR || 'https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png'}" 
+                     class="player-avatar-main" 
+                     onerror="this.src='https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png'">
+                <h1 style="font-size: 2.8rem; margin: 0; color: #fff; text-transform: uppercase;">
+                    ${p.GAME_TAG} ${p.FLAG || ''}
+                </h1>
+                <p style="color: var(--fuma-primary); letter-spacing: 4px; font-weight: 600; margin-top: 10px;">
+                    ${p.MAIN_POSITION || 'N/A'} | ${p.MAIN_ARCHETYPE || 'Standard'}
+                </p>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 25px;">
+                    <img src="${p.LOGO || ''}" style="height: 45px; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));">
+                    <span style="font-size: 1.3rem; font-weight: 300;">${p.CURRENT_TEAM || 'Free Agent'}</span>
                 </div>
             </div>
         `;
 
-        // --- STATS DISPLAY ---
-        statsContainer.style.display = "grid";
-        statsContainer.style.gridTemplateColumns = "repeat(auto-fit, minmax(250px, 1fr))";
-        statsContainer.style.gap = "20px";
-        statsContainer.style.marginTop = "30px";
-
+        // --- DESIGN PREMIÈRE MISE EN PAGE (STATS AVEC ICÔNES) ---
         statsContainer.innerHTML = `
-            ${renderStatCard("GENERAL", [
-                { label: "Matches Played", val: player.GAME_PLAYED },
-                { label: "Average Rating", val: player.RATING, color: "var(--fuma-primary)" },
-                { label: "Cards", val: player.CARDS }
-            ])}
-            ${renderStatCard("ATTACK", [
-                { label: "Goals", val: player.GOALS },
-                { label: "Assists", val: player.ASSISTS },
-                { label: "Shots", val: player.SHOTS }
-            ])}
-            ${renderStatCard("DISTRIBUTION", [
-                { label: "Passes Completed", val: player.SUCCESSFUL_PASSES },
-                { label: "Pass Accuracy %", val: player['%SUCCESSFUL_PASSES'] }
-            ])}
-            ${renderStatCard("DEFENSE", [
-                { label: "Tackles Won", val: player.SUCCESSFUL_TACKLES },
-                { label: "Tackle Success %", val: player['%SUCCESSFUL_TACKLES'] }
-            ])}
+            <div class="stat-block">
+                <h3><i class="fas fa-info-circle"></i> General</h3>
+                <div class="stat-row">
+                    <span class="stat-label">Matches Played</span>
+                    <span class="stat-value">${p.GAME_PLAYED || '0'}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Average Rating</span>
+                    <span class="stat-value highlight">${p.RATING || '0.0'}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Cards</span>
+                    <span class="stat-value">${p.CARDS || '0'}</span>
+                </div>
+            </div>
+
+            <div class="stat-block">
+                <h3><i class="fas fa-fire"></i> Attack</h3>
+                <div class="stat-row">
+                    <span class="stat-label">Goals</span>
+                    <span class="stat-value highlight">${p.GOALS || '0'}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Assists</span>
+                    <span class="stat-value highlight">${p.ASSISTS || '0'}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Shots</span>
+                    <span class="stat-value">${p.SHOTS || '0'}</span>
+                </div>
+            </div>
+
+            <div class="stat-block">
+                <h3><i class="fas fa-share-alt"></i> Distribution</h3>
+                <div class="stat-row">
+                    <span class="stat-label">Successful Passes</span>
+                    <span class="stat-value">${p.SUCCESSFUL_PASSES || '0'}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Pass Accuracy</span>
+                    <span class="stat-value">${p['%SUCCESSFUL_PASSES'] || '0%'}</span>
+                </div>
+            </div>
+
+            <div class="stat-block">
+                <h3><i class="fas fa-shield-alt"></i> Defense</h3>
+                <div class="stat-row">
+                    <span class="stat-label">Successful Tackles</span>
+                    <span class="stat-value">${p.SUCCESSFUL_TACKLES || '0'}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Tackle Accuracy</span>
+                    <span class="stat-value">${p['%SUCCESSFUL_TACKLES'] || '0%'}</span>
+                </div>
+            </div>
         `;
 
     } catch (e) {
         console.error(e);
-        headerContainer.innerHTML = "Error loading profile.";
+        headerContainer.innerHTML = "<p style='text-align:center; color:red;'>Error while loading data.</p>";
     }
 }
 function renderStatCard(title, stats) {
@@ -660,6 +697,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
