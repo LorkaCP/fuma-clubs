@@ -52,17 +52,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadData() {
-    const s = document.getElementById('season-master-select').value;
-    const d = document.getElementById('division-master-select').value;
-    const gid = LEAGUE_CONFIG[s][d].fixtures;
-    const statsGid = LEAGUE_CONFIG[s].stats_gid;
-    
-    // Lancement des deux processus en même temps
-    const tasks = [fetchAndProcess(gid)];
-    if (statsGid) tasks.push(fetchAndProcessStats(statsGid));
-    
-    await Promise.all(tasks);
-}
+        const s = document.getElementById('season-master-select').value;
+        const d = document.getElementById('division-master-select').value;
+        const gid = LEAGUE_CONFIG[s][d].fixtures;
+        const statsGid = LEAGUE_CONFIG[s].stats_gid;
+        
+        // On charge d'abord les matchs, puis les stats
+        await fetchAndProcess(gid);
+        if (statsGid) await fetchAndProcessStats(statsGid);
+    }
 
     // Gère la visibilité du selecteur de journée
     window.updateStatsUI = function(isStatsTab) {
