@@ -536,6 +536,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error(e);
         headerContainer.innerHTML = "Error loading profile.";
     }
+}
 
 
 function renderStatCard(title, stats) {
@@ -551,6 +552,7 @@ function renderStatCard(title, stats) {
         </div>
     `;
 }
+
 
 // Écouteur pour le changement de saison
 document.getElementById('season-selector')?.addEventListener('change', (e) => {
@@ -633,6 +635,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
