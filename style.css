@@ -474,11 +474,14 @@ body, .fuma-wrapper {
     min-width: 0;
 }
 
-/* Modifiez cette section dans votre style.css */
 .division-filter-container {
-    display: grid; /* Utilisez Grid plutôt que Flex pour la stabilité */
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
-    gap: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    align-items: flex-end;
+    margin-bottom: 40px;
+    margin-top:20px;
     padding: 25px;
     background: rgba(255, 255, 255, 0.03);
     border-radius: 15px;
@@ -486,12 +489,9 @@ body, .fuma-wrapper {
 }
 
 .selector-wrapper {
-    width: 100%; /* L'élément occupe toute sa colonne assignée */
-}
-
-.fuma-search-input {
-    width: 100% !important; /* Force la largeur pour éviter le saut */
-    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .selector-label {
@@ -691,7 +691,6 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
-
 
 
 
