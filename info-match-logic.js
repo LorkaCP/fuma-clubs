@@ -20,19 +20,35 @@ document.addEventListener('DOMContentLoaded', () => {
             // On cherche le match (TeamHome index 5, TeamAway index 6)
             const match = rows.find(r => r[5] === homeName && r[6] === awayName);
 
+            // --- IMPORTANT : ON CACHE LE LOADER ICI ---
+            const loader = document.getElementById('loader-container');
+            const mainContent = document.getElementById('main-content');
+            
+            if (loader) loader.style.display = 'none';
+            if (mainContent) mainContent.style.display = 'block';
+
             if (match) {
                 updateUI(match);
             } else {
-                document.querySelector('.match-detail-wrapper').innerHTML = "<h2>Match non trouvé.</h2><p>Vérifiez que les noms d'équipes correspondent au calendrier.</p>";
+                if (mainContent) {
+                    mainContent.innerHTML = "<h2 style='text-align:center;'>Match non trouvé.</h2>";
+                }
             }
         })
-        .catch(err => console.error("Erreur lors de la récupération des données:", err));
+        .catch(err => {
+            console.error("Erreur lors de la récupération des données:", err);
+            const loader = document.getElementById('loader-container');
+            if (loader) {
+                loader.innerHTML = "<p style='color:red;'>Erreur de connexion. Vérifiez votre lien.</p>";
+            }
+        });
 });
 
 /**
- * Découpe le CSV en gérant les guillemets et les virgules
+ * Découpe le CSV proprement
  */
 function parseCSV(text) {
+    if (!text) return [];
     return text.split('\n').map(row => {
         let values = [];
         let current = "";
@@ -50,7 +66,7 @@ function parseCSV(text) {
 }
 
 /**
- * Formate la liste des buteurs avec retours à la ligne et (xN) pour les doublés/triplés
+ * Formate les buteurs : Un par ligne avec (x2)
  */
 function formatStrikers(strikerString) {
     if (!strikerString || strikerString === '-' || strikerString.trim() === "") return '-';
@@ -60,24 +76,20 @@ function formatStrikers(strikerString) {
     
     if (names.length === 0) return '-';
 
-    // Compte les occurrences de chaque nom
     const counts = {};
     names.forEach(name => {
         counts[name] = (counts[name] || 0) + 1;
     });
 
-    // Transforme l'objet en lignes de texte avec <br> pour le retour à la ligne
     return Object.entries(counts)
         .map(([name, count]) => (count > 1 ? `${name} (x${count})` : name))
-        .join('<br>'); 
+        .join('<br>'); // Retour à la ligne HTML
 }
 
 /**
- * Met à jour l'interface utilisateur avec les données du match
+ * Met à jour l'interface
  */
 function updateUI(m) {
-    /* MAPPING : 0:Matchday, 1:Date, 3:CrestH, 4:CrestA, 5:TeamH, 6:TeamA, 7:ScH, 8:ScA, 9:StrikH, 10:StrikA... */
-
     // Infos générales
     document.getElementById('matchday-label').innerText = `Matchday ${m[0]}`;
     document.getElementById('match-date').innerText = m[1];
@@ -87,19 +99,21 @@ function updateUI(m) {
     document.getElementById('logo-away').src = m[4];
     
     const homeLink = document.getElementById('link-home');
-    homeLink.innerText = m[5];
-    homeLink.href = m[20] || "#"; 
+    if (homeLink) {
+        homeLink.innerText = m[5];
+        homeLink.href = m[20] || "#"; 
+    }
     
     document.getElementById('name-away').innerText = m[6];
     document.getElementById('score-display').innerText = `${m[7]} : ${m[8]}`;
 
-    // Statistiques
+    // Barres de stats
     updateBar('poss', m[11], m[12], true);
     updateBar('shots', m[13], m[14], false);
     updateBar('passes', m[15], m[16], false);
     updateBar('acc', m[17], m[18], true);
 
-    // Buteurs (Utilisation de innerHTML pour interpréter les <br>)
+    // Buteurs (innerHTML pour les <br>)
     document.getElementById('strikers-home').innerHTML = formatStrikers(m[9]);
     document.getElementById('strikers-away').innerHTML = formatStrikers(m[10]);
     
@@ -107,7 +121,7 @@ function updateUI(m) {
 }
 
 /**
- * Gère l'affichage des barres de progression des statistiques
+ * Anime les barres de stats
  */
 function updateBar(id, valH, valA, isPercent) {
     const h = parseFloat(String(valH).replace('%', '').replace(',', '.')) || 0;
@@ -119,8 +133,8 @@ function updateBar(id, valH, valA, isPercent) {
     const labelH = document.getElementById(`val-${id}-home`);
     const labelA = document.getElementById(`val-${id}-away`);
     
-    if(labelH) labelH.innerText = isPercent ? h + '%' : h;
-    if(labelA) labelA.innerText = isPercent ? a + '%' : a;
+    if(labelH) labelH.innerText = isPercent ? Math.round(h) + '%' : h;
+    if(labelA) labelA.innerText = isPercent ? Math.round(a) + '%' : a;
 
     const barH = document.getElementById(`bar-${id}-home`);
     const barA = document.getElementById(`bar-${id}-away`);
