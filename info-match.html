@@ -1,285 +1,144 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Détails du Match - FUMA CLUBS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-    <style>
-        :root {
-            --fuma-primary: #d4af37;
-            --fuma-bg-card: #1a1a1a;
-            --fuma-border: 1px solid rgba(255,255,255,0.1);
-            --fuma-text-dim: #aaa;
-        }
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const gid = params.get('gid');
+    const homeName = params.get('home');
+    const awayName = params.get('away');
 
-        body {
-            background-color: #000;
-            color: #fff;
-            font-family: 'Poppins', sans-serif;
-            margin: 0;
-        }
+    if (!gid) {
+        console.error("Aucun GID spécifié");
+        return;
+    }
 
-        /* --- LOADER : Plein écran et centré --- */
-        #loader-container {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        }
+    const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=";
+    const FINAL_URL = BASE_URL + gid;
 
-        .fuma-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255, 255, 255, 0.1);
-            border-top: 5px solid var(--fuma-primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* --- CONTENU PRINCIPAL --- */
-        .match-detail-wrapper { 
-            max-width: 800px; 
-            margin: 20px auto; 
-            padding: 15px; 
-            display: none; /* Masqué jusqu'à la fin du chargement JS */
-        }
-        
-        .match-meta { 
-            text-align: center; 
-            margin-bottom: 20px; 
-            font-size: 0.9rem; 
-            color: var(--fuma-text-dim);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* Header Score */
-        .score-header { 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            background: var(--fuma-bg-card); 
-            padding: 30px 20px; 
-            border-radius: 20px; 
-            border: var(--fuma-border); 
-            margin-bottom: 20px; 
-            text-align: center;
-        }
-        
-        .detail-team { flex: 1; }
-        .detail-team img { width: clamp(50px, 15vw, 90px); height: auto; margin-bottom: 10px; }
-        .detail-team h2 { font-size: 1.1rem; margin: 0; }
-        .detail-team a { color: inherit; text-decoration: none; transition: color 0.3s; }
-        .detail-team a:hover { color: var(--fuma-primary); }
-
-        .detail-score { 
-            flex: 1; 
-            font-size: clamp(2.2rem, 8vw, 3.5rem); 
-            font-weight: 800; 
-            color: var(--fuma-primary); 
-        }
-
-        /* Conteneur Stats */
-        .stats-container { 
-            background: var(--fuma-bg-card); 
-            border-radius: 20px; 
-            padding: 25px; 
-            border: var(--fuma-border); 
-        }
-        
-        .stat-row { margin-bottom: 20px; }
-        .stat-label { 
-            display: flex; 
-            justify-content: space-between; 
-            margin-bottom: 8px; 
-            font-weight: 600; 
-            font-size: 0.8rem; 
-            text-transform: uppercase; 
-            color: var(--fuma-text-dim); 
-        }
-        .stat-label span:nth-child(2) { color: #fff; font-size: 0.85rem; }
-        
-        .progress-container { 
-            display: flex; 
-            height: 10px; 
-            background: rgba(255,255,255,0.05); 
-            border-radius: 5px; 
-            overflow: hidden; 
-        }
-        .progress-bar { height: 100%; transition: width 1s ease-in-out; }
-        .bar-home { background: var(--fuma-primary); border-right: 1px solid #000; }
-        .bar-away { background: #444; }
-
-        /* Grille d'infos (Buteurs) */
-        .extra-info { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
-            gap: 15px; 
-            margin-top: 20px; 
-        }
-        .info-box { 
-            background: rgba(255,255,255,0.02); 
-            padding: 15px; 
-            border-radius: 15px; 
-            border: var(--fuma-border); 
-        }
-        .info-box h3 { 
-            color: var(--fuma-primary); 
-            font-size: 0.85rem; 
-            margin-bottom: 10px; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-        }
-        .info-box p { 
-            font-size: 0.95rem; 
-            margin: 0; 
-            line-height: 1.6; /* Espace entre les lignes pour les buteurs */
-        }
-        
-        .motm-card { 
-            grid-column: 1 / -1; 
-            text-align: center; 
-            background: linear-gradient(145deg, #222, #000); 
-            border: 1px solid var(--fuma-primary); 
-        }
-        .motm-name { 
-            font-weight: 800; 
-            font-size: 1.3rem !important; 
-            color: var(--fuma-primary); 
-            margin-top: 5px; 
-        }
-
-        /* --- AJUSTEMENTS MOBILES --- */
-        @media (max-width: 500px) {
-            .score-header {
-                padding: 20px 5px;
-                display: grid;
-                grid-template-columns: 1fr 110px 1fr; /* Garde le score au milieu */
-                align-items: center;
-                gap: 5px;
-            }
-
-            .detail-team img { width: 45px; margin-bottom: 5px; }
-            .detail-team h2 { font-size: 0.75rem; line-height: 1.1; }
-            .detail-score { font-size: 1.8rem; }
+    fetch(FINAL_URL)
+        .then(response => response.text())
+        .then(csvText => {
+            const rows = parseCSV(csvText);
             
-            .stats-container { padding: 15px; }
-            .stat-label { font-size: 0.7rem; }
-            .match-detail-wrapper { margin: 10px auto; }
+            // On cherche le match (TeamHome index 5, TeamAway index 6)
+            const match = rows.find(r => r[5] === homeName && r[6] === awayName);
+
+            // --- IMPORTANT : ON CACHE LE LOADER ICI ---
+            const loader = document.getElementById('loader-container');
+            const mainContent = document.getElementById('main-content');
+            
+            if (loader) loader.style.display = 'none';
+            if (mainContent) mainContent.style.display = 'block';
+
+            if (match) {
+                updateUI(match);
+            } else {
+                if (mainContent) {
+                    mainContent.innerHTML = "<h2 style='text-align:center;'>Match non trouvé.</h2>";
+                }
+            }
+        })
+        .catch(err => {
+            console.error("Erreur lors de la récupération des données:", err);
+            const loader = document.getElementById('loader-container');
+            if (loader) {
+                loader.innerHTML = "<p style='color:red;'>Erreur de connexion. Vérifiez votre lien.</p>";
+            }
+        });
+});
+
+/**
+ * Découpe le CSV proprement
+ */
+function parseCSV(text) {
+    if (!text) return [];
+    return text.split('\n').map(row => {
+        let values = [];
+        let current = "";
+        let inQuotes = false;
+        for (let char of row) {
+            if (char === '"') inQuotes = !inQuotes;
+            else if (char === ',' && !inQuotes) {
+                values.push(current.trim());
+                current = "";
+            } else current += char;
         }
-    </style>
-</head>
-<body>
+        values.push(current.trim());
+        return values;
+    });
+}
 
-    <div id="loader-container">
-        <div class="fuma-spinner"></div>
-        <p>Chargement des données...</p>
-    </div>
+/**
+ * Formate les buteurs : Un par ligne avec (x2)
+ */
+function formatStrikers(strikerString) {
+    if (!strikerString || strikerString === '-' || strikerString.trim() === "") return '-';
 
-    <div class="match-detail-wrapper" id="main-content">
-        
-        <a href="league.html" style="color: var(--fuma-text-dim); text-decoration: none; margin-bottom: 15px; display: inline-block; font-size: 0.9rem;">
-            <i class="fas fa-arrow-left"></i> FIXTURES
-        </a>
+    // Sépare par virgule, point-virgule ou saut de ligne
+    const names = strikerString.split(/[,\n;]+/).map(s => s.trim()).filter(s => s !== "");
+    
+    if (names.length === 0) return '-';
 
-        <div class="match-meta">
-            <span id="matchday-label">Matchday --</span> • 
-            <span id="match-date">--/--/--</span>
-        </div>
+    const counts = {};
+    names.forEach(name => {
+        counts[name] = (counts[name] || 0) + 1;
+    });
 
-        <div class="score-header">
-            <div class="detail-team">
-                <img id="logo-home" src="" alt="">
-                <h2 id="name-home-container"><a id="link-home" href="#">-</a></h2>
-            </div>
-            <div class="detail-score" id="score-display">- : -</div>
-            <div class="detail-team">
-                <img id="logo-away" src="" alt="">
-                <h2 id="name-away">-</h2>
-            </div>
-        </div>
+    return Object.entries(counts)
+        .map(([name, count]) => (count > 1 ? `${name} (x${count})` : name))
+        .join('<br>'); // Retour à la ligne HTML
+}
 
-        <div class="stats-container">
-            <div class="stat-row">
-                <div class="stat-label">
-                    <span id="val-poss-home">0%</span>
-                    <span>Possession</span>
-                    <span id="val-poss-away">0%</span>
-                </div>
-                <div class="progress-container">
-                    <div id="bar-poss-home" class="progress-bar bar-home" style="width: 50%"></div>
-                    <div id="bar-poss-away" class="progress-bar bar-away" style="width: 50%"></div>
-                </div>
-            </div>
+/**
+ * Met à jour l'interface
+ */
+function updateUI(m) {
+    // Infos générales
+    document.getElementById('matchday-label').innerText = `Matchday ${m[0]}`;
+    document.getElementById('match-date').innerText = m[1];
 
-            <div class="stat-row">
-                <div class="stat-label">
-                    <span id="val-shots-home">0</span>
-                    <span>Shots</span>
-                    <span id="val-shots-away">0</span>
-                </div>
-                <div class="progress-container">
-                    <div id="bar-shots-home" class="progress-bar bar-home" style="width: 50%"></div>
-                    <div id="bar-shots-away" class="progress-bar bar-away" style="width: 50%"></div>
-                </div>
-            </div>
+    // Logos et Noms
+    document.getElementById('logo-home').src = m[3];
+    document.getElementById('logo-away').src = m[4];
+    
+    const homeLink = document.getElementById('link-home');
+    if (homeLink) {
+        homeLink.innerText = m[5];
+        homeLink.href = m[20] || "#"; 
+    }
+    
+    document.getElementById('name-away').innerText = m[6];
+    document.getElementById('score-display').innerText = `${m[7]} : ${m[8]}`;
 
-            <div class="stat-row">
-                <div class="stat-label">
-                    <span id="val-passes-home">0</span>
-                    <span>Passes Attempted</span>
-                    <span id="val-passes-away">0</span>
-                </div>
-                <div class="progress-container">
-                    <div id="bar-passes-home" class="progress-bar bar-home" style="width: 50%"></div>
-                    <div id="bar-passes-away" class="progress-bar bar-away" style="width: 50%"></div>
-                </div>
-            </div>
+    // Barres de stats
+    updateBar('poss', m[11], m[12], true);
+    updateBar('shots', m[13], m[14], false);
+    updateBar('passes', m[15], m[16], false);
+    updateBar('acc', m[17], m[18], true);
 
-            <div class="stat-row">
-                <div class="stat-label">
-                    <span id="val-acc-home">0%</span>
-                    <span>Passing Accuracy</span>
-                    <span id="val-acc-away">0%</span>
-                </div>
-                <div class="progress-container">
-                    <div id="bar-acc-home" class="progress-bar bar-home" style="width: 50%"></div>
-                    <div id="bar-acc-away" class="progress-bar bar-away" style="width: 50%"></div>
-                </div>
-            </div>
+    // Buteurs (innerHTML pour les <br>)
+    document.getElementById('strikers-home').innerHTML = formatStrikers(m[9]);
+    document.getElementById('strikers-away').innerHTML = formatStrikers(m[10]);
+    
+    document.getElementById('motm-name').innerText = m[19] || 'N/A';
+}
 
-            <div class="extra-info">
-                <div class="info-box">
-                    <h3><i class="fas fa-futbol"></i> Home Scorer(s)</h3>
-                    <p id="strikers-home">-</p>
-                </div>
-                <div class="info-box">
-                    <h3><i class="fas fa-futbol"></i> Away Scorer(s)</h3>
-                    <p id="strikers-away">-</p>
-                </div>
-                <div class="info-box motm-card">
-                    <h3><i class="fas fa-crown"></i> MAN OF THE MATCH</h3>
-                    <p id="motm-name" class="motm-name">Chargement...</p>
-                </div>
-            </div>
-        </div>
-    </div>
+/**
+ * Anime les barres de stats
+ */
+function updateBar(id, valH, valA, isPercent) {
+    const h = parseFloat(String(valH).replace('%', '').replace(',', '.')) || 0;
+    const a = parseFloat(String(valA).replace('%', '').replace(',', '.')) || 0;
+    
+    const total = h + a;
+    const percH = total === 0 ? 50 : (h / total) * 100;
 
-    <script src="info-match-logic.js"></script>
-</body>
-</html>
+    const labelH = document.getElementById(`val-${id}-home`);
+    const labelA = document.getElementById(`val-${id}-away`);
+    
+    if(labelH) labelH.innerText = isPercent ? Math.round(h) + '%' : h;
+    if(labelA) labelA.innerText = isPercent ? Math.round(a) + '%' : a;
+
+    const barH = document.getElementById(`bar-${id}-home`);
+    const barA = document.getElementById(`bar-${id}-away`);
+    
+    if(barH) barH.style.width = percH + '%';
+    if(barA) barA.style.width = (100 - percH) + '%';
+}
