@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 7. LOGIQUE DÉTAILS CLUB (club.html) ---
-    async function loadClubProfile() {
+  async function loadClubProfile() {
     const detailContainer = document.getElementById('club-details');
     if (!detailContainer) return;
 
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = await resp.text();
         const lines = text.trim().split("\n");
         
-        // Extraction des headers et normalisation
+        // Header extraction and normalization
         const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
 
         const idx = {
@@ -251,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
             active: headers.indexOf('ACTIVE'),
             history: headers.indexOf('HISTORY'),
             stream: headers.indexOf('STREAM'),
-            media: headers.indexOf('MEDIA'), // Nouvelle colonne
+            media: headers.indexOf('MEDIA'),
             gp: headers.indexOf('GAMES PLAYED'),
             win: headers.indexOf('WIN'),
             draw: headers.indexOf('DRAW'),
@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (clubLine) {
             const v = parseCSVLine(clubLine);
             
-            // --- 1. GESTION DES RÉSEAUX SOCIAUX (MEDIA) ---
+            // --- 1. SOCIAL MEDIA LOGIC (MEDIA) ---
             let mediaIconsHTML = '';
             if (v[idx.media] && v[idx.media].toLowerCase() !== "none") {
                 const links = v[idx.media].split(',').map(l => l.trim());
@@ -292,28 +292,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 mediaIconsHTML += `</div>`;
             }
 
-            // --- 2. GESTION DU STREAM ---
+            // --- 2. STREAM & COMMUNITY SECTION ---
             let streamBlockHTML = '';
             const hasStream = v[idx.stream] && v[idx.stream].toLowerCase() !== "none";
             
             if (hasStream || mediaIconsHTML !== '') {
                 streamBlockHTML = `<div style="margin-bottom: 35px;">
-                    <h3 class="sidebar-title" style="color: var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; font-size: 0.85rem; letter-spacing:1px;">COMMUNAUTÉ</h3>`;
+                    <h3 class="sidebar-title" style="color: var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; font-size: 0.85rem; letter-spacing:1px;">COMMUNITY</h3>`;
                 
                 if (hasStream) {
                     const isTwitch = v[idx.stream].includes('twitch.tv');
                     streamBlockHTML += `
                         <a href="${v[idx.stream]}" target="_blank" class="fuma-cta" style="display:block; text-align:center; background:#6441a5; font-size: 0.75rem; padding: 10px; margin-bottom: 10px;">
-                            <i class="${isTwitch ? 'fab fa-twitch' : 'fab fa-youtube'}"></i> REGARDER LE LIVE
+                            <i class="${isTwitch ? 'fab fa-twitch' : 'fab fa-youtube'}"></i> WATCH LIVE
                         </a>`;
                 }
                 
                 streamBlockHTML += mediaIconsHTML + `</div>`;
             }
 
-            // --- 3. GESTION DU ROSTER (2 COLONNES) ---
+            // --- 3. ROSTER LOGIC (2 COLUMNS) ---
             const rawPlayers = v[idx.players] || "";
-            let playersListHTML = "<li style='grid-column: 1 / -1; color:var(--fuma-text-dim);'>Aucun joueur inscrit.</li>";
+            let playersListHTML = "<li style='grid-column: 1 / -1; color:var(--fuma-text-dim);'>No players registered.</li>";
 
             if (rawPlayers.trim() !== "" && rawPlayers.toLowerCase() !== "none") {
                 playersListHTML = rawPlayers.split(',')
@@ -331,14 +331,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         </li>`).join('');
             }
 
-            // --- 4. FORMATAGE HISTORIQUE & STATUT ---
+            // --- 4. HISTORY & STATUS FORMATTING ---
             const formattedHistory = v[idx.history] 
                 ? v[idx.history].split('\n').map(line => `<p style="margin-bottom:15px;">${line}</p>`).join('') 
-                : "Aucune information historique disponible.";
+                : "No historical information available.";
 
             const isActive = v[idx.active]?.toUpperCase() === 'YES';
 
-            // --- 5. GÉNÉRATION DU HTML FINAL ---
+            // --- 5. FINAL HTML GENERATION ---
             detailContainer.innerHTML = `
                 <div class="club-profile-header" style="text-align: center; margin-bottom: 50px;">
                     <img src="${v[idx.crest] || ''}" style="width: 150px; height: 150px; object-fit: contain; margin-bottom: 20px;" alt="Crest">
@@ -346,7 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="margin-top: 10px;">
                         <span style="color: ${isActive ? '#4caf50' : '#f44336'}; font-weight: 600; font-size: 0.9rem; letter-spacing: 1px;">
                             <i class="fas fa-circle" style="font-size: 8px; vertical-align: middle; margin-right: 5px;"></i>
-                            ${isActive ? 'CLUB ACTIF' : 'CLUB INACTIF'}
+                            ${isActive ? 'ACTIVE CLUB' : 'INACTIVE CLUB'}
                         </span>
                     </div>
                 </div>
@@ -354,17 +354,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="club-grid-layout">
                     <div class="club-main-info">
                         <section style="margin-bottom: 40px;">
-                            <h2 style="color:var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.2rem; letter-spacing:1px;">HISTOIRE DU CLUB</h2>
+                            <h2 style="color:var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.2rem; letter-spacing:1px;">CLUB HISTORY</h2>
                             <div style="font-style: italic; color: var(--fuma-text-dim); line-height: 1.8; font-size: 0.95rem;">
                                 ${formattedHistory}
                             </div>
                         </section>
                         
                         <div class="stats-bar" style="display: flex; justify-content: space-around; background: var(--fuma-bg-card); padding: 25px; border-radius: 15px; border: var(--fuma-border);"> 
-                            <div style="text-align: center;"><strong style="display: block; font-size: 1.8rem;">${v[idx.gp] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Matchs</span></div>
-                            <div style="text-align: center; color: #4caf50;"><strong style="display: block; font-size: 1.8rem;">${v[idx.win] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Victoires</span></div>
-                            <div style="text-align: center; color: #ffeb3b;"><strong style="display: block; font-size: 1.8rem;">${v[idx.draw] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Nuls</span></div>
-                            <div style="text-align: center; color: #f44336;"><strong style="display: block; font-size: 1.8rem;">${v[idx.lost] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Défaites</span></div>
+                            <div style="text-align: center;"><strong style="display: block; font-size: 1.8rem;">${v[idx.gp] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Played</span></div>
+                            <div style="text-align: center; color: #4caf50;"><strong style="display: block; font-size: 1.8rem;">${v[idx.win] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Wins</span></div>
+                            <div style="text-align: center; color: #ffeb3b;"><strong style="display: block; font-size: 1.8rem;">${v[idx.draw] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Draws</span></div>
+                            <div style="text-align: center; color: #f44336;"><strong style="display: block; font-size: 1.8rem;">${v[idx.lost] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Losses</span></div>
                         </div>
                     </div>
                     
@@ -376,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <h3 class="sidebar-title" style="color: var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; font-size: 0.85rem; letter-spacing:1px;">MANAGER</h3>
                             <p style="margin-bottom:35px; font-weight: 600; font-size: 1.1rem;">${v[idx.manager] || 'N/A'}</p>
                             
-                            <h3 class="sidebar-title" style="color: var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; font-size: 0.85rem; letter-spacing:1px;">EFFECTIF</h3>
+                            <h3 class="sidebar-title" style="color: var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; font-size: 0.85rem; letter-spacing:1px;">ROSTER</h3>
                             <ul class="roster-list" style="list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 15px;">
                                 ${playersListHTML}
                             </ul>
@@ -385,11 +385,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>`;
         } else {
-            detailContainer.innerHTML = "<div style='text-align:center; padding: 50px;'><h2 style='color:var(--fuma-primary)'>Club introuvable</h2></div>";
+            detailContainer.innerHTML = "<div style='text-align:center; padding: 50px;'><h2 style='color:var(--fuma-primary)'>Club not found</h2></div>";
         }
     } catch (e) { 
-        console.error("Erreur:", e);
-        detailContainer.innerHTML = "<p style='text-align:center; color:red; padding: 50px;'>Erreur lors du chargement des données.</p>";
+        console.error("Error:", e);
+        detailContainer.innerHTML = "<p style='text-align:center; color:red; padding: 50px;'>Error loading data.</p>";
     }
 }
 
@@ -661,6 +661,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
