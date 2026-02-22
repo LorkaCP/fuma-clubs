@@ -65,31 +65,39 @@
         .motm-name { font-weight: 800; font-size: 1.3rem !important; color: var(--fuma-primary); margin-top: 5px; }
 
         /* Mobile Adjustments */
-        @media (max-width: 500px) {
-    .score-header { 
-        padding: 20px 10px; 
-        flex-direction: column; /* Aligne les éléments verticalement */
-        gap: 15px;
+       @media (max-width: 500px) {
+    /* On garde l'alignement horizontal mais on optimise l'espace */
+    .score-header {
+        padding: 15px 5px;
+        display: grid;
+        grid-template-columns: 1fr 100px 1fr; /* Colonnes fixes pour le score */
+        align-items: center;
+        gap: 5px;
     }
 
-    .detail-team { 
-        order: unset; /* Réinitialise l'ordre pour suivre le flux HTML */
-        width: 100%;
+    .detail-team img {
+        width: 45px; /* Logos plus petits pour gagner de la place */
+        margin-bottom: 5px;
     }
 
-    .detail-score { 
-        order: unset; /* Place le score entre les deux équipes */
-        font-size: 3rem; 
-        margin: 10px 0;
-        width: 100%;
+    .detail-team h2 {
+        font-size: 0.8rem;
+        word-break: break-word; /* Évite que les noms longs ne cassent tout */
+        line-height: 1.1;
     }
 
-    .detail-team img { 
-        width: 70px; /* Taille de logo fixe sur mobile pour la cohérence */
+    .detail-score {
+        font-size: 1.8rem; /* Score plus compact */
+        white-space: nowrap;
     }
 
-    .detail-team h2 { 
-        font-size: 1rem; 
+    /* On réduit un peu l'écart des stats pour le mobile */
+    .stats-container {
+        padding: 15px;
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
     }
 }
     </style>
