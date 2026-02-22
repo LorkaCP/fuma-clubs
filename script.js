@@ -533,39 +533,38 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        // --- AFFICHAGE STATS ---
+        // --- STATS DISPLAY ---
         statsContainer.style.display = "grid";
         statsContainer.style.gridTemplateColumns = "repeat(auto-fit, minmax(250px, 1fr))";
         statsContainer.style.gap = "20px";
         statsContainer.style.marginTop = "30px";
 
         statsContainer.innerHTML = `
-            ${renderStatCard("GÉNÉRAL", [
-                { label: "Matchs Joués", val: player.GAME_PLAYED },
-                { label: "Note Moyenne", val: player.RATING, color: "var(--fuma-primary)" },
-                { label: "Cartons", val: player.CARDS }
+            ${renderStatCard("GENERAL", [
+                { label: "Matches Played", val: player.GAME_PLAYED },
+                { label: "Average Rating", val: player.RATING, color: "var(--fuma-primary)" },
+                { label: "Cards", val: player.CARDS }
             ])}
-            ${renderStatCard("ATTAQUE", [
-                { label: "Buts", val: player.GOALS },
-                { label: "Passes D.", val: player.ASSISTS },
-                { label: "Tirs", val: player.SHOTS }
+            ${renderStatCard("ATTACK", [
+                { label: "Goals", val: player.GOALS },
+                { label: "Assists", val: player.ASSISTS },
+                { label: "Shots", val: player.SHOTS }
             ])}
             ${renderStatCard("DISTRIBUTION", [
-                { label: "Passes Réussies", val: player.SUCCESSFUL_PASSES },
-                { label: "% Précision", val: player['%SUCCESSFUL_PASSES'] }
+                { label: "Passes Completed", val: player.SUCCESSFUL_PASSES },
+                { label: "Pass Accuracy %", val: player['%SUCCESSFUL_PASSES'] }
             ])}
-            ${renderStatCard("DÉFENSE", [
-                { label: "Tacles Réussis", val: player.SUCCESSFUL_TACKLES },
-                { label: "% Tacles", val: player['%SUCCESSFUL_TACKLES'] }
+            ${renderStatCard("DEFENSE", [
+                { label: "Tackles Won", val: player.SUCCESSFUL_TACKLES },
+                { label: "Tackle Success %", val: player['%SUCCESSFUL_TACKLES'] }
             ])}
         `;
 
     } catch (e) {
         console.error(e);
-        headerContainer.innerHTML = "Erreur de chargement.";
+        headerContainer.innerHTML = "Error loading profile.";
     }
 }
-
 function renderStatCard(title, stats) {
     return `
         <div class="stat-box" style="background: var(--fuma-bg-card); border: var(--fuma-border); padding: 20px; border-radius: 12px;">
@@ -661,6 +660,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
