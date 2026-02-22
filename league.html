@@ -363,19 +363,24 @@
 <script src="script.js"></script>
 <script src="league-logic.js"></script>
 <script>
-    function openTab(evt, tabName) {
-        let content = document.getElementsByClassName("league-content");
-        for (let i = 0; i < content.length; i++) {
-            content[i].classList.remove("active");
-        }
-        let tabs = document.getElementsByClassName("tab-btn");
-        for (let i = 0; i < tabs.length; i++) {
-            tabs[i].classList.remove("active");
-        }
-        
-        document.getElementById(tabName).classList.add("active");
-        evt.currentTarget.classList.add("active");
+   function openTab(evt, tabName) {
+    let content = document.getElementsByClassName("league-content");
+    for (let i = 0; i < content.length; i++) {
+        content[i].classList.remove("active");
     }
+    let tabs = document.getElementsByClassName("tab-btn");
+    for (let i = 0; i < tabs.length; i++) {
+        tabs[i].classList.remove("active");
+    }
+    
+    document.getElementById(tabName).classList.add("active");
+    evt.currentTarget.classList.add("active");
+
+    // Appel de la fonction pour masquer le sélecteur de journée
+    if (typeof updateStatsUI === "function") {
+        updateStatsUI(tabName === 'stats');
+    }
+}
 </script>
 </body>
 </html>
