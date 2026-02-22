@@ -242,22 +242,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = await resp.text();
         const lines = text.trim().split("\n");
         
-        // Extraction et nettoyage des headers (insensible à la casse)
+        // Extraction des headers et normalisation
         const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
 
         const idx = {
             team: headers.indexOf('TEAMS'),
             crest: headers.indexOf('CREST'),
+            active: headers.indexOf('ACTIVE'),
             history: headers.indexOf('HISTORY'),
+            stream: headers.indexOf('STREAM'),
+            media: headers.indexOf('MEDIA'), // Nouvelle colonne
             gp: headers.indexOf('GAMES PLAYED'),
             win: headers.indexOf('WIN'),
             draw: headers.indexOf('DRAW'),
             lost: headers.indexOf('LOST'),
             trophies: headers.indexOf('TROPHIES'),
             manager: headers.indexOf('MANAGER'),
-            players: headers.indexOf('PLAYERS'),
-            active: headers.indexOf('ACTIVE'),
-            stream: headers.indexOf('STREAM')
+            players: headers.indexOf('PLAYERS')
         };
 
         const clubLine = lines.slice(1).find(line => {
@@ -268,113 +269,127 @@ document.addEventListener('DOMContentLoaded', () => {
         if (clubLine) {
             const v = parseCSVLine(clubLine);
             
-            // Formatage de l'historique
-            const formattedHistory = v[idx.history] 
-                ? v[idx.history].split('\n').map(p => `<p style="margin-bottom:15px;">${p}</p>`).join('') 
-                : "No history available.";
-            
-            // --- LOGIQUE DU ROSTER SUR 2 COLONNES ---
-            const rawPlayers = v[idx.players];
-            let playersListHTML = "<li style='grid-column: 1 / -1;'>Roster is empty.</li>";
+            // --- 1. GESTION DES RÉSEAUX SOCIAUX (MEDIA) ---
+            let mediaIconsHTML = '';
+            if (v[idx.media] && v[idx.media].toLowerCase() !== "none") {
+                const links = v[idx.media].split(',').map(l => l.trim());
+                mediaIconsHTML = `<div style="display: flex; gap: 15px; justify-content: center; margin-top: 15px;">`;
+                
+                links.forEach(link => {
+                    let icon = 'fas fa-link';
+                    if (link.includes('twitter.com') || link.includes('x.com')) icon = 'fab fa-x-twitter';
+                    if (link.includes('instagram.com')) icon = 'fab fa-instagram';
+                    if (link.includes('facebook.com')) icon = 'fab fa-facebook';
+                    if (link.includes('discord')) icon = 'fab fa-discord';
+                    if (link.includes('tiktok.com')) icon = 'fab fa-tiktok';
+                    if (link.includes('youtube.com') && !link.includes('watch')) icon = 'fab fa-youtube';
+                    
+                    mediaIconsHTML += `
+                        <a href="${link}" target="_blank" style="color: var(--fuma-text-dim); font-size: 1.2rem; transition: 0.3s;" onmouseover="this.style.color='var(--fuma-primary)'" onmouseout="this.style.color='var(--fuma-text-dim)'">
+                            <i class="${icon}"></i>
+                        </a>`;
+                });
+                mediaIconsHTML += `</div>`;
+            }
 
-            if (rawPlayers && rawPlayers.trim() !== "" && rawPlayers.toLowerCase() !== "none") {
+            // --- 2. GESTION DU STREAM ---
+            let streamBlockHTML = '';
+            const hasStream = v[idx.stream] && v[idx.stream].toLowerCase() !== "none";
+            
+            if (hasStream || mediaIconsHTML !== '') {
+                streamBlockHTML = `<div style="margin-bottom: 35px;">
+                    <h3 class="sidebar-title" style="color: var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; font-size: 0.85rem; letter-spacing:1px;">COMMUNAUTÉ</h3>`;
+                
+                if (hasStream) {
+                    const isTwitch = v[idx.stream].includes('twitch.tv');
+                    streamBlockHTML += `
+                        <a href="${v[idx.stream]}" target="_blank" class="fuma-cta" style="display:block; text-align:center; background:#6441a5; font-size: 0.75rem; padding: 10px; margin-bottom: 10px;">
+                            <i class="${isTwitch ? 'fab fa-twitch' : 'fab fa-youtube'}"></i> REGARDER LE LIVE
+                        </a>`;
+                }
+                
+                streamBlockHTML += mediaIconsHTML + `</div>`;
+            }
+
+            // --- 3. GESTION DU ROSTER (2 COLONNES) ---
+            const rawPlayers = v[idx.players] || "";
+            let playersListHTML = "<li style='grid-column: 1 / -1; color:var(--fuma-text-dim);'>Aucun joueur inscrit.</li>";
+
+            if (rawPlayers.trim() !== "" && rawPlayers.toLowerCase() !== "none") {
                 playersListHTML = rawPlayers.split(',')
                     .map(p => p.trim())
                     .filter(p => p.length > 0)
-                    .map(p => {
-                        return `
-                            <li style="display: flex; align-items: center; min-width: 0;">
-                                <i class="fas fa-user-circle" style="font-size:0.75rem; margin-right:8px; color:var(--fuma-primary); flex-shrink: 0;"></i>
-                                <a href="player.html?id=${encodeURIComponent(p)}" 
-                                   style="color: var(--fuma-text-main); text-decoration: none; transition: 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem;" 
-                                   onmouseover="this.style.color='var(--fuma-primary)'" 
-                                   onmouseout="this.style.color='var(--fuma-text-main)'">
-                                    ${p}
-                                </a>
-                            </li>`;
-                    })
-                    .join('');
+                    .map(p => `
+                        <li style="display: flex; align-items: center; min-width: 0;">
+                            <i class="fas fa-user-circle" style="font-size:0.7rem; margin-right:8px; color:var(--fuma-primary); flex-shrink: 0;"></i>
+                            <a href="player.html?id=${encodeURIComponent(p)}" 
+                               style="color: var(--fuma-text-main); text-decoration: none; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: 0.2s;"
+                               onmouseover="this.style.color='var(--fuma-primary)'" 
+                               onmouseout="this.style.color='var(--fuma-text-main)'">
+                                ${p}
+                            </a>
+                        </li>`).join('');
             }
+
+            // --- 4. FORMATAGE HISTORIQUE & STATUT ---
+            const formattedHistory = v[idx.history] 
+                ? v[idx.history].split('\n').map(line => `<p style="margin-bottom:15px;">${line}</p>`).join('') 
+                : "Aucune information historique disponible.";
 
             const isActive = v[idx.active]?.toUpperCase() === 'YES';
-            const statusHTML = `
-                <span style="color: ${isActive ? '#4caf50' : '#f44336'}; font-weight: bold; font-size: 0.9rem; letter-spacing:1px;">
-                    <i class="fas fa-circle" style="font-size: 10px; vertical-align: middle; margin-right:5px;"></i> 
-                    ${isActive ? 'ACTIVE' : 'INACTIVE'}
-                </span>`;
 
-            let streamHTML = '';
-            if (v[idx.stream] && v[idx.stream].toLowerCase() !== "none") {
-                const isTwitch = v[idx.stream].includes('twitch.tv');
-                streamHTML = `
-                    <h3 class="sidebar-title" style="margin-top:25px; font-size:0.9rem; color:var(--fuma-primary);">
-                        <i class="fas fa-broadcast-tower"></i> LIVE STREAM
-                    </h3>
-                    <a href="${v[idx.stream]}" target="_blank" class="fuma-cta" style="display:block; text-align:center; background:#6441a5; font-size: 0.75rem; padding: 10px; margin-top:10px;">
-                        <i class="${isTwitch ? 'fab fa-twitch' : 'fab fa-youtube'}"></i> WATCH NOW
-                    </a>`;
-            }
-
-            let trophiesHTML = ''; 
-            if (v[idx.trophies] && v[idx.trophies] !== "0" && v[idx.trophies].toLowerCase() !== "none") {
-                trophiesHTML = `
-                    <div class="trophy-section" style="margin-bottom: 30px;">
-                        <h3 class="sidebar-title" style="border:none; margin-bottom:15px; font-size:1rem;">
-                            <i class="fas fa-trophy" style="color:var(--fuma-primary)"></i> ACHIEVEMENTS
-                        </h3>
-                        <div class="trophy-grid" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                            ${v[idx.trophies].split(',').map(t => `
-                                <div class="trophy-badge" style="background: rgba(212,175,55,0.1); padding: 6px 15px; border-radius: 20px; border: 1px solid var(--fuma-primary); font-size: 0.75rem; color: var(--fuma-primary); font-weight:600;">
-                                    🏆 ${t.trim()}
-                                </div>`).join('')}
-                        </div>
-                    </div>`;
-            }
-
+            // --- 5. GÉNÉRATION DU HTML FINAL ---
             detailContainer.innerHTML = `
-                <div class="club-profile-header" style="text-align: center; margin-bottom: 60px;">
-                    <img src="${v[idx.crest] || ''}" style="width: 160px; height: 160px; object-fit: contain; margin-bottom: 25px;" alt="Crest">
-                    <h1 class="club-title-responsive">${v[idx.team]}</h1>
-                    <div class="status-badge">${statusHTML}</div>
+                <div class="club-profile-header" style="text-align: center; margin-bottom: 50px;">
+                    <img src="${v[idx.crest] || ''}" style="width: 150px; height: 150px; object-fit: contain; margin-bottom: 20px;" alt="Crest">
+                    <h1 class="club-title-responsive" style="font-size: 3rem; font-weight: 800; text-transform: uppercase;">${v[idx.team]}</h1>
+                    <div style="margin-top: 10px;">
+                        <span style="color: ${isActive ? '#4caf50' : '#f44336'}; font-weight: 600; font-size: 0.9rem; letter-spacing: 1px;">
+                            <i class="fas fa-circle" style="font-size: 8px; vertical-align: middle; margin-right: 5px;"></i>
+                            ${isActive ? 'CLUB ACTIF' : 'CLUB INACTIF'}
+                        </span>
+                    </div>
                 </div>
                 
                 <div class="club-grid-layout">
                     <div class="club-main-info">
-                        ${trophiesHTML}
-                        <section>
-                            <h2 style="color:var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.2rem; letter-spacing:1px;">HISTORY</h2>
-                            <div style="font-style: italic; color: var(--fuma-text-dim); line-height: 1.8; font-size: 0.95rem;">${formattedHistory}</div>
+                        <section style="margin-bottom: 40px;">
+                            <h2 style="color:var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.2rem; letter-spacing:1px;">HISTOIRE DU CLUB</h2>
+                            <div style="font-style: italic; color: var(--fuma-text-dim); line-height: 1.8; font-size: 0.95rem;">
+                                ${formattedHistory}
+                            </div>
                         </section>
                         
-                        <div class="stats-bar"> 
-                            <div class="stat-item" style="text-align: center;"><strong style="display: block; font-size: 1.8rem;">${v[idx.gp] || 0}</strong><span style="font-size: 0.65rem; color: var(--fuma-text-dim); text-transform: uppercase; letter-spacing:1px;">Games</span></div>
-                            <div class="stat-item" style="text-align: center; color: #4caf50;"><strong style="display: block; font-size: 1.8rem;">${v[idx.win] || 0}</strong><span style="font-size: 0.65rem; color: var(--fuma-text-dim); text-transform: uppercase; letter-spacing:1px;">Win</span></div>
-                            <div class="stat-item" style="text-align: center; color: #ffeb3b;"><strong style="display: block; font-size: 1.8rem;">${v[idx.draw] || 0}</strong><span style="font-size: 0.65rem; color: var(--fuma-text-dim); text-transform: uppercase; letter-spacing:1px;">Draw</span></div>
-                            <div class="stat-item" style="text-align: center; color: #f44336;"><strong style="display: block; font-size: 1.8rem;">${v[idx.lost] || 0}</strong><span style="font-size: 0.65rem; color: var(--fuma-text-dim); text-transform: uppercase; letter-spacing:1px;">Lost</span></div>
+                        <div class="stats-bar" style="display: flex; justify-content: space-around; background: var(--fuma-bg-card); padding: 25px; border-radius: 15px; border: var(--fuma-border);"> 
+                            <div style="text-align: center;"><strong style="display: block; font-size: 1.8rem;">${v[idx.gp] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Matchs</span></div>
+                            <div style="text-align: center; color: #4caf50;"><strong style="display: block; font-size: 1.8rem;">${v[idx.win] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Victoires</span></div>
+                            <div style="text-align: center; color: #ffeb3b;"><strong style="display: block; font-size: 1.8rem;">${v[idx.draw] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Nuls</span></div>
+                            <div style="text-align: center; color: #f44336;"><strong style="display: block; font-size: 1.8rem;">${v[idx.lost] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Défaites</span></div>
                         </div>
                     </div>
                     
                     <div class="club-sidebar">
                         <div class="sidebar-box" style="background: var(--fuma-bg-card); padding: 30px; border-radius: 15px; border: var(--fuma-border); position: sticky; top: 20px;">
-                            <h3 class="sidebar-title" style="color: var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; font-size: 0.9rem; letter-spacing:1px;">MANAGER</h3>
-                            <p style="margin-bottom:30px; font-weight: 600; font-size: 1.1rem;">${v[idx.manager] || 'N/A'}</p>
                             
-                            <h3 class="sidebar-title" style="color: var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; font-size: 0.9rem; letter-spacing:1px;">ROSTER</h3>
+                            ${streamBlockHTML}
+
+                            <h3 class="sidebar-title" style="color: var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; font-size: 0.85rem; letter-spacing:1px;">MANAGER</h3>
+                            <p style="margin-bottom:35px; font-weight: 600; font-size: 1.1rem;">${v[idx.manager] || 'N/A'}</p>
                             
+                            <h3 class="sidebar-title" style="color: var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; font-size: 0.85rem; letter-spacing:1px;">EFFECTIF</h3>
                             <ul class="roster-list" style="list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 15px;">
                                 ${playersListHTML}
                             </ul>
 
-                            ${streamHTML}
                         </div>
                     </div>
                 </div>`;
         } else {
-            detailContainer.innerHTML = "<div style='text-align:center; padding: 50px;'><h2 style='color:var(--fuma-primary)'>Club not found</h2><p>Please check the URL or return to the clubs list.</p></div>";
+            detailContainer.innerHTML = "<div style='text-align:center; padding: 50px;'><h2 style='color:var(--fuma-primary)'>Club introuvable</h2></div>";
         }
     } catch (e) { 
-        console.error("Error loading club profile:", e);
-        detailContainer.innerHTML = "<p style='text-align:center; color:red; padding: 50px;'>Error loading club data. Please try again later.</p>";
+        console.error("Erreur:", e);
+        detailContainer.innerHTML = "<p style='text-align:center; color:red; padding: 50px;'>Erreur lors du chargement des données.</p>";
     }
 }
 
@@ -646,6 +661,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
