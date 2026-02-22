@@ -96,26 +96,42 @@ async function loadTeamsList() {
         const text = await resp.text();
         const lines = text.trim().split("\n");
         const headers = lines[0].split(",");
+        
+        // Identification des index de colonnes
         const teamIdx = headers.indexOf('TEAMS');
+        const activeIdx = headers.indexOf('ACTIVE');
 
-        // On récupère les noms, on filtre les doublons et les "Free Agent" déjà présents par défaut
         const teams = lines.slice(1)
-            .map(line => parseCSVLine(line)[teamIdx])
-            .filter(name => name && name.trim() !== "" && !name.toLowerCase().includes('free agent'))
-            .sort();
+            .map(line => {
+                const columns = parseCSVLine(line);
+                return {
+                    name: columns[teamIdx],
+                    active: columns[activeIdx] ? columns[activeIdx].trim().toUpperCase() : ""
+                };
+            })
+            .filter(club => {
+                // On garde si : 
+                // 1. Le nom existe
+                // 2. Ce n'est pas un "Free Agent" (déjà en dur dans le HTML)
+                // 3. La colonne ACTIVE n'est pas égale à "NO"
+                return club.name && 
+                       club.name.trim() !== "" && 
+                       !club.name.toLowerCase().includes('free agent') && 
+                       club.active !== "NO";
+            })
+            .sort((a, b) => a.name.localeCompare(b.name));
 
-        // Ajout des options au Select
-        teams.forEach(teamName => {
+        // Ajout des options filtrées au menu déroulant
+        teams.forEach(club => {
             const option = document.createElement('option');
-            option.value = teamName;
-            option.textContent = teamName;
+            option.value = club.name;
+            option.textContent = club.name;
             teamSelect.appendChild(option);
         });
     } catch (e) {
         console.error("Erreur lors du chargement des équipes :", e);
     }
 }
-
 
     
     async function handleProfilePage() {
@@ -758,6 +774,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
