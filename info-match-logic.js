@@ -66,7 +66,7 @@ function parseCSV(text) {
 }
 
 /**
- * Formate les buteurs : Un par ligne avec (x2)
+ * Formate les buteurs : Rend chaque nom cliquable et gère les (x2)
  */
 function formatStrikers(strikerString) {
     if (!strikerString || strikerString === '-' || strikerString.trim() === "") return '-';
@@ -82,7 +82,11 @@ function formatStrikers(strikerString) {
     });
 
     return Object.entries(counts)
-        .map(([name, count]) => (count > 1 ? `${name} (x${count})` : name))
+        .map(([name, count]) => {
+            // Création du lien vers player.html avec l'ID du joueur
+            const playerLink = `<a href="player.html?id=${encodeURIComponent(name)}" style="color: inherit; text-decoration: none; border-bottom: 1px dashed var(--fuma-primary);">${name}</a>`;
+            return (count > 1 ? `${playerLink} (x${count})` : playerLink);
+        })
         .join('<br>'); // Retour à la ligne HTML
 }
 
@@ -113,11 +117,19 @@ function updateUI(m) {
     updateBar('passes', m[15], m[16], false);
     updateBar('acc', m[17], m[18], true);
 
-    // Buteurs (innerHTML pour les <br>)
+    // Buteurs (innerHTML pour les liens cliquables et <br>)
     document.getElementById('strikers-home').innerHTML = formatStrikers(m[9]);
     document.getElementById('strikers-away').innerHTML = formatStrikers(m[10]);
     
-    document.getElementById('motm-name').innerText = m[19] || 'N/A';
+    // Homme du Match cliquable
+    const motmContainer = document.getElementById('motm-name');
+    const motmName = m[19] || 'N/A';
+    
+    if (motmName !== 'N/A') {
+        motmContainer.innerHTML = `<a href="player.html?id=${encodeURIComponent(motmName)}" style="color: var(--fuma-primary); text-decoration: none; font-weight: bold; border-bottom: 1px solid transparent; transition: 0.3s;" onmouseover="this.style.borderBottom='1px solid var(--fuma-primary)'" onmouseout="this.style.borderBottom='1px solid transparent'">${motmName}</a>`;
+    } else {
+        motmContainer.innerText = 'N/A';
+    }
 }
 
 /**
