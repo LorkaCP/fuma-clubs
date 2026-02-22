@@ -70,13 +70,14 @@
         /* Header Score & Buteurs */
         .score-header { 
             display: flex; 
-            align-items: flex-start; /* Aligné en haut pour les listes de buteurs */
+            align-items: flex-start;
             justify-content: space-between; 
             background: var(--fuma-bg-card); 
             padding: 30px 20px; 
             border-radius: 20px; 
             border: var(--fuma-border); 
             margin-bottom: 20px; 
+            position: relative;
         }
         
         .detail-team { 
@@ -87,11 +88,8 @@
             align-items: center;
         }
         .detail-team img { width: clamp(50px, 15vw, 90px); height: auto; margin-bottom: 10px; }
-        .detail-team h2 { font-size: 1.1rem; margin: 0; }
-        .detail-team a { color: inherit; text-decoration: none; transition: color 0.3s; }
-        .detail-team a:hover { color: var(--fuma-primary); }
+        .detail-team h2 { font-size: 1.1rem; margin: 0; font-weight: 600; }
 
-        /* Style spécifique pour les buteurs sous l'équipe */
         .strikers-list {
             font-size: 0.75rem;
             color: var(--fuma-text-dim);
@@ -101,14 +99,46 @@
             width: 100%;
         }
 
+        .score-center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
         .detail-score { 
-            flex: 1; 
             font-size: clamp(2.2rem, 8vw, 3.5rem); 
             font-weight: 800; 
             color: var(--fuma-primary); 
             text-align: center;
-            padding-top: 10px;
+            line-height: 1;
+            margin-bottom: 15px;
         }
+
+        /* Bouton Revoir le Match */
+        .btn-replay {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--fuma-primary);
+            color: #000;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            transition: transform 0.2s, background 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-replay:hover {
+            transform: scale(1.05);
+            background: #fff;
+        }
+
+        .btn-replay i { font-size: 0.8rem; }
 
         /* Stats */
         .stats-container { 
@@ -165,13 +195,14 @@
             .score-header {
                 padding: 20px 10px;
                 display: grid;
-                grid-template-columns: 1fr 80px 1fr;
+                grid-template-columns: 1fr 100px 1fr;
                 gap: 5px;
             }
             .detail-team img { width: 45px; }
             .detail-team h2 { font-size: 0.75rem; }
             .detail-score { font-size: 1.8rem; }
-            .strikers-list { font-size: 0.65rem; }
+            .strikers-list { font-size: 0.6rem; }
+            .btn-replay { padding: 6px 10px; font-size: 0.55rem; }
         }
     </style>
 </head>
@@ -196,11 +227,16 @@
         <div class="score-header">
             <div class="detail-team">
                 <img id="logo-home" src="" alt="">
-                <h2 id="name-home-container"><a id="link-home" href="#">-</a></h2>
+                <h2 id="name-home">-</h2>
                 <div id="strikers-home" class="strikers-list"></div>
             </div>
 
-            <div class="detail-score" id="score-display">- : -</div>
+            <div class="score-center">
+                <div class="detail-score" id="score-display">- : -</div>
+                <a id="link-replay" href="#" class="btn-replay" target="_blank">
+                    <i class="fas fa-play"></i> REVOIR LE MATCH
+                </a>
+            </div>
 
             <div class="detail-team">
                 <img id="logo-away" src="" alt="">
