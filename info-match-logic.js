@@ -69,12 +69,11 @@ function parseCSV(text) {
  * Formate les buteurs : Rend chaque nom cliquable avec une icône profil
  */
 function formatStrikers(strikerString) {
-    if (!strikerString || strikerString === '-' || strikerString.trim() === "") return '-';
+    if (!strikerString || strikerString === '-' || strikerString.trim() === "") return '';
 
-    // Sépare par virgule, point-virgule ou saut de ligne
     const names = strikerString.split(/[,\n;]+/).map(s => s.trim()).filter(s => s !== "");
     
-    if (names.length === 0) return '-';
+    if (names.length === 0) return '';
 
     const counts = {};
     names.forEach(name => {
@@ -83,14 +82,13 @@ function formatStrikers(strikerString) {
 
     return Object.entries(counts)
         .map(([name, count]) => {
-            // Lien avec icône au lieu du soulignement
             const playerLink = `
                 <a href="player.html?id=${encodeURIComponent(name)}" style="color: inherit; text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='var(--fuma-primary)'" onmouseout="this.style.color='inherit'">
-                    <i class="fas fa-user" style="font-size: 0.7rem; margin-right: 4px; opacity: 0.7;"></i>${name}
+                    <i class="fas fa-user" style="font-size: 0.6rem; margin-right: 4px; opacity: 0.7;"></i>${name}
                 </a>`;
             return (count > 1 ? `${playerLink} (x${count})` : playerLink);
         })
-        .join('<br>'); // Retour à la ligne HTML
+        .join('<br>');
 }
 
 /**
@@ -101,18 +99,26 @@ function updateUI(m) {
     document.getElementById('matchday-label').innerText = `Matchday ${m[0]}`;
     document.getElementById('match-date').innerText = m[1];
 
-    // Logos et Noms
+    // Logos et Noms (Texte simple)
     document.getElementById('logo-home').src = m[3];
     document.getElementById('logo-away').src = m[4];
-    
-    const homeLink = document.getElementById('link-home');
-    if (homeLink) {
-        homeLink.innerText = m[5];
-        homeLink.href = m[20] || "#"; 
-    }
-    
+    document.getElementById('name-home').innerText = m[5];
     document.getElementById('name-away').innerText = m[6];
+    
+    // Score
     document.getElementById('score-display').innerText = `${m[7]} : ${m[8]}`;
+
+    // Gestion du bouton REPLAY (Index 20)
+    const replayLink = document.getElementById('link-replay');
+    if (replayLink) {
+        const videoUrl = m[20];
+        if (videoUrl && videoUrl !== "#" && videoUrl.trim() !== "") {
+            replayLink.href = videoUrl;
+            replayLink.style.display = 'inline-flex';
+        } else {
+            replayLink.style.display = 'none';
+        }
+    }
 
     // Barres de stats
     updateBar('poss', m[11], m[12], true);
@@ -120,11 +126,11 @@ function updateUI(m) {
     updateBar('passes', m[15], m[16], false);
     updateBar('acc', m[17], m[18], true);
 
-    // Buteurs (innerHTML pour les icônes et liens)
+    // Buteurs (Sous les noms d'équipes)
     document.getElementById('strikers-home').innerHTML = formatStrikers(m[9]);
     document.getElementById('strikers-away').innerHTML = formatStrikers(m[10]);
     
-    // Homme du Match avec icône profil
+    // Homme du Match
     const motmContainer = document.getElementById('motm-name');
     const motmName = m[19] || 'N/A';
     
