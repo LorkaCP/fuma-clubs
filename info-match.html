@@ -66,11 +66,32 @@
 
         /* Mobile Adjustments */
         @media (max-width: 500px) {
-            .score-header { padding: 20px 10px; }
-            .detail-score { order: -1; flex-basis: 100%; margin-bottom: 15px; }
-            .detail-team h2 { font-size: 0.9rem; }
-            .match-detail-wrapper { margin-top: 10px; }
-        }
+    .score-header { 
+        padding: 20px 10px; 
+        flex-direction: column; /* Aligne les éléments verticalement */
+        gap: 15px;
+    }
+
+    .detail-team { 
+        order: unset; /* Réinitialise l'ordre pour suivre le flux HTML */
+        width: 100%;
+    }
+
+    .detail-score { 
+        order: unset; /* Place le score entre les deux équipes */
+        font-size: 3rem; 
+        margin: 10px 0;
+        width: 100%;
+    }
+
+    .detail-team img { 
+        width: 70px; /* Taille de logo fixe sur mobile pour la cohérence */
+    }
+
+    .detail-team h2 { 
+        font-size: 1rem; 
+    }
+}
     </style>
 </head>
 <body>
