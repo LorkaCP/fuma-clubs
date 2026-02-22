@@ -87,26 +87,66 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 4. LOGIQUE PAGE PROFIL ---
-    function handleProfilePage() {
-        if (!window.location.pathname.includes('profile.html')) return;
-        
-        const params = new URLSearchParams(window.location.search);
-        const discordUsername = params.get('username');
-        const discordId = params.get('id');
+async function loadTeamsList() {
+    const teamSelect = document.getElementById('team');
+    if (!teamSelect) return;
 
-        if (discordUsername && discordUsername !== "undefined" && discordId && discordId !== "undefined") {
-            const nameInput = document.getElementById('discord-name');
-            const idInput = document.getElementById('id-discord');
+    try {
+        const resp = await fetch(SHEET_URL);
+        const text = await resp.text();
+        const lines = text.trim().split("\n");
+        const headers = lines[0].split(",");
+        const teamIdx = headers.indexOf('TEAMS');
+
+        // On récupère les noms, on filtre les doublons et les "Free Agent" déjà présents par défaut
+        const teams = lines.slice(1)
+            .map(line => parseCSVLine(line)[teamIdx])
+            .filter(name => name && name.trim() !== "" && !name.toLowerCase().includes('free agent'))
+            .sort();
+
+        // Ajout des options au Select
+        teams.forEach(teamName => {
+            const option = document.createElement('option');
+            option.value = teamName;
+            option.textContent = teamName;
+            teamSelect.appendChild(option);
+        });
+    } catch (e) {
+        console.error("Erreur lors du chargement des équipes :", e);
+    }
+}
+
+
+    
+    async function handleProfilePage() {
+    // Vérifie si nous sommes bien sur la page profile.html
+    if (!window.location.pathname.includes('profile.html')) return;
+
+    // 1. Charger la liste des clubs dans le menu déroulant
+    await loadTeamsList();
+
+    // 2. Récupération des paramètres Discord dans l'URL (après redirection Auth)
+    const params = new URLSearchParams(window.location.search);
+    const discordUsername = params.get('username');
+    const discordId = params.get('id');
+
+    // 3. Si les infos Discord sont présentes, on pré-remplit le formulaire
+    if (discordUsername && discordUsername !== "undefined" && discordId && discordId !== "undefined") {
+        const nameInput = document.getElementById('discord-name');
+        const idInput = document.getElementById('id-discord');
+        
+        if (nameInput && idInput) {
+            nameInput.value = decodeURIComponent(discordUsername);
+            idInput.value = discordId;
             
-            if (nameInput && idInput) {
-                nameInput.value = decodeURIComponent(discordUsername);
-                idInput.value = discordId;
-                checkExistingProfile(discordId);
-                // Nettoyage de l'URL
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
+            // On vérifie si ce joueur a déjà un profil enregistré
+            checkExistingProfile(discordId);
+            
+            // Nettoyage de l'URL pour la sécurité et l'esthétique
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
     }
+}
 
     async function checkExistingProfile(discordId) {
         const loader = document.getElementById('fuma-loader');
@@ -718,6 +758,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
