@@ -15,9 +15,49 @@
             --fuma-text-dim: #aaa;
         }
 
-        .match-detail-wrapper { max-width: 800px; margin: 20px auto; padding: 15px; }
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+        }
+
+        /* --- LOADER : Plein écran et centré --- */
+        #loader-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .fuma-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top: 5px solid var(--fuma-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* --- CONTENU PRINCIPAL --- */
+        .match-detail-wrapper { 
+            max-width: 800px; 
+            margin: 20px auto; 
+            padding: 15px; 
+            display: none; /* Masqué jusqu'à la fin du chargement JS */
+        }
         
-        /* En-tête de la journée */
         .match-meta { 
             text-align: center; 
             margin-bottom: 20px; 
@@ -29,103 +69,130 @@
 
         /* Header Score */
         .score-header { 
-            display: flex; align-items: center; justify-content: space-between; 
-            background: var(--fuma-bg-card); padding: 30px 20px; border-radius: 20px; 
-            border: var(--fuma-border); margin-bottom: 20px; text-align: center;
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            background: var(--fuma-bg-card); 
+            padding: 30px 20px; 
+            border-radius: 20px; 
+            border: var(--fuma-border); 
+            margin-bottom: 20px; 
+            text-align: center;
         }
+        
         .detail-team { flex: 1; }
         .detail-team img { width: clamp(50px, 15vw, 90px); height: auto; margin-bottom: 10px; }
         .detail-team h2 { font-size: 1.1rem; margin: 0; }
         .detail-team a { color: inherit; text-decoration: none; transition: color 0.3s; }
         .detail-team a:hover { color: var(--fuma-primary); }
 
-        .detail-score { flex: 1; font-size: clamp(2rem, 8vw, 3.5rem); font-weight: 800; color: var(--fuma-primary); }
+        .detail-score { 
+            flex: 1; 
+            font-size: clamp(2.2rem, 8vw, 3.5rem); 
+            font-weight: 800; 
+            color: var(--fuma-primary); 
+        }
 
         /* Conteneur Stats */
-        .stats-container { background: var(--fuma-bg-card); border-radius: 20px; padding: 25px; border: var(--fuma-border); }
+        .stats-container { 
+            background: var(--fuma-bg-card); 
+            border-radius: 20px; 
+            padding: 25px; 
+            border: var(--fuma-border); 
+        }
+        
         .stat-row { margin-bottom: 20px; }
         .stat-label { 
-            display: flex; justify-content: space-between; margin-bottom: 8px; 
-            font-weight: 600; font-size: 0.8rem; text-transform: uppercase; color: var(--fuma-text-dim); 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 8px; 
+            font-weight: 600; 
+            font-size: 0.8rem; 
+            text-transform: uppercase; 
+            color: var(--fuma-text-dim); 
         }
         .stat-label span:nth-child(2) { color: #fff; font-size: 0.85rem; }
         
-        .progress-container { display: flex; height: 10px; background: rgba(255,255,255,0.05); border-radius: 5px; overflow: hidden; }
+        .progress-container { 
+            display: flex; 
+            height: 10px; 
+            background: rgba(255,255,255,0.05); 
+            border-radius: 5px; 
+            overflow: hidden; 
+        }
         .progress-bar { height: 100%; transition: width 1s ease-in-out; }
         .bar-home { background: var(--fuma-primary); border-right: 1px solid #000; }
         .bar-away { background: #444; }
 
-        /* Grille d'infos supplémentaires */
-        .extra-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 20px; }
-        .info-box { background: rgba(255,255,255,0.02); padding: 15px; border-radius: 15px; border: var(--fuma-border); }
-        .info-box h3 { color: var(--fuma-primary); font-size: 0.85rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-        .info-box p { font-size: 0.95rem; margin: 0; line-height: 1.4; }
+        /* Grille d'infos (Buteurs) */
+        .extra-info { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+            gap: 15px; 
+            margin-top: 20px; 
+        }
+        .info-box { 
+            background: rgba(255,255,255,0.02); 
+            padding: 15px; 
+            border-radius: 15px; 
+            border: var(--fuma-border); 
+        }
+        .info-box h3 { 
+            color: var(--fuma-primary); 
+            font-size: 0.85rem; 
+            margin-bottom: 10px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+        }
+        .info-box p { 
+            font-size: 0.95rem; 
+            margin: 0; 
+            line-height: 1.6; /* Espace entre les lignes pour les buteurs */
+        }
         
-        .motm-card { grid-column: 1 / -1; text-align: center; background: linear-gradient(145deg, #222, #000); border: 1px solid var(--fuma-primary); }
-        .motm-name { font-weight: 800; font-size: 1.3rem !important; color: var(--fuma-primary); margin-top: 5px; }
+        .motm-card { 
+            grid-column: 1 / -1; 
+            text-align: center; 
+            background: linear-gradient(145deg, #222, #000); 
+            border: 1px solid var(--fuma-primary); 
+        }
+        .motm-name { 
+            font-weight: 800; 
+            font-size: 1.3rem !important; 
+            color: var(--fuma-primary); 
+            margin-top: 5px; 
+        }
 
+        /* --- AJUSTEMENTS MOBILES --- */
+        @media (max-width: 500px) {
+            .score-header {
+                padding: 20px 5px;
+                display: grid;
+                grid-template-columns: 1fr 110px 1fr; /* Garde le score au milieu */
+                align-items: center;
+                gap: 5px;
+            }
 
-
-#loader-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 300px;
-    color: var(--fuma-primary);
-}
-
-        
-
-        /* Mobile Adjustments */
-       @media (max-width: 500px) {
-    /* On garde l'alignement horizontal mais on optimise l'espace */
-    .score-header {
-        padding: 15px 5px;
-        display: grid;
-        grid-template-columns: 1fr 100px 1fr; /* Colonnes fixes pour le score */
-        align-items: center;
-        gap: 5px;
-    }
-
-    .detail-team img {
-        width: 45px; /* Logos plus petits pour gagner de la place */
-        margin-bottom: 5px;
-    }
-
-    .detail-team h2 {
-        font-size: 0.8rem;
-        word-break: break-word; /* Évite que les noms longs ne cassent tout */
-        line-height: 1.1;
-    }
-
-    .detail-score {
-        font-size: 1.8rem; /* Score plus compact */
-        white-space: nowrap;
-    }
-
-    /* On réduit un peu l'écart des stats pour le mobile */
-    .stats-container {
-        padding: 15px;
-    }
-    
-    .stat-label {
-        font-size: 0.7rem;
-    }
-}
+            .detail-team img { width: 45px; margin-bottom: 5px; }
+            .detail-team h2 { font-size: 0.75rem; line-height: 1.1; }
+            .detail-score { font-size: 1.8rem; }
+            
+            .stats-container { padding: 15px; }
+            .stat-label { font-size: 0.7rem; }
+            .match-detail-wrapper { margin: 10px auto; }
+        }
     </style>
 </head>
 <body>
 
     <div id="loader-container">
-    <div class="fuma-spinner"></div>
-    <p>Chargement des statistiques...</p>
-</div>
-
-<div class="match-detail-wrapper" id="main-content" style="display: none;">
+        <div class="fuma-spinner"></div>
+        <p>Chargement des données...</p>
     </div>
 
-    <div class="match-detail-wrapper">
+    <div class="match-detail-wrapper" id="main-content">
+        
         <a href="league.html" style="color: var(--fuma-text-dim); text-decoration: none; margin-bottom: 15px; display: inline-block; font-size: 0.9rem;">
             <i class="fas fa-arrow-left"></i> FIXTURES
         </a>
@@ -137,12 +204,12 @@
 
         <div class="score-header">
             <div class="detail-team">
-                <img id="logo-home" src="" alt="Logo Home">
+                <img id="logo-home" src="" alt="">
                 <h2 id="name-home-container"><a id="link-home" href="#">-</a></h2>
             </div>
             <div class="detail-score" id="score-display">- : -</div>
             <div class="detail-team">
-                <img id="logo-away" src="" alt="Logo Away">
+                <img id="logo-away" src="" alt="">
                 <h2 id="name-away">-</h2>
             </div>
         </div>
@@ -207,7 +274,7 @@
                 </div>
                 <div class="info-box motm-card">
                     <h3><i class="fas fa-crown"></i> MAN OF THE MATCH</h3>
-                    <p id="motm-name" class="motm-name">Loading...</p>
+                    <p id="motm-name" class="motm-name">Chargement...</p>
                 </div>
             </div>
         </div>
