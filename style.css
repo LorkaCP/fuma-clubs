@@ -489,9 +489,8 @@ body, .fuma-wrapper {
 }
 
 .selector-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    width: 100%;
+    
 }
 
 .selector-label {
@@ -691,6 +690,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
