@@ -99,32 +99,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function fetchAndProcessStats(gid) {
-        try {
-            const resp = await fetch(`${BASE_CSV_URL}${gid}`);
-            const text = await resp.text();
-            const rows = text.split('\n').filter(r => r.trim() !== "").map(parseCSVLine);
-            const headers = rows[0].map(h => h.trim());
-            const players = rows.slice(1);
+    const containers = ['top-scorers-list', 'top-assists-list', 'top-ratings-list'];
+    
+    // 1. Afficher le spinner dans chaque conteneur de stats
+    containers.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '<div class="fuma-spinner" style="margin: 20px auto;"></div>';
+    });
 
-            const c = {
-    // Remplacez 'DISCORD_NAME' par le nom exact de votre colonne Game Tag dans le CSV des stats
-    name: headers.indexOf('GAME_TAG'), 
-    team: headers.indexOf('CURRENT_TEAM'),
-    avatar: headers.indexOf('AVATAR'),
-    goals: headers.indexOf('GOALS'),
-    assists: headers.indexOf('ASSISTS'),
-    rating: headers.indexOf('RATING')
-};
+    try {
+        const resp = await fetch(`${BASE_CSV_URL}${gid}`);
+        const text = await resp.text();
+        const rows = text.split('\n').filter(r => r.trim() !== "").map(parseCSVLine);
+        const headers = rows[0].map(h => h.trim());
+        const players = rows.slice(1);
 
-            // Identification des équipes de la division actuelle
-            const teamsInDiv = [...new Set(currentMatchesData.map(r => r[col.h]))];
-            const filteredPlayers = players.filter(p => teamsInDiv.includes(p[c.team]));
+        const c = {
+            name: headers.indexOf('GAME_TAG'), 
+            team: headers.indexOf('CURRENT_TEAM'),
+            avatar: headers.indexOf('AVATAR'),
+            goals: headers.indexOf('GOALS'),
+            assists: headers.indexOf('ASSISTS'),
+            rating: headers.indexOf('RATING')
+        };
 
-            renderTopList(filteredPlayers, c.goals, 'top-scorers-list', c, 'Buts');
-            renderTopList(filteredPlayers, c.assists, 'top-assists-list', c, 'Passes');
-            renderTopList(filteredPlayers, c.rating, 'top-ratings-list', c, 'Note', true);
-        } catch (e) { console.error("Erreur Stats:", e); }
+        const teamsInDiv = [...new Set(currentMatchesData.map(r => r[col.h]))];
+        const filteredPlayers = players.filter(p => teamsInDiv.includes(p[c.team]));
+
+        // 2. Le rendu final remplacera les spinners
+        renderTopList(filteredPlayers, c.goals, 'top-scorers-list', c, 'Buts');
+        renderTopList(filteredPlayers, c.assists, 'top-assists-list', c, 'Passes');
+        renderTopList(filteredPlayers, c.rating, 'top-ratings-list', c, 'Note', true);
+        
+    } catch (e) { 
+        console.error("Erreur Stats:", e);
+        containers.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = "<p style='color:red; font-size:0.8rem;'>Erreur de chargement</p>";
+        });
     }
+}
 
     function renderTopList(players, colIdx, containerId, c, label, isFloat = false) {
     const container = document.getElementById(containerId);
