@@ -474,23 +474,27 @@ body, .fuma-wrapper {
     min-width: 0;
 }
 
+/* Pour la ligne de filtres */
 .division-filter-container {
     display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
-    align-items: flex-end;
-    margin-bottom: 40px;
-    margin-top:20px;
-    padding: 25px;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    flex-direction: row; /* Force l'alignement horizontal */
+    flex-wrap: nowrap;   /* Empêche le saut à la ligne sur mobile */
+    gap: 10px;
+    padding: 15px;
+    overflow-x: auto;    /* Permet de scroller horizontalement si l'écran est trop petit */
+    -webkit-overflow-scrolling: touch;
 }
 
 .selector-wrapper {
-    width: 100%;
-    
+    flex: 1;             /* Chaque menu prend une part égale de l'espace */
+    min-width: 120px;    /* Empêche les menus de devenir trop minuscules */
+}
+
+.fuma-search-input {
+    width: 100%;         /* Le select prend toute la largeur du wrapper */
+    box-sizing: border-box;
+    white-space: nowrap;
+    text-overflow: ellipsis; /* Coupe le texte proprement s'il est trop long */
 }
 
 .selector-label {
@@ -690,6 +694,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
