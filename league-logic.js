@@ -107,13 +107,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const players = rows.slice(1);
 
             const c = {
-                name: headers.indexOf('DISCORD_NAME'),
-                team: headers.indexOf('CURRENT_TEAM'),
-                avatar: headers.indexOf('AVATAR'),
-                goals: headers.indexOf('GOALS'),
-                assists: headers.indexOf('ASSISTS'),
-                rating: headers.indexOf('RATING')
-            };
+    // Remplacez 'DISCORD_NAME' par le nom exact de votre colonne Game Tag dans le CSV des stats
+    name: headers.indexOf('GAME_TAG'), 
+    team: headers.indexOf('CURRENT_TEAM'),
+    avatar: headers.indexOf('AVATAR'),
+    goals: headers.indexOf('GOALS'),
+    assists: headers.indexOf('ASSISTS'),
+    rating: headers.indexOf('RATING')
+};
 
             // Identification des équipes de la division actuelle
             const teamsInDiv = [...new Set(currentMatchesData.map(r => r[col.h]))];
