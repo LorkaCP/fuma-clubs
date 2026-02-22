@@ -493,93 +493,51 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 
-    headerContainer.innerHTML = `
-
+   headerContainer.innerHTML = `
             <div class="player-profile-card" style="background: var(--fuma-bg-card); padding: 40px; border-radius: 20px; border: var(--fuma-border); text-align: center; position: relative; overflow: hidden;">
-
                 <img src="${player.AVATAR || 'https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png'}" style="width: 150px; height: 150px; border-radius: 50%; border: 3px solid var(--fuma-primary); object-fit: cover; margin-bottom: 20px;">
-
                 <h1 style="font-size: 2.5rem; margin: 0;">${player.GAME_TAG} ${player.FLAG || ''}</h1>
-
                 <p style="color: var(--fuma-primary); letter-spacing: 3px; font-weight: 600;">${player.MAIN_POSITION} | ${player.MAIN_ARCHETYPE}</p>
-
                 <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 20px;">
-
                     <img src="${player.LOGO}" style="height: 40px;" alt="Club">
-
                     <span style="font-size: 1.2rem;">${player.CURRENT_TEAM}</span>
-
                 </div>
-
             </div>
-
         `;
 
-
-
-        // --- AFFICHAGE STATS ---
-
+        // --- STATS DISPLAY ---
         statsContainer.style.display = "grid";
-
         statsContainer.style.gridTemplateColumns = "repeat(auto-fit, minmax(250px, 1fr))";
-
         statsContainer.style.gap = "20px";
-
         statsContainer.style.marginTop = "30px";
 
-
-
         statsContainer.innerHTML = `
-
-            ${renderStatCard("GÉNÉRAL", [
-
-                { label: "Matchs Joués", val: player.GAME_PLAYED },
-
-                { label: "Note Moyenne", val: player.RATING, color: "var(--fuma-primary)" },
-
-                { label: "Cartons", val: player.CARDS }
-
+            ${renderStatCard("GENERAL", [
+                { label: "Matches Played", val: player.GAME_PLAYED },
+                { label: "Average Rating", val: player.RATING, color: "var(--fuma-primary)" },
+                { label: "Cards", val: player.CARDS }
             ])}
-
-            ${renderStatCard("ATTAQUE", [
-
-                { label: "Buts", val: player.GOALS },
-
-                { label: "Passes D.", val: player.ASSISTS },
-
-                { label: "Tirs", val: player.SHOTS }
-
+            ${renderStatCard("ATTACK", [
+                { label: "Goals", val: player.GOALS },
+                { label: "Assists", val: player.ASSISTS },
+                { label: "Shots", val: player.SHOTS }
             ])}
-
             ${renderStatCard("DISTRIBUTION", [
-
-                { label: "Passes Réussies", val: player.SUCCESSFUL_PASSES },
-
-                { label: "% Précision", val: player['%SUCCESSFUL_PASSES'] }
-
+                { label: "Passes Completed", val: player.SUCCESSFUL_PASSES },
+                { label: "Pass Accuracy %", val: player['%SUCCESSFUL_PASSES'] }
             ])}
-
-            ${renderStatCard("DÉFENSE", [
-
-                { label: "Tacles Réussis", val: player.SUCCESSFUL_TACKLES },
-
-                { label: "% Tacles", val: player['%SUCCESSFUL_TACKLES'] }
-
+            ${renderStatCard("DEFENSE", [
+                { label: "Tackles Won", val: player.SUCCESSFUL_TACKLES },
+                { label: "Tackle Success %", val: player['%SUCCESSFUL_TACKLES'] }
             ])}
-
         `;
 
-
-
     } catch (e) {
-
         console.error(e);
-
-        headerContainer.innerHTML = "Erreur de chargement.";
-
+        headerContainer.innerHTML = "Error loading profile.";
     }
 
-}
+
 function renderStatCard(title, stats) {
     return `
         <div class="stat-box" style="background: var(--fuma-bg-card); border: var(--fuma-border); padding: 20px; border-radius: 12px;">
