@@ -47,14 +47,6 @@ function parseCSV(text) {
 }
 
 function updateUI(m) {
-    /* MAPPING BASÉ SUR VOTRE LISTE DE COLONNES :
-       0:Matchday, 1:StartDate, 2:EndDate, 3:CrestHome, 4:CrestAway, 
-       5:TeamHome, 6:TeamAway, 7:ScoreHome, 8:ScoreAway, 9:StrikerHome, 
-       10:StrikerAway, 11:%PossessionHome, 12:%PossessionAway, 13:ShotsHome, 
-       14:ShotsAway, 15:PassesAttemptedHome, 16:PassesAttemptedAway, 
-       17:%AccuracyHome, 18:%AccuracyAway, 19:MotM, 20:LinkHome
-    */
-
     // Infos Matchday & Date
     document.getElementById('matchday-label').innerText = `Matchday ${m[0]}`;
     document.getElementById('match-date').innerText = m[1];
@@ -66,29 +58,50 @@ function updateUI(m) {
     // Nom Domicile + Lien
     const homeLink = document.getElementById('link-home');
     homeLink.innerText = m[5];
-    homeLink.href = m[20] || "#"; // LinkHome col 20
+    homeLink.href = m[20] || "#"; 
     
     document.getElementById('name-away').innerText = m[6];
     document.getElementById('score-display').innerText = `${m[7]} : ${m[8]}`;
 
     // Mise à jour des barres de statistiques
-    updateBar('poss', m[11], m[12], true);  // Possession
-    updateBar('shots', m[13], m[14], false); // Tirs
-    updateBar('passes', m[15], m[16], false); // Passes
-    updateBar('acc', m[17], m[18], true);    // Précision
+    updateBar('poss', m[11], m[12], true);
+    updateBar('shots', m[13], m[14], false);
+    updateBar('passes', m[15], m[16], false);
+    updateBar('acc', m[17], m[18], true);
 
-    // Détails Buteurs & MotM
-    document.getElementById('strikers-home').innerText = m[9] || '-';
-    document.getElementById('strikers-away').innerText = m[10] || '-';
+    // --- LOGIQUE DES BUTEURS FORMATÉS ---
+    document.getElementById('strikers-home').innerText = formatStrikers(m[9]);
+    document.getElementById('strikers-away').innerText = formatStrikers(m[10]);
+    
     document.getElementById('motm-name').innerText = m[19] || 'N/A';
 }
 
 /**
- * @param {string} id - Identifiant HTML (poss, shots, passes, acc)
- * @param {string} valH - Valeur Domicile
- * @param {string} valA - Valeur Extérieur
- * @param {boolean} isPercent - Si true, on affiche le symbole %
+ * Transforme "Joueur A, Joueur A, Joueur B" en "Joueur A (x2), Joueur B"
  */
+function formatStrikers(strikerString) {
+    if (!strikerString || strikerString === '-' || strikerString.trim() === "") return '-';
+
+    // 1. Nettoyage : on sépare par virgule ou retour à la ligne, et on enlève les espaces vides
+    const names = strikerString.split(/[,\n]+/).map(s => s.trim()).filter(s => s !== "");
+    
+    if (names.length === 0) return '-';
+
+    // 2. Comptage des buts par joueur
+    const counts = {};
+    names.forEach(name => {
+        counts[name] = (counts[name] || 0) + 1;
+    });
+
+    // 3. Reconstruction de la chaîne sur une seule ligne
+    return Object.entries(counts)
+        .map(([name, count]) => {
+            return count > 1 ? `${name} (x${count})` : name;
+        })
+        .join(', '); // Les met l'un à côté de l'autre séparés par une virgule
+}
+
+
 function updateBar(id, valH, valA, isPercent) {
     // Nettoyage des valeurs (on enlève les % si présents et on convertit en nombre)
     const h = parseFloat(String(valH).replace('%', '').replace(',', '.')) || 0;
