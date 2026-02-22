@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // On cherche le match (TeamHome index 5, TeamAway index 6)
             const match = rows.find(r => r[5] === homeName && r[6] === awayName);
 
-            // --- IMPORTANT : ON CACHE LE LOADER ICI ---
+            // --- GESTION DU LOADER ---
             const loader = document.getElementById('loader-container');
             const mainContent = document.getElementById('main-content');
             
@@ -30,80 +30,72 @@ document.addEventListener('DOMContentLoaded', () => {
             if (match) {
                 updateUI(match);
             } else {
-                if (mainContent) {
-                    mainContent.innerHTML = "<h2 style='text-align:center;'>Match non trouvé.</h2>";
-                }
+                console.error("Match non trouvé dans le CSV");
             }
         })
         .catch(err => {
-            console.error("Erreur lors de la récupération des données:", err);
-            const loader = document.getElementById('loader-container');
-            if (loader) {
-                loader.innerHTML = "<p style='color:red;'>Erreur de connexion. Vérifiez votre lien.</p>";
-            }
+            console.error("Erreur lors du fetch :", err);
         });
 });
 
 /**
- * Découpe le CSV proprement
+ * Parse le CSV en gérant les guillemets
  */
 function parseCSV(text) {
-    if (!text) return [];
-    return text.split('\n').map(row => {
-        let values = [];
-        let current = "";
+    const lines = text.split('\n');
+    return lines.map(line => {
+        const result = [];
+        let cur = '';
         let inQuotes = false;
-        for (let char of row) {
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
             if (char === '"') inQuotes = !inQuotes;
             else if (char === ',' && !inQuotes) {
-                values.push(current.trim());
-                current = "";
-            } else current += char;
+                result.push(cur.trim());
+                cur = '';
+            } else {
+                cur += char;
+            }
         }
-        values.push(current.trim());
-        return values;
+        result.push(cur.trim());
+        return result;
     });
 }
 
 /**
- * Formate les buteurs : Rend chaque nom cliquable avec une icône profil
- */
-function formatStrikers(strikerString) {
-    if (!strikerString || strikerString === '-' || strikerString.trim() === "") return '';
-
-    const names = strikerString.split(/[,\n;]+/).map(s => s.trim()).filter(s => s !== "");
-    
-    if (names.length === 0) return '';
-
-    const counts = {};
-    names.forEach(name => {
-        counts[name] = (counts[name] || 0) + 1;
-    });
-
-    return Object.entries(counts)
-        .map(([name, count]) => {
-            const playerLink = `
-                <a href="player.html?id=${encodeURIComponent(name)}" style="color: inherit; text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='var(--fuma-primary)'" onmouseout="this.style.color='inherit'">
-                    <i class="fas fa-user" style="font-size: 0.6rem; margin-right: 4px; opacity: 0.7;"></i>${name}
-                </a>`;
-            return (count > 1 ? `${playerLink} (x${count})` : playerLink);
-        })
-        .join('<br>');
-}
-
-/**
- * Met à jour l'interface
+ * Met à jour l'interface avec les données du match
  */
 function updateUI(m) {
     // Infos générales
     document.getElementById('matchday-label').innerText = `Matchday ${m[0]}`;
     document.getElementById('match-date').innerText = m[1];
 
-    // Logos et Noms (Texte simple)
-    document.getElementById('logo-home').src = m[3];
-    document.getElementById('logo-away').src = m[4];
-    document.getElementById('name-home').innerText = m[5];
-    document.getElementById('name-away').innerText = m[6];
+    // --- LOGOS CLIQUABLES ---
+    const logoHomeImg = document.getElementById('logo-home');
+    const logoAwayImg = document.getElementById('logo-away');
+    
+    logoHomeImg.src = m[3];
+    logoHomeImg.style.cursor = "pointer";
+    logoHomeImg.onclick = () => window.location.href = `club.html?name=${encodeURIComponent(m[5])}`;
+
+    logoAwayImg.src = m[4];
+    logoAwayImg.style.cursor = "pointer";
+    logoAwayImg.onclick = () => window.location.href = `club.html?name=${encodeURIComponent(m[6])}`;
+
+    // --- NOMS DES CLUBS CLIQUABLES ---
+    const styleLink = "color: inherit; text-decoration: none; transition: 0.2s;";
+    const hoverEffect = "this.style.color='var(--fuma-primary)'";
+    const normalEffect = "this.style.color='inherit'";
+
+    document.getElementById('name-home').innerHTML = `
+        <a href="club.html?name=${encodeURIComponent(m[5])}" style="${styleLink}" onmouseover="${hoverEffect}" onmouseout="${normalEffect}">
+            ${m[5]}
+        </a>`;
+
+    document.getElementById('name-away').innerHTML = `
+        <a href="club.html?name=${encodeURIComponent(m[6])}" style="${styleLink}" onmouseover="${hoverEffect}" onmouseout="${normalEffect}">
+            ${m[6]}
+        </a>`;
     
     // Score
     document.getElementById('score-display').innerText = `${m[7]} : ${m[8]}`;
@@ -120,17 +112,17 @@ function updateUI(m) {
         }
     }
 
-    // Barres de stats
+    // Barres de stats (Possession, Tirs, Passes, Précision)
     updateBar('poss', m[11], m[12], true);
     updateBar('shots', m[13], m[14], false);
     updateBar('passes', m[15], m[16], false);
     updateBar('acc', m[17], m[18], true);
 
-    // Buteurs (Sous les noms d'équipes)
+    // Buteurs
     document.getElementById('strikers-home').innerHTML = formatStrikers(m[9]);
     document.getElementById('strikers-away').innerHTML = formatStrikers(m[10]);
     
-    // Homme du Match
+    // Homme du Match (Cliquable vers profil joueur)
     const motmContainer = document.getElementById('motm-name');
     const motmName = m[19] || 'N/A';
     
@@ -145,7 +137,7 @@ function updateUI(m) {
 }
 
 /**
- * Anime les barres de stats
+ * Anime les barres de statistiques
  */
 function updateBar(id, valH, valA, isPercent) {
     const h = parseFloat(String(valH).replace('%', '').replace(',', '.')) || 0;
@@ -157,12 +149,20 @@ function updateBar(id, valH, valA, isPercent) {
     const labelH = document.getElementById(`val-${id}-home`);
     const labelA = document.getElementById(`val-${id}-away`);
     
-    if(labelH) labelH.innerText = isPercent ? Math.round(h) + '%' : h;
-    if(labelA) labelA.innerText = isPercent ? Math.round(a) + '%' : a;
+    if(labelH) labelH.innerText = isPercent ? (Math.round(h) + '%') : h;
+    if(labelA) labelA.innerText = isPercent ? (Math.round(a) + '%') : a;
 
     const barH = document.getElementById(`bar-${id}-home`);
     const barA = document.getElementById(`bar-${id}-away`);
     
     if(barH) barH.style.width = percH + '%';
     if(barA) barA.style.width = (100 - percH) + '%';
+}
+
+/**
+ * Formate la liste des buteurs (attend une chaîne séparée par des virgules)
+ */
+function formatStrikers(str) {
+    if (!str || str === '0' || str.trim() === '') return '';
+    return str.split(',').map(s => `<div>${s.trim()} <i class="fas fa-futbol" style="font-size: 0.7rem; opacity: 0.6;"></i></div>`).join('');
 }
