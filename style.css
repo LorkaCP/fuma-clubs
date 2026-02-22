@@ -477,6 +477,7 @@ body, .fuma-wrapper {
 /* Pour la ligne de filtres */
 .division-filter-container {
     display: flex;
+    margin-top:20px;
     flex-direction: row; /* Force l'alignement horizontal */
     flex-wrap: nowrap;   /* Empêche le saut à la ligne sur mobile */
     gap: 10px;
@@ -694,6 +695,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
