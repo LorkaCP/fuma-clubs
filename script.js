@@ -269,7 +269,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (clubLine) {
             const v = parseCSVLine(clubLine);
             
-            // --- 1. SOCIAL MEDIA LOGIC (MEDIA) ---
+            // --- 1. TROPHIES LOGIC ---
+            let trophiesHTML = '';
+            const rawTrophies = v[idx.trophies] || "";
+            if (rawTrophies.trim() !== "" && rawTrophies.toLowerCase() !== "none") {
+                const trophyList = rawTrophies.split(',').map(t => t.trim());
+                trophiesHTML = `
+                    <div style="margin-bottom: 30px; padding: 20px; background: linear-gradient(145deg, rgba(255, 215, 0, 0.1), rgba(0,0,0,0)); border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 15px;">
+                        <h3 style="color: #ffd700; font-size: 0.75rem; letter-spacing: 2px; margin-bottom: 15px; text-transform: uppercase; font-weight: 800;">
+                            <i class="fas fa-trophy" style="margin-right: 8px;"></i> HONOURS & TROPHIES
+                        </h3>
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                            ${trophyList.map(t => `
+                                <span style="background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: #fff; border: 1px solid rgba(255,255,255,0.1); font-weight: 600;">
+                                    <i class="fas fa-medal" style="color: #ffd700; margin-right: 5px;"></i>${t}
+                                </span>`).join('')}
+                        </div>
+                    </div>`;
+            }
+
+            // --- 2. SOCIAL MEDIA LOGIC (MEDIA) ---
             let mediaIconsHTML = '';
             if (v[idx.media] && v[idx.media].toLowerCase() !== "none") {
                 const links = v[idx.media].split(',').map(l => l.trim());
@@ -292,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 mediaIconsHTML += `</div>`;
             }
 
-            // --- 2. STREAM & COMMUNITY SECTION ---
+            // --- 3. STREAM & COMMUNITY SECTION ---
             let streamBlockHTML = '';
             const hasStream = v[idx.stream] && v[idx.stream].toLowerCase() !== "none";
             
@@ -311,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 streamBlockHTML += mediaIconsHTML + `</div>`;
             }
 
-            // --- 3. ROSTER LOGIC (2 COLUMNS) ---
+            // --- 4. ROSTER LOGIC (2 COLUMNS) ---
             const rawPlayers = v[idx.players] || "";
             let playersListHTML = "<li style='grid-column: 1 / -1; color:var(--fuma-text-dim);'>No players registered.</li>";
 
@@ -326,19 +345,19 @@ document.addEventListener('DOMContentLoaded', () => {
                                style="color: var(--fuma-text-main); text-decoration: none; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: 0.2s;"
                                onmouseover="this.style.color='var(--fuma-primary)'" 
                                onmouseout="this.style.color='var(--fuma-text-main)'">
-                                ${p}
+                                 ${p}
                             </a>
                         </li>`).join('');
             }
 
-            // --- 4. HISTORY & STATUS FORMATTING ---
+            // --- 5. HISTORY & STATUS FORMATTING ---
             const formattedHistory = v[idx.history] 
                 ? v[idx.history].split('\n').map(line => `<p style="margin-bottom:15px;">${line}</p>`).join('') 
                 : "No historical information available.";
 
             const isActive = v[idx.active]?.toUpperCase() === 'YES';
 
-            // --- 5. FINAL HTML GENERATION ---
+            // --- 6. FINAL HTML GENERATION ---
             detailContainer.innerHTML = `
                 <div class="club-profile-header" style="text-align: center; margin-bottom: 50px;">
                     <img src="${v[idx.crest] || ''}" style="width: 150px; height: 150px; object-fit: contain; margin-bottom: 20px;" alt="Crest">
@@ -353,6 +372,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 <div class="club-grid-layout">
                     <div class="club-main-info">
+                        
+                        ${trophiesHTML}
+
                         <section style="margin-bottom: 40px;">
                             <h2 style="color:var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.2rem; letter-spacing:1px;">CLUB HISTORY</h2>
                             <div style="font-style: italic; color: var(--fuma-text-dim); line-height: 1.8; font-size: 0.95rem;">
@@ -392,7 +414,6 @@ document.addEventListener('DOMContentLoaded', () => {
         detailContainer.innerHTML = "<p style='text-align:center; color:red; padding: 50px;'>Error loading data.</p>";
     }
 }
-
     // --- 8. LOGIQUE LISTE DES JOUEURS (players.html) ---
    async function fetchFumaPlayers(gid = "1342244083") {
     const playerContainer = document.getElementById('fuma-js-players');
@@ -697,6 +718,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
