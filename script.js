@@ -237,7 +237,7 @@ async function loadTeamsList() {
                     method: 'POST',
                     body: formData,
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    mode: 'no-cors'
+                    
                 });
                 alert("Profile update sent! Check back in a few moments.");
             } catch (error) {
@@ -774,6 +774,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
