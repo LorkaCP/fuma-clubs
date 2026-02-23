@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const seasons = Object.keys(LEAGUE_CONFIG);
-        sSel.innerHTML = seasons.map(s => `<option value="${s}">Saison ${s.replace('S','')}</option>`).join('');
+        sSel.innerHTML = seasons.map(s => `<option value="${s}">Season ${s.replace('S','')}</option>`).join('');
         
         const updateDivs = (s) => {
             // Filtrer pour ne pas afficher "stats_gid" dans le select
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         .sort((a, b) => parseInt(a) - parseInt(b));
         
         if (days.length === 0) return;
-        mSel.innerHTML = days.map(d => `<option value="${d}">Journée ${d}</option>`).join('');
+        mSel.innerHTML = days.map(d => `<option value="${d}">Matchday ${d}</option>`).join('');
 
         const now = new Date();
         now.setHours(0,0,0,0);
