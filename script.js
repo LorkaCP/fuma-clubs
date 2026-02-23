@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
     const PLAYERS_SHEET_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=';
-    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw0l6edytvGzqMvXZ1T9sC2spLoqYzDq1_f0ZdwZyPnBgzHg5O3j77pvxOiDcYGElkjLQ/exec'; 
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxDUG4RIiKIl7PbVBADDDZvM-IbRdcYaPCYLIG_Yu1V-6dle3KopDt-dgbOzL03QkNObQ/exec'; 
     const CLIENT_ID = '1473807551329079408'; 
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
     const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
@@ -774,6 +774,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
