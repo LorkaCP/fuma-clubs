@@ -127,9 +127,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const filteredPlayers = players.filter(p => teamsInDiv.includes(p[c.team]));
 
         // 2. Le rendu final remplacera les spinners
-        renderTopList(filteredPlayers, c.goals, 'top-scorers-list', c, 'Buts');
-        renderTopList(filteredPlayers, c.assists, 'top-assists-list', c, 'Passes');
-        renderTopList(filteredPlayers, c.rating, 'top-ratings-list', c, 'Note', true);
+        renderTopList(filteredPlayers, c.goals, 'top-scorers-list', c, 'Goals');
+        renderTopList(filteredPlayers, c.assists, 'top-assists-list', c, 'Assists');
+        renderTopList(filteredPlayers, c.rating, 'top-ratings-list', c, 'Rating', true);
         
     } catch (e) { 
         console.error("Erreur Stats:", e);
