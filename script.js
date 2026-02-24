@@ -470,11 +470,11 @@ async function loadTeamsList() {
         detailContainer.innerHTML = "<p style='text-align:center; color:red; padding: 50px;'>Error loading data.</p>";
     }
 }
-    // --- 8. LOGIQUE LISTE DES JOUEURS (players.html) ---
-   async function fetchFumaPlayers(gid = "1342244083") {
+  async function fetchFumaPlayers(gid = "1342244083") {
     const playerContainer = document.getElementById('fuma-js-players');
     if (!playerContainer) return;
 
+    // 1. Ton Spinner Original
     playerContainer.innerHTML = `
         <div class="fuma-loading-wrapper" style="grid-column: 1/-1; text-align: center; padding: 50px;">
             <div class="fuma-spinner" style="margin: 0 auto 15px;"></div>
@@ -482,11 +482,19 @@ async function loadTeamsList() {
         </div>`;
 
     try {
-        const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}`);
+        // 2. Fetch avec protection anti-cache (&t=...)
+        const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}&t=${Date.now()}`);
+        if (!resp.ok) throw new Error("Network error");
+        
         const text = await resp.text();
-        const lines = text.trim().split("\n");
-        const headers = lines[0].split(",");
+        
+        // Sécurité si Google renvoie une erreur HTML au lieu du CSV
+        if (text.includes("<!DOCTYPE html>")) throw new Error("Invalid CSV format (HTML received)");
 
+        const lines = text.trim().split("\n").filter(line => line.trim() !== "");
+        const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
+
+        // 3. Tes Index originaux
         const idx = {
             tag: headers.indexOf('GAME_TAG'),
             pos: headers.indexOf('MAIN_POSITION'),
@@ -498,6 +506,7 @@ async function loadTeamsList() {
             flag: headers.indexOf('FLAG')
         };
 
+        // 4. Mapping avec tes sécurités Avatar + Sécurités anti-#REF
         allPlayers = lines.slice(1).map(line => {
             const v = parseCSVLine(line);
             const rawAvatar = v[idx.avatar] ? v[idx.avatar].trim() : "";
@@ -509,16 +518,21 @@ async function loadTeamsList() {
                 team: v[idx.team] || "Free Agent",
                 logo: v[idx.logo] || "",
                 rating: v[idx.rating] || "0.0", 
-                avatar: isValidAvatar ? rawAvatar : DEFAULT_AVATAR,
+                avatar: isValidAvatar ? rawAvatar : (typeof DEFAULT_AVATAR !== 'undefined' ? DEFAULT_AVATAR : ""),
                 arch: v[idx.arch] || "Standard", 
                 flag: v[idx.flag] || ""
             };
-        }).filter(p => p.tag && p.tag !== "Unknown");
+        }).filter(p => 
+            p.tag && 
+            p.tag !== "Unknown" && 
+            p.tag.trim() !== "" && 
+            !p.tag.includes("#REF") // <--- PROTECTION CLÉ contre les cartes buggées
+        );
 
-        // Mise à jour du filtre équipe en conservant la sélection si possible
+        // 5. TA LOGIQUE DE FILTRE ÉQUIPE (CONSERVÉE)
         const teamFilter = document.getElementById('filter-team');
         if (teamFilter) {
-            const currentSelectedTeam = teamFilter.value; // On mémorise le choix actuel
+            const currentSelectedTeam = teamFilter.value; 
             const teams = [...new Set(allPlayers.map(p => p.team))].sort();
             teamFilter.innerHTML = '<option value="">All Teams</option>';
             teams.forEach(team => {
@@ -527,14 +541,15 @@ async function loadTeamsList() {
                 option.textContent = team;
                 teamFilter.appendChild(option);
             });
-            teamFilter.value = currentSelectedTeam; // On restaure si l'équipe existe dans la nouvelle saison
+            teamFilter.value = currentSelectedTeam; 
         }
 
-        // --- LA MODIFICATION CLÉ ---
+        // 6. Application des filtres
         applyPlayerFilters(); 
         
     } catch (e) {
-        playerContainer.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:red;'>Error loading players.</p>";
+        console.error("Fetch Error:", e);
+        playerContainer.innerHTML = `<p style='grid-column:1/-1; text-align:center; color:red;'>Error loading players: ${e.message}</p>`;
     }
 }
     function renderPlayers(list) {
@@ -774,6 +789,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
