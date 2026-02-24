@@ -70,95 +70,86 @@ function updateUI(m) {
     document.getElementById('matchday-label').innerText = `Matchday ${m[0]}`;
     document.getElementById('match-date').innerText = m[1];
 
-    // Logos : CrestHome (3), CrestAway (4)
+    // Logos et Noms (Cliquables)
     const logoHomeImg = document.getElementById('logo-home');
     const logoAwayImg = document.getElementById('logo-away');
-    
     logoHomeImg.src = m[3];
-    logoHomeImg.style.cursor = "pointer";
-    logoHomeImg.onclick = () => window.location.href = `club.html?name=${encodeURIComponent(m[5])}`;
-
     logoAwayImg.src = m[4];
-    logoAwayImg.style.cursor = "pointer";
+    logoHomeImg.onclick = () => window.location.href = `club.html?name=${encodeURIComponent(m[5])}`;
     logoAwayImg.onclick = () => window.location.href = `club.html?name=${encodeURIComponent(m[6])}`;
 
-    // Noms des clubs (5 et 6) cliquables
     const styleLink = "color: inherit; text-decoration: none; transition: 0.2s;";
-    const hoverEffect = "this.style.color='var(--fuma-primary)'";
-    const normalEffect = "this.style.color='inherit'";
-
-    document.getElementById('name-home').innerHTML = `
-        <a href="club.html?name=${encodeURIComponent(m[5])}" style="${styleLink}" onmouseover="${hoverEffect}" onmouseout="${normalEffect}">
-            ${m[5]}
-        </a>`;
-
-    document.getElementById('name-away').innerHTML = `
-        <a href="club.html?name=${encodeURIComponent(m[6])}" style="${styleLink}" onmouseover="${hoverEffect}" onmouseout="${normalEffect}">
-            ${m[6]}
-        </a>`;
+    document.getElementById('name-home').innerHTML = `<a href="club.html?name=${encodeURIComponent(m[5])}" style="${styleLink}">${m[5]}</a>`;
+    document.getElementById('name-away').innerHTML = `<a href="club.html?name=${encodeURIComponent(m[6])}" style="${styleLink}">${m[6]}</a>`;
     
     // Score : ScoreHome (8), ScoreAway (9)
     document.getElementById('score-display').innerText = `${m[8]} : ${m[9]}`;
 
-    // Barres de stats (Possession (12,13), Tirs (14,15), Passes (16,17), Précision (18,19))
+    // 1) Possession (12,13)
     updateBar('poss', m[12], m[13], true);
+
+    // 2) Tirs (14,15)
     updateBar('shots', m[14], m[15], false);
-    updateBar('passes', m[16], m[17], false);
-    updateBar('acc', m[18], m[19], true);
 
-    // Nouvelles stats : Tackles (20,21), Red Cards (22,23)
+    // 3) Passes (16,17) avec Accuracy (18,19) affiché à côté
+    const passHome = m[16];
+    const accHome = m[18];
+    const passAway = m[17];
+    const accAway = m[19];
+    
+    document.getElementById('val-passes-home').innerText = `${passHome} (${accHome})`;
+    document.getElementById('val-passes-away').innerText = `${passAway} (${accAway})`;
+    // On garde la barre basée sur le nombre de passes effectuées
+    updateBar('passes', passHome, passAway, false, true); 
+
+    // 4) Tackles (20,21)
     updateBar('tackles', m[20], m[21], false);
-    updateBar('red', m[22], m[23], false);
 
-    // Buteurs : StrikerHome (10), StrikerAway (11)
+    // 5) Red Cards (22,23) - Simple affichage sans barre
+    document.getElementById('val-red-home').innerText = m[22] || '0';
+    document.getElementById('val-red-away').innerText = m[23] || '0';
+
+    // Buteurs (10,11)
     document.getElementById('strikers-home').innerHTML = formatStrikers(m[10]);
     document.getElementById('strikers-away').innerHTML = formatStrikers(m[11]);
     
-    // Homme du Match (MotM index 24)
+    // MotM (24)
     const motmContainer = document.getElementById('motm-name');
     const motmName = m[24] || 'N/A';
-    
     if (motmName !== 'N/A') {
-        motmContainer.innerHTML = `
-            <a href="player.html?id=${encodeURIComponent(motmName)}" style="color: var(--fuma-primary); text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                <i class="fas fa-user-check" style="font-size: 0.9rem;"></i> ${motmName}
-            </a>`;
-    } else {
-        motmContainer.innerText = 'N/A';
+        motmContainer.innerHTML = `<a href="player.html?id=${encodeURIComponent(motmName)}" style="color: var(--fuma-primary); text-decoration: none; font-weight: bold;"><i class="fas fa-user-check"></i> ${motmName}</a>`;
     }
 
-    // Gestion du bouton REPLAY (LinkHome index 25)
+    // Replay (25)
     const replayLink = document.getElementById('link-replay');
-    if (replayLink) {
-        const videoUrl = m[25];
-        if (videoUrl && videoUrl !== "#" && videoUrl.trim() !== "") {
-            replayLink.href = videoUrl;
-            replayLink.style.display = 'inline-flex';
-        } else {
-            replayLink.style.display = 'none';
-        }
+    if (replayLink && m[25] && m[25] !== "#") {
+        replayLink.href = m[25];
+        replayLink.style.display = 'inline-flex';
+    } else {
+        replayLink.style.display = 'none';
     }
 }
 
 /**
  * Anime les barres de statistiques
+ * @param {boolean} onlyBar - Si vrai, ne met pas à jour le texte (utile pour les passes fusionnées)
  */
-function updateBar(id, valH, valA, isPercent) {
+function updateBar(id, valH, valA, isPercent, onlyBar = false) {
     const h = parseFloat(String(valH).replace('%', '').replace(',', '.')) || 0;
     const a = parseFloat(String(valA).replace('%', '').replace(',', '.')) || 0;
     
     const total = h + a;
     const percH = total === 0 ? 50 : (h / total) * 100;
 
-    const labelH = document.getElementById(`val-${id}-home`);
-    const labelA = document.getElementById(`val-${id}-away`);
-    
-    if(labelH) labelH.innerText = isPercent ? (Math.round(h) + '%') : h;
-    if(labelA) labelA.innerText = isPercent ? (Math.round(a) + '%') : a;
+    if (!onlyBar) {
+        const labelH = document.getElementById(`val-${id}-home`);
+        const labelA = document.getElementById(`val-${id}-away`);
+        if(labelH) labelH.innerText = isPercent ? (Math.round(h) + '%') : h;
+        if(labelA) labelA.innerText = isPercent ? (Math.round(a) + '%') : a;
+    }
 
     const barH = document.getElementById(`bar-${id}-home`);
     const barA = document.getElementById(`bar-${id}-away`);
-    
     if(barH) barH.style.width = percH + '%';
     if(barA) barA.style.width = (100 - percH) + '%';
 }
