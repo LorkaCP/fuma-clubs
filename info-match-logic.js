@@ -119,7 +119,7 @@ function updateUI(m) {
 
     document.getElementById('val-tackles-home').innerText = `${tackMadeHome}/${tackAttHome}`;
     document.getElementById('val-tackles-away').innerText = `${tackMadeAway}/${tackAttAway}`;
-    updateBar('tackles', tackAttHome, tackAttAway, false, true);
+    updateBar('tackles', tackMadeHome, tackMadeAway, false, true);
 
     // 5) Red Cards (25, 26)
     document.getElementById('val-red-home').innerText = m[25] || '0';
