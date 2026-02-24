@@ -198,7 +198,7 @@ body, .fuma-wrapper {
 .fuma-search-container {
     text-align: center;
     margin-top: 20px;
-    margin-bottom: 35px;
+    margin-bottom: 20px;
     max-width: 300px;
 }
 
@@ -706,6 +706,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
