@@ -246,83 +246,67 @@
         </div>
 
         <div class="stats-container">
-            <div class="stat-row">
-                <div class="stat-label">
-                    <span id="val-poss-home">0%</span>
-                    <span>Possession</span>
-                    <span id="val-poss-away">0%</span>
-                </div>
-                <div class="progress-container">
-                    <div id="bar-poss-home" class="progress-bar bar-home" style="width: 50%"></div>
-                    <div id="bar-poss-away" class="progress-bar bar-away" style="width: 50%"></div>
-                </div>
-            </div>
-
-            <div class="stat-row">
-                <div class="stat-label">
-                    <span id="val-shots-home">0</span>
-                    <span>Shots</span>
-                    <span id="val-shots-away">0</span>
-                </div>
-                <div class="progress-container">
-                    <div id="bar-shots-home" class="progress-bar bar-home" style="width: 50%"></div>
-                    <div id="bar-shots-away" class="progress-bar bar-away" style="width: 50%"></div>
-                </div>
-            </div>
-
-            <div class="stat-row">
-                <div class="stat-label">
-                    <span id="val-passes-home">0</span>
-                    <span>Passes Attempted</span>
-                    <span id="val-passes-away">0</span>
-                </div>
-                <div class="progress-container">
-                    <div id="bar-passes-home" class="progress-bar bar-home" style="width: 50%"></div>
-                    <div id="bar-passes-away" class="progress-bar bar-away" style="width: 50%"></div>
-                </div>
-            </div>
-
-            <div class="stat-row">
-                <div class="stat-label">
-                    <span id="val-acc-home">0%</span>
-                    <span>Passing Accuracy</span>
-                    <span id="val-acc-away">0%</span>
-                </div>
-                <div class="progress-container">
-                    <div id="bar-acc-home" class="progress-bar bar-home" style="width: 50%"></div>
-                    <div id="bar-acc-away" class="progress-bar bar-away" style="width: 50%"></div>
-                </div>
-            </div>
-
-            <div class="stat-row">
-    <div class="stat-label">
-        <span id="val-tackles-home">0</span>
-        <span>Tackles</span>
-        <span id="val-tackles-away">0</span>
-    </div>
-    <div class="progress-container">
-        <div id="bar-tackles-home" class="progress-bar bar-home" style="width: 50%"></div>
-        <div id="bar-tackles-away" class="progress-bar bar-away" style="width: 50%"></div>
-    </div>
-</div>
-
-<div class="stat-row">
-    <div class="stat-label">
-        <span id="val-red-home">0</span>
-        <span style="color: #ff4d4d;"><i class="fas fa-square"></i> Red Cards</span>
-        <span id="val-red-away">0</span>
-    </div>
-    <div class="progress-container">
-        <div id="bar-red-home" class="progress-bar" style="width: 0%; background: #ff4d4d;"></div>
-        <div id="bar-red-away" class="progress-bar" style="width: 0%; background: #444;"></div>
-    </div>
-</div>
-
-            <div class="motm-card">
-                <h3><i class="fas fa-crown"></i> MAN OF THE MATCH</h3>
-                <p id="motm-name" class="motm-name">-</p>
-            </div>
+    <div class="stat-row">
+        <div class="stat-label">
+            <span id="val-poss-home">0%</span>
+            <span>Possession</span>
+            <span id="val-poss-away">0%</span>
         </div>
+        <div class="progress-container">
+            <div id="bar-poss-home" class="progress-bar bar-home" style="width: 50%"></div>
+            <div id="bar-poss-away" class="progress-bar bar-away" style="width: 50%"></div>
+        </div>
+    </div>
+
+    <div class="stat-row">
+        <div class="stat-label">
+            <span id="val-shots-home">0</span>
+            <span>Shots</span>
+            <span id="val-shots-away">0</span>
+        </div>
+        <div class="progress-container">
+            <div id="bar-shots-home" class="progress-bar bar-home" style="width: 50%"></div>
+            <div id="bar-shots-away" class="progress-bar bar-away" style="width: 50%"></div>
+        </div>
+    </div>
+
+    <div class="stat-row">
+        <div class="stat-label">
+            <span id="val-passes-home">0 (0%)</span>
+            <span>Passes (Acc.)</span>
+            <span id="val-passes-away">0 (0%)</span>
+        </div>
+        <div class="progress-container">
+            <div id="bar-passes-home" class="progress-bar bar-home" style="width: 50%"></div>
+            <div id="bar-passes-away" class="progress-bar bar-away" style="width: 50%"></div>
+        </div>
+    </div>
+
+    <div class="stat-row">
+        <div class="stat-label">
+            <span id="val-tackles-home">0</span>
+            <span>Tackles</span>
+            <span id="val-tackles-away">0</span>
+        </div>
+        <div class="progress-container">
+            <div id="bar-tackles-home" class="progress-bar bar-home" style="width: 50%"></div>
+            <div id="bar-tackles-away" class="progress-bar bar-away" style="width: 50%"></div>
+        </div>
+    </div>
+
+    <div class="stat-row" style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+        <div class="stat-label" style="margin-bottom: 0;">
+            <span id="val-red-home" style="color: #ff4d4d; font-size: 1.2rem;">0</span>
+            <span style="color: #ff4d4d;"><i class="fas fa-square"></i> Red Cards</span>
+            <span id="val-red-away" style="color: #ff4d4d; font-size: 1.2rem;">0</span>
+        </div>
+    </div>
+
+    <div class="motm-card">
+        <h3><i class="fas fa-crown"></i> MAN OF THE MATCH</h3>
+        <p id="motm-name" class="motm-name">-</p>
+    </div>
+</div>
     </div>
 
     <script src="info-match-logic.js"></script>
