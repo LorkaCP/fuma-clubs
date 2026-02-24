@@ -65,12 +65,15 @@ function parseCSV(text) {
 /**
  * Met à jour l'interface avec les données du match selon la nouvelle structure
  */
+/**
+ * Met à jour l'interface avec les données du match (Structure 2026)
+ */
 function updateUI(m) {
     // Infos générales : Matchday (0), StartDate (1)
     document.getElementById('matchday-label').innerText = `Matchday ${m[0]}`;
     document.getElementById('match-date').innerText = m[1];
 
-    // Logos et Noms (Cliquables)
+    // Logos et Noms (Cliquables) - TeamHome (5), TeamAway (6), Crests (3,4)
     const logoHomeImg = document.getElementById('logo-home');
     const logoAwayImg = document.getElementById('logo-away');
     logoHomeImg.src = m[3];
@@ -82,78 +85,58 @@ function updateUI(m) {
     document.getElementById('name-home').innerHTML = `<a href="club.html?name=${encodeURIComponent(m[5])}" style="${styleLink}">${m[5]}</a>`;
     document.getElementById('name-away').innerHTML = `<a href="club.html?name=${encodeURIComponent(m[6])}" style="${styleLink}">${m[6]}</a>`;
     
-    // Score : ScoreHome (8), ScoreAway (9)
-    document.getElementById('score-display').innerText = `${m[8]} : ${m[9]}`;
+    // Score : ScoreHome (9), ScoreAway (10)
+    document.getElementById('score-display').innerText = `${m[9]} : ${m[10]}`;
 
-    // 1) Possession (12,13)
-    updateBar('poss', m[12], m[13], true);
+    // 1) Possession (13, 14)
+    updateBar('poss', m[13], m[14], true);
 
-    // 2) Tirs (14,15)
-    updateBar('shots', m[14], m[15], false);
+    // 2) Tirs (15, 16)
+    updateBar('shots', m[15], m[16], false);
 
-    // 3) Passes (16,17) avec Accuracy (18,19) affiché à côté
-    const passHome = m[16];
-    const accHome = m[18];
-    const passAway = m[17];
-    const accAway = m[19];
+    // 3) Passes Tentées (17, 18) avec Précision % (19, 20)
+    const passHome = m[17];
+    const accHome = m[19];
+    const passAway = m[18];
+    const accAway = m[20];
     
+    // Affichage formaté : "Nombre (Précision%)"
     document.getElementById('val-passes-home').innerText = `${passHome} (${accHome}%)`;
     document.getElementById('val-passes-away').innerText = `${passAway} (${accAway}%)`;
-    // On garde la barre basée sur le nombre de passes effectuées
     updateBar('passes', passHome, passAway, false, true); 
 
-    // 4) Tackles (20,21)
-    updateBar('tackles', m[20], m[21], false);
+    // 4) Tacles Tentés (21, 22) avec Tacles Réussis (23, 24)
+    const tackAttHome = m[21];
+    const tackMadeHome = m[23];
+    const tackAttAway = m[22];
+    const tackMadeAway = m[24];
 
-    // 5) Red Cards (22,23) - Simple affichage sans barre
-    document.getElementById('val-red-home').innerText = m[22] || '0';
-    document.getElementById('val-red-away').innerText = m[23] || '0';
+    // Affichage formaté : "Réussis/Tentés"
+    document.getElementById('val-tackles-home').innerText = `${tackMadeHome}/${tackAttHome}`;
+    document.getElementById('val-tackles-away').innerText = `${tackMadeAway}/${tackAttAway}`;
+    updateBar('tackles', tackAttHome, tackAttAway, false, true);
 
-    // Buteurs (10,11)
-    document.getElementById('strikers-home').innerHTML = formatStrikers(m[10]);
-    document.getElementById('strikers-away').innerHTML = formatStrikers(m[11]);
+    // 5) Red Cards (25, 26)
+    document.getElementById('val-red-home').innerText = m[25] || '0';
+    document.getElementById('val-red-away').innerText = m[26] || '0';
+
+    // Buteurs (11, 12)
+    document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
+    document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
     
-    // MotM (24)
+    // MotM (27)
     const motmContainer = document.getElementById('motm-name');
-    const motmName = m[24] || 'N/A';
+    const motmName = m[27] || 'N/A';
     if (motmName !== 'N/A') {
         motmContainer.innerHTML = `<a href="player.html?id=${encodeURIComponent(motmName)}" style="color: var(--fuma-primary); text-decoration: none; font-weight: bold;"><i class="fas fa-user-check"></i> ${motmName}</a>`;
     }
 
-    // Replay (25)
+    // Gestion du lien Replay (si présent dans une colonne non listée, ex: m[28])
     const replayLink = document.getElementById('link-replay');
-    if (replayLink && m[25] && m[25] !== "#") {
-        replayLink.href = m[25];
-        replayLink.style.display = 'inline-flex';
-    } else {
-        replayLink.style.display = 'none';
+    if (replayLink && m[7]) { // Utilise l'IDMatch (7) ou une autre colonne pour le lien
+        // Code pour le lien si nécessaire
     }
 }
-
-/**
- * Anime les barres de statistiques
- * @param {boolean} onlyBar - Si vrai, ne met pas à jour le texte (utile pour les passes fusionnées)
- */
-function updateBar(id, valH, valA, isPercent, onlyBar = false) {
-    const h = parseFloat(String(valH).replace('%', '').replace(',', '.')) || 0;
-    const a = parseFloat(String(valA).replace('%', '').replace(',', '.')) || 0;
-    
-    const total = h + a;
-    const percH = total === 0 ? 50 : (h / total) * 100;
-
-    if (!onlyBar) {
-        const labelH = document.getElementById(`val-${id}-home`);
-        const labelA = document.getElementById(`val-${id}-away`);
-        if(labelH) labelH.innerText = isPercent ? (Math.round(h) + '%') : h;
-        if(labelA) labelA.innerText = isPercent ? (Math.round(a) + '%') : a;
-    }
-
-    const barH = document.getElementById(`bar-${id}-home`);
-    const barA = document.getElementById(`bar-${id}-away`);
-    if(barH) barH.style.width = percH + '%';
-    if(barA) barA.style.width = (100 - percH) + '%';
-}
-
 /**
  * Formate la liste des buteurs
  */
