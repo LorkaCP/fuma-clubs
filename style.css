@@ -224,7 +224,7 @@ body, .fuma-wrapper {
 .fuma-club-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 20px;
+    
 }
 
 .club-card {
@@ -696,6 +696,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
