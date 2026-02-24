@@ -17,10 +17,10 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(csvText => {
             const rows = parseCSV(csvText);
             
-            // On cherche le match (TeamHome index 5, TeamAway index 6)
+            // Recherche du match : TeamHome (index 5) et TeamAway (index 6)
             const match = rows.find(r => r[5] === homeName && r[6] === awayName);
 
-            // --- GESTION DU LOADER ---
+            // GESTION DU LOADER
             const loader = document.getElementById('loader-container');
             const mainContent = document.getElementById('main-content');
             
@@ -63,14 +63,14 @@ function parseCSV(text) {
 }
 
 /**
- * Met à jour l'interface avec les données du match
+ * Met à jour l'interface avec les données du match selon la nouvelle structure
  */
 function updateUI(m) {
-    // Infos générales
+    // Infos générales : Matchday (0), StartDate (1)
     document.getElementById('matchday-label').innerText = `Matchday ${m[0]}`;
     document.getElementById('match-date').innerText = m[1];
 
-    // --- LOGOS CLIQUABLES ---
+    // Logos : CrestHome (3), CrestAway (4)
     const logoHomeImg = document.getElementById('logo-home');
     const logoAwayImg = document.getElementById('logo-away');
     
@@ -82,7 +82,7 @@ function updateUI(m) {
     logoAwayImg.style.cursor = "pointer";
     logoAwayImg.onclick = () => window.location.href = `club.html?name=${encodeURIComponent(m[6])}`;
 
-    // --- NOMS DES CLUBS CLIQUABLES ---
+    // Noms des clubs (5 et 6) cliquables
     const styleLink = "color: inherit; text-decoration: none; transition: 0.2s;";
     const hoverEffect = "this.style.color='var(--fuma-primary)'";
     const normalEffect = "this.style.color='inherit'";
@@ -97,34 +97,26 @@ function updateUI(m) {
             ${m[6]}
         </a>`;
     
-    // Score
-    document.getElementById('score-display').innerText = `${m[7]} : ${m[8]}`;
+    // Score : ScoreHome (8), ScoreAway (9)
+    document.getElementById('score-display').innerText = `${m[8]} : ${m[9]}`;
 
-    // Gestion du bouton REPLAY (Index 20)
-    const replayLink = document.getElementById('link-replay');
-    if (replayLink) {
-        const videoUrl = m[20];
-        if (videoUrl && videoUrl !== "#" && videoUrl.trim() !== "") {
-            replayLink.href = videoUrl;
-            replayLink.style.display = 'inline-flex';
-        } else {
-            replayLink.style.display = 'none';
-        }
-    }
+    // Barres de stats (Possession (12,13), Tirs (14,15), Passes (16,17), Précision (18,19))
+    updateBar('poss', m[12], m[13], true);
+    updateBar('shots', m[14], m[15], false);
+    updateBar('passes', m[16], m[17], false);
+    updateBar('acc', m[18], m[19], true);
 
-    // Barres de stats (Possession, Tirs, Passes, Précision)
-    updateBar('poss', m[11], m[12], true);
-    updateBar('shots', m[13], m[14], false);
-    updateBar('passes', m[15], m[16], false);
-    updateBar('acc', m[17], m[18], true);
+    // Nouvelles stats : Tackles (20,21), Red Cards (22,23)
+    updateBar('tackles', m[20], m[21], false);
+    updateBar('red', m[22], m[23], false);
 
-    // Buteurs
-    document.getElementById('strikers-home').innerHTML = formatStrikers(m[9]);
-    document.getElementById('strikers-away').innerHTML = formatStrikers(m[10]);
+    // Buteurs : StrikerHome (10), StrikerAway (11)
+    document.getElementById('strikers-home').innerHTML = formatStrikers(m[10]);
+    document.getElementById('strikers-away').innerHTML = formatStrikers(m[11]);
     
-    // Homme du Match (Cliquable vers profil joueur)
+    // Homme du Match (MotM index 24)
     const motmContainer = document.getElementById('motm-name');
-    const motmName = m[19] || 'N/A';
+    const motmName = m[24] || 'N/A';
     
     if (motmName !== 'N/A') {
         motmContainer.innerHTML = `
@@ -133,6 +125,18 @@ function updateUI(m) {
             </a>`;
     } else {
         motmContainer.innerText = 'N/A';
+    }
+
+    // Gestion du bouton REPLAY (LinkHome index 25)
+    const replayLink = document.getElementById('link-replay');
+    if (replayLink) {
+        const videoUrl = m[25];
+        if (videoUrl && videoUrl !== "#" && videoUrl.trim() !== "") {
+            replayLink.href = videoUrl;
+            replayLink.style.display = 'inline-flex';
+        } else {
+            replayLink.style.display = 'none';
+        }
     }
 }
 
@@ -160,7 +164,7 @@ function updateBar(id, valH, valA, isPercent) {
 }
 
 /**
- * Formate la liste des buteurs (attend une chaîne séparée par des virgules)
+ * Formate la liste des buteurs
  */
 function formatStrikers(str) {
     if (!str || str === '0' || str.trim() === '') return '';
