@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Recherche du match : TeamHome (index 5) et TeamAway (index 6)
             const match = rows.find(r => r[5] === homeName && r[6] === awayName);
 
-            // GESTION DU LOADER
             const loader = document.getElementById('loader-container');
             const mainContent = document.getElementById('main-content');
             
@@ -85,6 +84,17 @@ function updateUI(m) {
     // Score : ScoreHome (9), ScoreAway (10)
     document.getElementById('score-display').innerText = `${m[9]} : ${m[10]}`;
 
+    // --- CORRECTION LIEN REPLAY (Colonne I = Index 8) ---
+    const replayLink = document.getElementById('link-replay');
+    if (replayLink) {
+        if (m[8] && m[8] !== "" && m[8] !== "#") {
+            replayLink.href = m[8];
+            replayLink.style.display = 'inline-flex';
+        } else {
+            replayLink.style.display = 'none';
+        }
+    }
+
     // 1) Possession (13, 14)
     updateBar('poss', m[13], m[14], true);
 
@@ -97,7 +107,6 @@ function updateUI(m) {
     const passAway = m[18];
     const accAway = m[20];
     
-    // Affichage formaté : "Nombre (Précision%)"
     document.getElementById('val-passes-home').innerText = `${passHome} (${accHome}%)`;
     document.getElementById('val-passes-away').innerText = `${passAway} (${accAway}%)`;
     updateBar('passes', passHome, passAway, false, true); 
@@ -108,7 +117,6 @@ function updateUI(m) {
     const tackAttAway = m[22];
     const tackMadeAway = m[24];
 
-    // Affichage formaté : "Réussis/Tentés"
     document.getElementById('val-tackles-home').innerText = `${tackMadeHome}/${tackAttHome}`;
     document.getElementById('val-tackles-away').innerText = `${tackMadeAway}/${tackAttAway}`;
     updateBar('tackles', tackAttHome, tackAttAway, false, true);
@@ -127,12 +135,6 @@ function updateUI(m) {
     if (motmName !== 'N/A') {
         motmContainer.innerHTML = `<a href="player.html?id=${encodeURIComponent(motmName)}" style="color: var(--fuma-primary); text-decoration: none; font-weight: bold;"><i class="fas fa-user-check"></i> ${motmName}</a>`;
     }
-
-    // Lien Replay (IDMatch à l'index 7)
-    const replayLink = document.getElementById('link-replay');
-    if (replayLink && m[7]) {
-        // Optionnel : Configurer ici l'URL du replay si nécessaire
-    }
 }
 
 /**
@@ -145,7 +147,6 @@ function updateBar(id, valH, valA, isPercent, onlyBar = false) {
     const total = h + a;
     const percH = total === 0 ? 50 : (h / total) * 100;
 
-    // Mise à jour du texte si nécessaire
     if (!onlyBar) {
         const labelH = document.getElementById(`val-${id}-home`);
         const labelA = document.getElementById(`val-${id}-away`);
@@ -153,7 +154,6 @@ function updateBar(id, valH, valA, isPercent, onlyBar = false) {
         if(labelA) labelA.innerText = isPercent ? (Math.round(a) + '%') : a;
     }
 
-    // Mise à jour visuelle des barres
     const barH = document.getElementById(`bar-${id}-home`);
     const barA = document.getElementById(`bar-${id}-away`);
     if(barH) barH.style.width = percH + '%';
