@@ -672,7 +672,7 @@ async function loadTeamsList() {
                 </div>
                 <div class="stat-row">
                     <span class="stat-label">Red Cards</span>
-                    <span class="stat-value" style="color: #ff4d4d;"><i class="fas fa-square"></i> ${p.RED_CARD || p['RED CARDS'] || '0'}</span>
+                    <span class="stat-value" style="color: #ff4d4d;"><i class="fas fa-square"></i> ${p.RED_CARD || p['RED_CARDS'] || '0'}</span>
                 </div>
             </div>
 
@@ -817,6 +817,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
