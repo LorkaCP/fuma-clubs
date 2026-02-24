@@ -17,8 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(csvText => {
             const rows = parseCSV(csvText);
             
-            // Recherche du match : TeamHome (index 5) et TeamAway (index 6)
-            const match = rows.find(r => r[5] === homeName && r[6] === awayName);
+            // On cherche maintenant l'équipe domicile en colonne 6 et extérieur en colonne 7
+            const match = rows.find(r => r[6] === homeName && r[7] === awayName);
 
             const loader = document.getElementById('loader-container');
             const mainContent = document.getElementById('main-content');
@@ -74,24 +74,24 @@ function updateUI(m) {
     const logoAwayImg = document.getElementById('logo-away');
     logoHomeImg.src = m[3];
     logoAwayImg.src = m[4];
-    logoHomeImg.onclick = () => window.location.href = `club.html?name=${encodeURIComponent(m[5])}`;
-    logoAwayImg.onclick = () => window.location.href = `club.html?name=${encodeURIComponent(m[6])}`;
+    logoHomeImg.onclick = () => window.location.href = `club.html?name=${encodeURIComponent(m[6])}`;
+    logoAwayImg.onclick = () => window.location.href = `club.html?name=${encodeURIComponent(m[7])}`;
 
     const styleLink = "color: inherit; text-decoration: none; transition: 0.2s;";
-    document.getElementById('name-home').innerHTML = `<a href="club.html?name=${encodeURIComponent(m[5])}" style="${styleLink}">${m[5]}</a>`;
-    document.getElementById('name-away').innerHTML = `<a href="club.html?name=${encodeURIComponent(m[6])}" style="${styleLink}">${m[6]}</a>`;
+    document.getElementById('name-home').innerHTML = `<a href="club.html?name=${encodeURIComponent(m[6])}" style="${styleLink}">${m[6]}</a>`;
+    document.getElementById('name-away').innerHTML = `<a href="club.html?name=${encodeURIComponent(m[7])}" style="${styleLink}">${m[7]}</a>`;
     
     // Score : ScoreHome (9), ScoreAway (10)
     document.getElementById('score-display').innerText = `${m[9]} : ${m[10]}`;
 
     // --- CORRECTION LIEN REPLAY (Colonne H = Index 7) ---
-   // --- LIEN REPLAY (Colonne H = Index 7) ---
+   // --- LIEN REPLAY (Colonne H = Index 5) ---
     const replayLink = document.getElementById('link-replay');
     if (replayLink) {
-        if (m[7] && m[7] !== "" && m[7] !== "#") {
-            replayLink.href = m[7];
-            replayLink.style.display = 'inline-flex';
-        } else {
+       if (m[5] && m[5] !== "" && m[5] !== "#") {
+    replayLink.href = m[5];
+    replayLink.style.display = 'inline-flex';
+} else {
             replayLink.style.display = 'none';
         }
     }
