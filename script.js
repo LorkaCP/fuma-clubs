@@ -216,11 +216,13 @@ async function loadTeamsList() {
         const submitBtn = profileForm.querySelector('button[type="submit"]');
         const originalBtnText = submitBtn.innerText;
         
-        // 1. État de chargement
+        // 1. État visuel de chargement
         submitBtn.disabled = true;
         submitBtn.innerText = "Updating...";
 
+        // 2. Préparation des données
         const avatarInput = document.getElementById('avatar')?.value.trim();
+        const DEFAULT_AVATAR = "https://via.placeholder.com/150"; // Assurez-vous que cette variable est définie
         const finalAvatar = (avatarInput === "" || avatarInput.toLowerCase() === "none") ? DEFAULT_AVATAR : avatarInput;
 
         const formData = new URLSearchParams();
@@ -234,7 +236,7 @@ async function loadTeamsList() {
         formData.append('main_position', document.getElementById('main-position')?.value || "");
 
         try {
-            // 2. Envoi des données
+            // 3. Envoi à Google Apps Script
             await fetch(APP_SCRIPT_URL, {
                 method: 'POST',
                 body: formData,
@@ -242,22 +244,30 @@ async function loadTeamsList() {
                 mode: 'no-cors'
             });
 
-            // 3. SUCCÈS : Remplacement du formulaire par le message
+            // 4. Succès : Mise à jour de l'interface
             const statusBox = document.getElementById('status-message');
             const statusText = document.getElementById('status-text');
 
             if (statusBox && statusText) {
-                statusText.innerText = "Profile update sent! Your changes will appear in a few moments.";
+                // On affiche le message et on cache le formulaire
+                statusText.innerText = "Profile updated! Redirecting to players list in 3 seconds...";
                 statusBox.style.display = 'block';
-                profileForm.style.display = 'none'; // Cache le formulaire
+                profileForm.style.display = 'none'; 
+                
+                // Remonte en haut de page pour que le message soit visible
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                // 5. Redirection automatique après 3 secondes
+                setTimeout(() => {
+                    window.location.href = 'players.html';
+                }, 3000);
             }
 
         } catch (error) {
             console.error("Submission error:", error);
             
-            // 4. ERREUR : On réactive le bouton pour que l'utilisateur puisse réessayer
-            alert("An error occurred. Please check your connection and try again.");
+            // En cas d'erreur, on avertit l'utilisateur et on réactive le bouton
+            alert("An error occurred during update. Please try again.");
             submitBtn.disabled = false;
             submitBtn.innerText = originalBtnText;
         }
@@ -802,6 +812,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
