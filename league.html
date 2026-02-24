@@ -374,13 +374,33 @@
     }
     
     document.getElementById(tabName).classList.add("active");
-    evt.currentTarget.classList.add("active");
+    
+    // Si l'événement existe (clic manuel), on active le bouton cliqué
+    if (evt) {
+        evt.currentTarget.classList.add("active");
+    } else {
+        // Sinon (chargement auto), on cherche le bouton par son attribut onclick
+        const targetBtn = Array.from(tabs).find(btn => btn.getAttribute('onclick').includes(tabName));
+        if (targetBtn) targetBtn.classList.add("active");
+    }
 
-    // Appel de la fonction pour masquer le sélecteur de journée
     if (typeof updateStatsUI === "function") {
         updateStatsUI(tabName === 'stats');
     }
 }
+
+// --- NOUVELLE LOGIQUE AU CHARGEMENT ---
+window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+
+    if (tab === 'fixtures') {
+        openTab(null, 'fixtures');
+    } else if (tab === 'stats') {
+        openTab(null, 'stats');
+    }
+    // Par défaut, 'standings' est déjà actif dans le HTML
+});
 </script>
 </body>
 </html>
