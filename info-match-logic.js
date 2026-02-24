@@ -97,8 +97,8 @@ function updateUI(m) {
     const passAway = m[17];
     const accAway = m[19];
     
-    document.getElementById('val-passes-home').innerText = `${passHome} (${accHome})`;
-    document.getElementById('val-passes-away').innerText = `${passAway} (${accAway})`;
+    document.getElementById('val-passes-home').innerText = `${passHome} (${accHome}%)`;
+    document.getElementById('val-passes-away').innerText = `${passAway} (${accAway}%)`;
     // On garde la barre basée sur le nombre de passes effectuées
     updateBar('passes', passHome, passAway, false, true); 
 
