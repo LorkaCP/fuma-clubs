@@ -15,194 +15,47 @@
             --fuma-text-dim: #aaa;
         }
 
-        body {
-            background-color: #000;
-            color: #fff;
-            font-family: 'Poppins', sans-serif;
-            margin: 0;
-        }
+        body { background-color: #000; color: #fff; font-family: 'Poppins', sans-serif; margin: 0; }
 
-        /* --- LOADER --- */
-        #loader-container {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        }
+        /* LOADER */
+        #loader-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; }
+        .fuma-spinner { width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.1); border-top: 5px solid var(--fuma-primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .fuma-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255, 255, 255, 0.1);
-            border-top: 5px solid var(--fuma-primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
+        /* LAYOUT */
+        .match-detail-wrapper { max-width: 800px; margin: 20px auto; padding: 15px; display: none; }
+        .match-meta { text-align: center; margin-bottom: 20px; font-size: 0.9rem; color: var(--fuma-text-dim); text-transform: uppercase; letter-spacing: 1px; }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* --- MISE EN PAGE --- */
-        .match-detail-wrapper { 
-            max-width: 800px; 
-            margin: 20px auto; 
-            padding: 15px; 
-            display: none; 
-        }
-        
-        .match-meta { 
-            text-align: center; 
-            margin-bottom: 20px; 
-            font-size: 0.9rem; 
-            color: var(--fuma-text-dim);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* Header Score & Buteurs */
-        .score-header { 
-            display: flex; 
-            align-items: flex-start;
-            justify-content: space-between; 
-            background: var(--fuma-bg-card); 
-            padding: 30px 20px; 
-            border-radius: 20px; 
-            border: var(--fuma-border); 
-            margin-bottom: 20px; 
-            position: relative;
-        }
-        
-        .detail-team { 
-            flex: 1; 
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        .score-header { display: flex; align-items: flex-start; justify-content: space-between; background: var(--fuma-bg-card); padding: 30px 20px; border-radius: 20px; border: var(--fuma-border); margin-bottom: 20px; }
+        .detail-team { flex: 1; text-align: center; display: flex; flex-direction: column; align-items: center; }
         .detail-team img { width: clamp(50px, 15vw, 90px); height: auto; margin-bottom: 10px; }
-        .detail-team h2 { font-size: 1.1rem; margin: 0; font-weight: 600; }
+        .team-link { color: inherit; text-decoration: none; font-weight: 600; transition: 0.2s; }
+        .team-link:hover { color: var(--fuma-primary); }
 
-        .strikers-list {
-            font-size: 0.75rem;
-            color: var(--fuma-text-dim);
-            margin-top: 10px;
-            line-height: 1.4;
-            font-weight: 400;
-            width: 100%;
-        }
+        .strikers-list { font-size: 0.75rem; color: var(--fuma-text-dim); margin-top: 10px; line-height: 1.4; }
+        .score-center { flex: 1; display: flex; flex-direction: column; align-items: center; }
+        .detail-score { font-size: clamp(2.2rem, 8vw, 3.5rem); font-weight: 800; color: var(--fuma-primary); margin-bottom: 15px; }
 
-        .score-center {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
+        .btn-replay { display: inline-flex; align-items: center; gap: 8px; background: var(--fuma-primary); color: #000; text-decoration: none; padding: 8px 16px; border-radius: 50px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; transition: 0.2s; }
+        .btn-replay:hover { transform: scale(1.05); background: #fff; }
 
-        .detail-score { 
-            font-size: clamp(2.2rem, 8vw, 3.5rem); 
-            font-weight: 800; 
-            color: var(--fuma-primary); 
-            text-align: center;
-            line-height: 1;
-            margin-bottom: 15px;
-        }
-
-        /* Bouton Revoir le Match */
-        .btn-replay {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--fuma-primary);
-            color: #000;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-size: 0.7rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            transition: transform 0.2s, background 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn-replay:hover {
-            transform: scale(1.05);
-            background: #fff;
-        }
-
-        .btn-replay i { font-size: 0.8rem; }
-
-        /* Stats */
-        .stats-container { 
-            background: var(--fuma-bg-card); 
-            border-radius: 20px; 
-            padding: 25px; 
-            border: var(--fuma-border); 
-        }
-        
+        /* STATS */
+        .stats-container { background: var(--fuma-bg-card); border-radius: 20px; padding: 25px; border: var(--fuma-border); }
         .stat-row { margin-bottom: 20px; }
-        .stat-label { 
-            display: flex; 
-            justify-content: space-between; 
-            margin-bottom: 8px; 
-            font-weight: 600; 
-            font-size: 0.8rem; 
-            text-transform: uppercase; 
-            color: var(--fuma-text-dim); 
-        }
-        
-        .progress-container { 
-            display: flex; 
-            height: 10px; 
-            background: rgba(255,255,255,0.05); 
-            border-radius: 5px; 
-            overflow: hidden; 
-        }
+        .stat-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; color: var(--fuma-text-dim); }
+        .progress-container { display: flex; height: 10px; background: rgba(255,255,255,0.05); border-radius: 5px; overflow: hidden; }
         .progress-bar { height: 100%; transition: width 1s ease-in-out; }
         .bar-home { background: var(--fuma-primary); border-right: 1px solid #000; }
         .bar-away { background: #444; }
 
-        /* Man of the Match */
-        .motm-card { 
-            margin-top: 20px;
-            text-align: center; 
-            background: linear-gradient(145deg, #222, #000); 
-            border: 1px solid var(--fuma-primary); 
-            padding: 15px; 
-            border-radius: 15px;
-        }
-        .motm-card h3 { 
-            color: var(--fuma-primary); 
-            font-size: 0.85rem; 
-            margin-bottom: 10px; 
-            text-transform: uppercase;
-        }
-        .motm-name { 
-            font-weight: 800; 
-            font-size: 1.3rem !important; 
-            color: var(--fuma-primary); 
-        }
+        /* MOTM */
+        .motm-card { margin-top: 20px; text-align: center; background: linear-gradient(145deg, #222, #000); border: 1px solid var(--fuma-primary); padding: 15px; border-radius: 15px; }
+        .motm-card h3 { color: var(--fuma-primary); font-size: 0.85rem; margin-bottom: 5px; text-transform: uppercase; }
+        .motm-name { font-weight: 800; font-size: 1.3rem !important; }
 
         @media (max-width: 500px) {
-            .score-header {
-                padding: 20px 10px;
-                display: grid;
-                grid-template-columns: 1fr 100px 1fr;
-                gap: 5px;
-            }
-            .detail-team img { width: 45px; }
-            .detail-team h2 { font-size: 0.75rem; }
+            .score-header { display: grid; grid-template-columns: 1fr 100px 1fr; gap: 5px; padding: 20px 10px; }
             .detail-score { font-size: 1.8rem; }
-            .strikers-list { font-size: 0.6rem; }
-            .btn-replay { padding: 6px 10px; font-size: 0.55rem; }
         }
     </style>
 </head>
@@ -210,14 +63,14 @@
 
     <div id="loader-container">
         <div class="fuma-spinner"></div>
-        <p>Loading...</p>
+        <p>Chargement des statistiques...</p>
     </div>
 
     <div class="match-detail-wrapper" id="main-content">
         
         <a href="league.html?tab=fixtures" style="color: var(--fuma-text-dim); text-decoration: none; margin-bottom: 15px; display: inline-block; font-size: 0.9rem;">
-    <i class="fas fa-arrow-left"></i> FIXTURES
-</a>
+            <i class="fas fa-arrow-left"></i> CALENDRIER
+        </a>
 
         <div class="match-meta">
             <span id="matchday-label">Matchday --</span> • 
@@ -247,11 +100,7 @@
 
         <div class="stats-container">
             <div class="stat-row">
-                <div class="stat-label">
-                    <span id="val-poss-home">0%</span>
-                    <span>Possession</span>
-                    <span id="val-poss-away">0%</span>
-                </div>
+                <div class="stat-label"><span id="val-poss-home">0%</span><span>Possession</span><span id="val-poss-away">0%</span></div>
                 <div class="progress-container">
                     <div id="bar-poss-home" class="progress-bar bar-home" style="width: 50%"></div>
                     <div id="bar-poss-away" class="progress-bar bar-away" style="width: 50%"></div>
@@ -259,11 +108,7 @@
             </div>
 
             <div class="stat-row">
-                <div class="stat-label">
-                    <span id="val-shots-home">0</span>
-                    <span>Shots</span>
-                    <span id="val-shots-away">0</span>
-                </div>
+                <div class="stat-label"><span id="val-shots-home">0</span><span>Tirs</span><span id="val-shots-away">0</span></div>
                 <div class="progress-container">
                     <div id="bar-shots-home" class="progress-bar bar-home" style="width: 50%"></div>
                     <div id="bar-shots-away" class="progress-bar bar-away" style="width: 50%"></div>
@@ -271,11 +116,7 @@
             </div>
 
             <div class="stat-row">
-                <div class="stat-label">
-                    <span id="val-passes-home">0</span>
-                    <span>Passes Attempted</span>
-                    <span id="val-passes-away">0</span>
-                </div>
+                <div class="stat-label"><span id="val-passes-home">0</span><span>Passes Tentées</span><span id="val-passes-away">0</span></div>
                 <div class="progress-container">
                     <div id="bar-passes-home" class="progress-bar bar-home" style="width: 50%"></div>
                     <div id="bar-passes-away" class="progress-bar bar-away" style="width: 50%"></div>
@@ -283,14 +124,26 @@
             </div>
 
             <div class="stat-row">
-                <div class="stat-label">
-                    <span id="val-acc-home">0%</span>
-                    <span>Passing Accuracy</span>
-                    <span id="val-acc-away">0%</span>
-                </div>
+                <div class="stat-label"><span id="val-acc-home">0%</span><span>Précision Passes</span><span id="val-acc-away">0%</span></div>
                 <div class="progress-container">
                     <div id="bar-acc-home" class="progress-bar bar-home" style="width: 50%"></div>
                     <div id="bar-acc-away" class="progress-bar bar-away" style="width: 50%"></div>
+                </div>
+            </div>
+
+            <div class="stat-row">
+                <div class="stat-label"><span id="val-tackles-home">0</span><span>Tacles</span><span id="val-tackles-away">0</span></div>
+                <div class="progress-container">
+                    <div id="bar-tackles-home" class="progress-bar bar-home" style="width: 50%"></div>
+                    <div id="bar-tackles-away" class="progress-bar bar-away" style="width: 50%"></div>
+                </div>
+            </div>
+
+            <div class="stat-row">
+                <div class="stat-label"><span id="val-reds-home">0</span><span>Cartons Rouges</span><span id="val-reds-away">0</span></div>
+                <div class="progress-container">
+                    <div id="bar-reds-home" class="progress-bar bar-home" style="width: 50%"></div>
+                    <div id="bar-reds-away" class="progress-bar bar-away" style="width: 50%"></div>
                 </div>
             </div>
 
