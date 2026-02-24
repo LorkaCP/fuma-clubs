@@ -589,7 +589,7 @@ select option {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
     transition: transform 0.2s ease;
 }
 
@@ -696,6 +696,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
