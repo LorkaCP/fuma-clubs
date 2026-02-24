@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // On cherche le match (TeamHome index 5, TeamAway index 6)
             const match = rows.find(r => r[5] === homeName && r[6] === awayName);
 
+            // --- GESTION DU LOADER ---
             const loader = document.getElementById('loader-container');
             const mainContent = document.getElementById('main-content');
             
@@ -38,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Parse le CSV en gérant les guillemets et les virgules internes
+ * Parse le CSV en gérant les guillemets
  */
 function parseCSV(text) {
     const lines = text.split('\n');
@@ -62,56 +63,47 @@ function parseCSV(text) {
 }
 
 /**
- * Met à jour l'interface avec les données (Index basés sur votre nouvelle liste)
+ * Met à jour l'interface avec les données du match
  */
 function updateUI(m) {
     // Infos générales
     document.getElementById('matchday-label').innerText = `Matchday ${m[0]}`;
-    document.getElementById('match-date').innerText = m[1]; // StartDate
+    document.getElementById('match-date').innerText = m[1];
 
-    // Logos
+    // --- LOGOS CLIQUABLES ---
     const logoHomeImg = document.getElementById('logo-home');
     const logoAwayImg = document.getElementById('logo-away');
-    logoHomeImg.src = m[3]; // CrestHome
-    logoAwayImg.src = m[4];  // CrestAway
-
-    // Noms des Clubs (Cliquables)
-    const teamHome = m[5];
-    const teamAway = m[6];
-    document.getElementById('name-home').innerHTML = `<a href="club.html?name=${encodeURIComponent(teamHome)}" class="team-link">${teamHome}</a>`;
-    document.getElementById('name-away').innerHTML = `<a href="club.html?name=${encodeURIComponent(teamAway)}" class="team-link">${teamAway}</a>`;
     
-    // Score (ScoreHome: m[8], ScoreAway: m[9])
-    document.getElementById('score-display').innerText = `${m[8]} : ${m[9]}`;
+    logoHomeImg.src = m[3];
+    logoHomeImg.style.cursor = "pointer";
+    logoHomeImg.onclick = () => window.location.href = `club.html?name=${encodeURIComponent(m[5])}`;
 
-    // Buteurs (StrikerHome: m[10], StrikerAway: m[11])
-    document.getElementById('strikers-home').innerHTML = formatStrikers(m[10]);
-    document.getElementById('strikers-away').innerHTML = formatStrikers(m[11]);
+    logoAwayImg.src = m[4];
+    logoAwayImg.style.cursor = "pointer";
+    logoAwayImg.onclick = () => window.location.href = `club.html?name=${encodeURIComponent(m[6])}`;
 
-    // --- Statistiques ---
-    updateBar('poss',    m[12], m[13], true);  // Possession
-    updateBar('shots',   m[14], m[15], false); // Shots
-    updateBar('passes',  m[16], m[17], false); // Passes Attempted
-    updateBar('acc',     m[18], m[19], true);  // Accuracy
-    updateBar('tackles', m[20], m[21], false); // Tackles
-    updateBar('reds',    m[22], m[23], false); // Red Cards
+    // --- NOMS DES CLUBS CLIQUABLES ---
+    const styleLink = "color: inherit; text-decoration: none; transition: 0.2s;";
+    const hoverEffect = "this.style.color='var(--fuma-primary)'";
+    const normalEffect = "this.style.color='inherit'";
 
-    // Man of the Match (MotM: m[24])
-    const motmContainer = document.getElementById('motm-name');
-    const motmName = m[24] || 'N/A';
-    if (motmName !== 'N/A' && motmName.trim() !== '') {
-        motmContainer.innerHTML = `
-            <a href="player.html?id=${encodeURIComponent(motmName)}" style="color: var(--fuma-primary); text-decoration: none; font-weight: bold;">
-                <i class="fas fa-user-check"></i> ${motmName}
-            </a>`;
-    } else {
-        motmContainer.innerText = 'N/A';
-    }
+    document.getElementById('name-home').innerHTML = `
+        <a href="club.html?name=${encodeURIComponent(m[5])}" style="${styleLink}" onmouseover="${hoverEffect}" onmouseout="${normalEffect}">
+            ${m[5]}
+        </a>`;
 
-    // Lien Replay (LinkHome: m[25])
+    document.getElementById('name-away').innerHTML = `
+        <a href="club.html?name=${encodeURIComponent(m[6])}" style="${styleLink}" onmouseover="${hoverEffect}" onmouseout="${normalEffect}">
+            ${m[6]}
+        </a>`;
+    
+    // Score
+    document.getElementById('score-display').innerText = `${m[7]} : ${m[8]}`;
+
+    // Gestion du bouton REPLAY (Index 20)
     const replayLink = document.getElementById('link-replay');
     if (replayLink) {
-        const videoUrl = m[25];
+        const videoUrl = m[20];
         if (videoUrl && videoUrl !== "#" && videoUrl.trim() !== "") {
             replayLink.href = videoUrl;
             replayLink.style.display = 'inline-flex';
@@ -119,8 +111,34 @@ function updateUI(m) {
             replayLink.style.display = 'none';
         }
     }
+
+    // Barres de stats (Possession, Tirs, Passes, Précision)
+    updateBar('poss', m[11], m[12], true);
+    updateBar('shots', m[13], m[14], false);
+    updateBar('passes', m[15], m[16], false);
+    updateBar('acc', m[17], m[18], true);
+
+    // Buteurs
+    document.getElementById('strikers-home').innerHTML = formatStrikers(m[9]);
+    document.getElementById('strikers-away').innerHTML = formatStrikers(m[10]);
+    
+    // Homme du Match (Cliquable vers profil joueur)
+    const motmContainer = document.getElementById('motm-name');
+    const motmName = m[19] || 'N/A';
+    
+    if (motmName !== 'N/A') {
+        motmContainer.innerHTML = `
+            <a href="player.html?id=${encodeURIComponent(motmName)}" style="color: var(--fuma-primary); text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <i class="fas fa-user-check" style="font-size: 0.9rem;"></i> ${motmName}
+            </a>`;
+    } else {
+        motmContainer.innerText = 'N/A';
+    }
 }
 
+/**
+ * Anime les barres de statistiques
+ */
 function updateBar(id, valH, valA, isPercent) {
     const h = parseFloat(String(valH).replace('%', '').replace(',', '.')) || 0;
     const a = parseFloat(String(valA).replace('%', '').replace(',', '.')) || 0;
@@ -141,6 +159,9 @@ function updateBar(id, valH, valA, isPercent) {
     if(barA) barA.style.width = (100 - percH) + '%';
 }
 
+/**
+ * Formate la liste des buteurs (attend une chaîne séparée par des virgules)
+ */
 function formatStrikers(str) {
     if (!str || str === '0' || str.trim() === '') return '';
     return str.split(',').map(s => `<div>${s.trim()} <i class="fas fa-futbol" style="font-size: 0.7rem; opacity: 0.6;"></i></div>`).join('');
