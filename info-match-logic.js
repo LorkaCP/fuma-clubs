@@ -85,10 +85,11 @@ function updateUI(m) {
     document.getElementById('score-display').innerText = `${m[9]} : ${m[10]}`;
 
     // --- CORRECTION LIEN REPLAY (Colonne H = Index 7) ---
+   // --- LIEN REPLAY (Colonne H = Index 7) ---
     const replayLink = document.getElementById('link-replay');
     if (replayLink) {
         if (m[7] && m[7] !== "" && m[7] !== "#") {
-            replayLink.href = m[8];
+            replayLink.href = m[7];
             replayLink.style.display = 'inline-flex';
         } else {
             replayLink.style.display = 'none';
