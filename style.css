@@ -577,6 +577,7 @@ select option {
     display: grid;
     /* On réduit la taille minimale des colonnes pour en mettre plus par ligne */
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+    margin-bottom: 20px;
     gap: 12px; /* Espacement entre les boîtes réduit */
     padding: 10px;
 }
@@ -695,6 +696,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
