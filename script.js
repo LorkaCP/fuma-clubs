@@ -207,49 +207,62 @@ async function loadTeamsList() {
 
     // --- 5. ENVOI DU FORMULAIRE ---
     function setupFormSubmission() {
-        const profileForm = document.getElementById('profile-form');
-        if (!profileForm) return;
+    const profileForm = document.getElementById('profile-form');
+    if (!profileForm) return;
 
-        profileForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const submitBtn = profileForm.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.innerText;
-            
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Updating...";
+    profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const submitBtn = profileForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerText;
+        
+        // 1. État de chargement
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Updating...";
 
-            const avatarInput = document.getElementById('avatar')?.value.trim();
-            const finalAvatar = (avatarInput === "" || avatarInput.toLowerCase() === "none") ? DEFAULT_AVATAR : avatarInput;
+        const avatarInput = document.getElementById('avatar')?.value.trim();
+        const finalAvatar = (avatarInput === "" || avatarInput.toLowerCase() === "none") ? DEFAULT_AVATAR : avatarInput;
 
-            const formData = new URLSearchParams();
-            formData.append('game_tag', document.getElementById('id-game')?.value || "");
-            formData.append('discord_id', document.getElementById('id-discord')?.value || "");
-            formData.append('discord_name', document.getElementById('discord-name')?.value || "");
-            formData.append('country', document.getElementById('country')?.value || "");
-            formData.append('avatar', finalAvatar);
-            formData.append('current_team', document.getElementById('team')?.value || "Free Agent");
-            formData.append('main_archetype', document.getElementById('main-archetype')?.value || "");
-            formData.append('main_position', document.getElementById('main-position')?.value || "");
+        const formData = new URLSearchParams();
+        formData.append('game_tag', document.getElementById('id-game')?.value || "");
+        formData.append('discord_id', document.getElementById('id-discord')?.value || "");
+        formData.append('discord_name', document.getElementById('discord-name')?.value || "");
+        formData.append('country', document.getElementById('country')?.value || "");
+        formData.append('avatar', finalAvatar);
+        formData.append('current_team', document.getElementById('team')?.value || "Free Agent");
+        formData.append('main_archetype', document.getElementById('main-archetype')?.value || "");
+        formData.append('main_position', document.getElementById('main-position')?.value || "");
 
-            try {
-                // Utilisation de mode: 'no-cors' pour éviter les erreurs de redirection Google Apps Script
-                await fetch(APP_SCRIPT_URL, {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    mode: 'no-cors'
-                });
-                alert("Profile update sent! Check back in a few moments.");
-            } catch (error) {
-                console.error("Submission error:", error);
-                alert("Update sent (please check your profile in a few moments).");
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerText = originalBtnText;
+        try {
+            // 2. Envoi des données
+            await fetch(APP_SCRIPT_URL, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                mode: 'no-cors'
+            });
+
+            // 3. SUCCÈS : Remplacement du formulaire par le message
+            const statusBox = document.getElementById('status-message');
+            const statusText = document.getElementById('status-text');
+
+            if (statusBox && statusText) {
+                statusText.innerText = "Profile update sent! Your changes will appear in a few moments.";
+                statusBox.style.display = 'block';
+                profileForm.style.display = 'none'; // Cache le formulaire
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
-        });
-    }
 
+        } catch (error) {
+            console.error("Submission error:", error);
+            
+            // 4. ERREUR : On réactive le bouton pour que l'utilisateur puisse réessayer
+            alert("An error occurred. Please check your connection and try again.");
+            submitBtn.disabled = false;
+            submitBtn.innerText = originalBtnText;
+        }
+    });
+}
     // --- 6. LOGIQUE LISTE DES CLUBS (clubs.html) ---
     async function fetchFumaClubs() {
         const clubContainer = document.getElementById('fuma-js-clubs');
@@ -789,6 +802,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
