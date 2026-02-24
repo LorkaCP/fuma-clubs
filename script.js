@@ -614,10 +614,10 @@ async function loadTeamsList() {
     const PLAYERS_SHEET_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=';
 
     try {
-        const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}`);
+        const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}&t=${Date.now()}`);
         const text = await resp.text();
         const lines = text.trim().split("\n");
-        const headers = lines[0].split(",").map(h => h.trim());
+        const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
         
         const rows = lines.slice(1).map(line => {
             const v = parseCSVLine(line);
@@ -626,15 +626,16 @@ async function loadTeamsList() {
             return obj;
         });
 
+        // Recherche du joueur par son ID ou son Tag
         const p = rows.find(player => player.GAME_ID === playerId || player.GAME_TAG === playerId);
 
         if (!p) {
-            headerContainer.innerHTML = `<p style="text-align:center;">Data not found for this season.</p>`;
+            headerContainer.innerHTML = `<p style="text-align:center; padding: 50px;">Data not found for this season.</p>`;
             statsContainer.innerHTML = "";
             return;
         }
 
-        // --- DESIGN PREMIÈRE MISE EN PAGE (HEADER) ---
+        // --- EN-TÊTE DU PROFIL (HEADER) ---
         headerContainer.innerHTML = `
             <div class="player-card-header">
                <img src="${p.AVATAR || 'https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png'}" 
@@ -647,13 +648,13 @@ async function loadTeamsList() {
                     ${p.MAIN_POSITION || 'N/A'} | ${p.MAIN_ARCHETYPE || 'Standard'}
                 </p>
                 <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 25px;">
-                    <img src="${p.LOGO || ''}" style="height: 45px; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));">
+                    <img src="${p.LOGO || ''}" style="height: 45px; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));" onerror="this.style.display='none'">
                     <span style="font-size: 1.3rem; font-weight: 300;">${p.CURRENT_TEAM || 'Free Agent'}</span>
                 </div>
             </div>
         `;
 
-        // --- DESIGN PREMIÈRE MISE EN PAGE (STATS AVEC ICÔNES) ---
+        // --- GRILLE DES STATISTIQUES ---
         statsContainer.innerHTML = `
             <div class="stat-block">
                 <h3><i class="fas fa-info-circle"></i> General</h3>
@@ -666,8 +667,12 @@ async function loadTeamsList() {
                     <span class="stat-value highlight">${p.RATING || '0.0'}</span>
                 </div>
                 <div class="stat-row">
-                    <span class="stat-label">Cards</span>
-                    <span class="stat-value">${p.CARDS || '0'}</span>
+                    <span class="stat-label">MOTM</span>
+                    <span class="stat-value" style="color: #ffd700;"><i class="fas fa-star"></i> ${p.MOTM || '0'}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Red Cards</span>
+                    <span class="stat-value" style="color: #ff4d4d;"><i class="fas fa-square"></i> ${p.RED_CARD || p['RED CARDS'] || '0'}</span>
                 </div>
             </div>
 
@@ -713,8 +718,8 @@ async function loadTeamsList() {
         `;
 
     } catch (e) {
-        console.error(e);
-        headerContainer.innerHTML = "<p style='text-align:center; color:red;'>Error while loading data.</p>";
+        console.error("Error fetching player data:", e);
+        headerContainer.innerHTML = "<p style='text-align:center; color:red; padding: 50px;'>Error while loading data.</p>";
     }
 }
 function renderStatCard(title, stats) {
@@ -812,6 +817,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
