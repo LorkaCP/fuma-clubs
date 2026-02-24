@@ -84,10 +84,10 @@ function updateUI(m) {
     // Score : ScoreHome (9), ScoreAway (10)
     document.getElementById('score-display').innerText = `${m[9]} : ${m[10]}`;
 
-    // --- CORRECTION LIEN REPLAY (Colonne I = Index 8) ---
+    // --- CORRECTION LIEN REPLAY (Colonne H = Index 7) ---
     const replayLink = document.getElementById('link-replay');
     if (replayLink) {
-        if (m[8] && m[8] !== "" && m[8] !== "#") {
+        if (m[7] && m[7] !== "" && m[7] !== "#") {
             replayLink.href = m[8];
             replayLink.style.display = 'inline-flex';
         } else {
