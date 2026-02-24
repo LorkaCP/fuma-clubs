@@ -63,9 +63,6 @@ function parseCSV(text) {
 }
 
 /**
- * Met à jour l'interface avec les données du match selon la nouvelle structure
- */
-/**
  * Met à jour l'interface avec les données du match (Structure 2026)
  */
 function updateUI(m) {
@@ -131,12 +128,38 @@ function updateUI(m) {
         motmContainer.innerHTML = `<a href="player.html?id=${encodeURIComponent(motmName)}" style="color: var(--fuma-primary); text-decoration: none; font-weight: bold;"><i class="fas fa-user-check"></i> ${motmName}</a>`;
     }
 
-    // Gestion du lien Replay (si présent dans une colonne non listée, ex: m[28])
+    // Lien Replay (IDMatch à l'index 7)
     const replayLink = document.getElementById('link-replay');
-    if (replayLink && m[7]) { // Utilise l'IDMatch (7) ou une autre colonne pour le lien
-        // Code pour le lien si nécessaire
+    if (replayLink && m[7]) {
+        // Optionnel : Configurer ici l'URL du replay si nécessaire
     }
 }
+
+/**
+ * Anime les barres de statistiques et met à jour les labels textuels
+ */
+function updateBar(id, valH, valA, isPercent, onlyBar = false) {
+    const h = parseFloat(String(valH).replace('%', '').replace(',', '.')) || 0;
+    const a = parseFloat(String(valA).replace('%', '').replace(',', '.')) || 0;
+    
+    const total = h + a;
+    const percH = total === 0 ? 50 : (h / total) * 100;
+
+    // Mise à jour du texte si nécessaire
+    if (!onlyBar) {
+        const labelH = document.getElementById(`val-${id}-home`);
+        const labelA = document.getElementById(`val-${id}-away`);
+        if(labelH) labelH.innerText = isPercent ? (Math.round(h) + '%') : h;
+        if(labelA) labelA.innerText = isPercent ? (Math.round(a) + '%') : a;
+    }
+
+    // Mise à jour visuelle des barres
+    const barH = document.getElementById(`bar-${id}-home`);
+    const barA = document.getElementById(`bar-${id}-away`);
+    if(barH) barH.style.width = percH + '%';
+    if(barA) barA.style.width = (100 - percH) + '%';
+}
+
 /**
  * Formate la liste des buteurs
  */
