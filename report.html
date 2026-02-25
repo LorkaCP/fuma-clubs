@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>FUMA - Report Data</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .report-form-container { max-width: 800px; margin: 20px auto; padding: 20px; }
+        .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .team-sec { background: #1a1a1a; padding: 20px; border-radius: 10px; border: 1px solid #333; }
+        label { display: block; margin-top: 15px; font-size: 0.8rem; color: #d4af37; font-weight: 600; }
+        input { width: 100%; padding: 10px; background: #000; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
+        .submit-btn { width: 100%; padding: 20px; background: #d4af37; color: #000; border: none; font-weight: 800; margin-top: 30px; cursor: pointer; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="report-form-container">
+        <h1 style="text-align: center; color: #d4af37;">DATA REPORT</h1>
+        <p id="loading-status" style="text-align: center; font-size: 0.9rem;">Vérification des données existantes...</p>
+
+        <form id="match-report-form">
+            <div class="grid-stats">
+                <div class="team-sec">
+                    <h2 id="name-home">HOME</h2>
+                    <label>Score</label><input type="number" name="sh" id="in-sh">
+                    <label>Buteurs (ex: Messi 12', 45')</label><input type="text" name="stH" id="in-stH">
+                    <label>Possession %</label><input type="number" name="posH" id="in-posH">
+                    <label>Tirs</label><input type="number" name="shoH" id="in-shoH">
+                    <label>Passes Tentées</label><input type="number" name="pasAttH" id="in-pasAttH">
+                    <label>Précision %</label><input type="number" name="accH" id="in-accH">
+                    <label>Tacles Réussis</label><input type="number" name="tacMadH" id="in-tacMadH">
+                    <label>Tacles Tentés</label><input type="number" name="tacAttH" id="in-tacAttH">
+                </div>
+
+                <div class="team-sec">
+                    <h2 id="name-away">AWAY</h2>
+                    <label>Score</label><input type="number" name="sa" id="in-sa">
+                    <label>Buteurs</label><input type="text" name="stA" id="in-stA">
+                    <label>Possession %</label><input type="number" name="posA" id="in-posA">
+                    <label>Tirs</label><input type="number" name="shoA" id="in-shoA">
+                    <label>Passes Tentées</label><input type="number" name="pasAttA" id="in-pasAttA">
+                    <label>Précision %</label><input type="number" name="accA" id="in-accA">
+                    <label>Tacles Réussis</label><input type="number" name="tacMadA" id="in-tacMadA">
+                    <label>Tacles Tentés</label><input type="number" name="tacAttA" id="in-tacAttA">
+                </div>
+            </div>
+            
+            <div class="team-sec" style="margin-top:20px;">
+                <label>Homme du Match (MotM)</label>
+                <input type="text" name="motm" id="in-motm" placeholder="Nom du joueur">
+            </div>
+
+            <button type="submit" class="submit-btn" id="btn-submit">ENREGISTRER SUR LE GOOGLE SHEET</button>
+        </form>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const home = params.get('home');
+        const away = params.get('away');
+        const gid = params.get('gid');
+        
+        document.getElementById('name-home').innerText = home;
+        document.getElementById('name-away').innerText = away;
+
+        // LOGIQUE DE PRÉ-REMPLISSAGE (Lecture du CSV existant)
+        const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=";
+        
+        fetch(BASE_URL + gid)
+            .then(r => r.text())
+            .then(csv => {
+                const rows = csv.split('\n').map(row => row.split(',').map(cell => cell.replace(/^"|"$/g, '')));
+                const match = rows.find(r => r[6] === home && r[7] === away);
+                
+                if(match && match[8] !== "") { // Si un score existe déjà en colonne 8
+                    document.getElementById('in-sh').value = match[8];
+                    document.getElementById('in-sa').value = match[9];
+                    // On pourrait pré-remplir les autres colonnes ici selon votre structure CSV
+                    document.getElementById('loading-status').innerText = "Données actuelles chargées (Mode Modification)";
+                } else {
+                    document.getElementById('loading-status').innerText = "Nouveau rapport de match";
+                }
+            });
+
+        // ENVOI VERS APPS SCRIPT
+        document.getElementById('match-report-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit');
+            btn.innerText = "ENVOI EN COURS...";
+            btn.disabled = true;
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            data.home = home;
+            data.away = away;
+
+            try {
+                // REMPLACEZ PAR VOTRE URL DE DÉPLOIEMENT APPS SCRIPT
+                const APPS_SCRIPT_URL = "VOTRE_URL_SCRIPT_ICI";
+                
+                await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(data)
+                });
+
+                alert("Match enregistré avec succès !");
+                window.location.href = `info-match.html?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}&gid=${gid}`;
+            } catch (err) {
+                alert("Erreur lors de l'envoi");
+                btn.disabled = false;
+                btn.innerText = "RÉESSAYER";
+            }
+        };
+    </script>
+</body>
+</html>
