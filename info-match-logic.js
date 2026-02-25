@@ -67,56 +67,98 @@ function parseCSV(text) {
 /**
  * Met à jour l'interface avec les données du match (Structure 2026)
  */
+/**
+ * Met à jour l'intégralité de l'interface avec les données du match
+ * @param {Array} m - La ligne du CSV correspondant au match
+ */
 function updateUI(m) {
-    // Éléments de l'interface
+    // 1. DÉTECTION : Le match est-il déjà joué ?
+    // On vérifie si la colonne ScoreHome (index 8) contient une valeur
+    const isPlayed = m[8] !== "" && m[8] !== undefined && m[8] !== null;
+
     const statsContainer = document.querySelector('.stats-container');
-    const scoreDisplay = document.getElementById('score-display');
-    const replayLink = document.getElementById('link-replay');
+    const scoreDisplay = document.querySelector('.score');
+    const replayLink = document.querySelector('.replay-link');
 
-    // Vérification si le match a été joué (Colonnes ScoreHome index 9 et ScoreAway index 10)
-    // On vérifie si la cellule est vide ou contient un caractère non numérique
-    const isPlayed = m[9] !== "" && m[10] !== "" && m[9] !== null;
-
-    // Infos générales : Matchday (0), StartDate (1)
-    document.getElementById('matchday-label').innerText = `Matchday ${m[0]}`;
-    document.getElementById('match-date').innerText = m[1];
-
-    // Logos et Noms (Cliquables) - TeamHome (6), TeamAway (7), Crests (3,4)
-    const logoHomeImg = document.getElementById('logo-home');
-    const logoAwayImg = document.getElementById('logo-away');
-    logoHomeImg.src = m[3];
-    logoAwayImg.src = m[4];
-    
-    logoHomeImg.onclick = () => window.location.href = `club.html?name=${encodeURIComponent(m[6])}`;
-    logoAwayImg.onclick = () => window.location.href = `club.html?name=${encodeURIComponent(m[7])}`;
-
-    const styleLink = "color: inherit; text-decoration: none; transition: 0.2s;";
-    document.getElementById('name-home').innerHTML = `<a href="club.html?name=${encodeURIComponent(m[6])}" style="${styleLink}">${m[6]}</a>`;
-    document.getElementById('name-away').innerHTML = `<a href="club.html?name=${encodeURIComponent(m[7])}" style="${styleLink}">${m[7]}</a>`;
-
-    // --- LOGIQUE D'AFFICHAGE CONDITIONNELLE ---
     if (!isPlayed) {
-    const hName = encodeURIComponent(homeName);
-    const aName = encodeURIComponent(awayName);
+        // --- CAS : MATCH NON JOUÉ ---
+        const hName = encodeURIComponent(m[6]);
+        const aName = encodeURIComponent(m[7]);
+        const currentGid = new URLSearchParams(window.location.search).get('gid');
+
+        // On ajuste l'affichage du score
+        scoreDisplay.innerText = "VS";
+        if (replayLink) replayLink.style.display = 'none';
+
+        // On injecte le bouton de rapport à la place des stats vides
+        statsContainer.innerHTML = `
+            <div style="text-align: center; padding: 50px 20px; background: rgba(212, 175, 55, 0.05); border-radius: 15px; border: 1px dashed var(--fuma-primary); margin: 20px;">
+                <i class="fas fa-file-signature" style="font-size: 3rem; color: var(--fuma-primary); margin-bottom: 20px;"></i>
+                <h3 style="margin-bottom: 10px; font-weight: 800; letter-spacing: 1px;">AUCUNE DONNÉE ENREGISTRÉE</h3>
+                <p style="color: var(--fuma-text-dim); margin-bottom: 25px; font-size: 0.9rem;">Les statistiques de cette rencontre n'ont pas encore été encodées.</p>
+                
+                <a href="report.html?home=${hName}&away=${aName}&gid=${currentGid}" 
+                   style="display: inline-block; padding: 15px 35px; background: var(--fuma-primary); color: #000; text-decoration: none; border-radius: 50px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: transform 0.2s ease;">
+                   <i class="fas fa-plus-circle"></i> Encoder le score
+                </a>
+            </div>
+        `;
+        return; // On arrête l'exécution ici
+    }
+
+    // --- CAS : MATCH JOUÉ (Logique originale) ---
     
-    // On passe le GID actuel pour que le formulaire sache où chercher les données existantes
-    const reportUrl = `report.html?home=${hName}&away=${aName}&gid=${gid}`;
+    // Mise à jour des scores et logos (colonnes 8, 9, 10, 11)
+    scoreDisplay.innerText = `${m[8]} - ${m[9]}`;
+    document.getElementById('logo-home').src = m[10];
+    document.getElementById('logo-away').src = m[11];
+    document.getElementById('name-home').innerText = m[6];
+    document.getElementById('name-away').innerText = m[7];
 
-    scoreDisplay.innerText = "VS";
-    if (replayLink) replayLink.style.display = 'none';
+    // Buteurs (colonnes 12 et 13)
+    document.getElementById('strikers-home').innerText = m[12] || '';
+    document.getElementById('strikers-away').innerText = m[13] || '';
 
-    statsContainer.innerHTML = `
-        <div style="text-align: center; padding: 40px 20px; color: var(--fuma-text-dim);">
-            <i class="far fa-calendar-alt" style="font-size: 2rem; margin-bottom: 15px; color: var(--fuma-primary);"></i>
-            <p style="font-weight: 600; letter-spacing: 1px; margin-bottom: 20px;">CE MATCH N'A PAS ENCORE ÉTÉ ENCODÉ</p>
-            
-            <a href="${reportUrl}" 
-               style="display: inline-block; padding: 12px 25px; background: var(--fuma-primary); color: #000; text-decoration: none; border-radius: 50px; font-weight: 800; font-size: 0.8rem; transition: transform 0.2s;">
-               <i class="fas fa-edit"></i> ENCODER LE SCORE
-            </a>
-        </div>
-    `;
-    return;
+    // Vidéo Replay (colonne 30)
+    if (m[30] && m[30].startsWith('http')) {
+        replayLink.href = m[30];
+        replayLink.style.display = 'inline-block';
+    } else {
+        replayLink.style.display = 'none';
+    }
+
+    // Statistiques Barres (Possession, Tirs, Passes, Tacles)
+    updateBar('possession', m[14], m[15], true);
+    updateBar('shots', m[16], m[17], false);
+    
+    // Passes et Précision (colonnes 18, 19, 20, 21)
+    const passLabelH = `${m[18]} (${m[20]})`;
+    const passLabelA = `${m[19]} (${m[21]})`;
+    document.getElementById('val-passes-home').innerText = passLabelH;
+    document.getElementById('val-passes-away').innerText = passLabelA;
+    updateBar('passes', m[20], m[21], false, true); // onlyBar = true car labels personnalisés
+
+    // Tacles (colonnes 24, 25, 22, 23)
+    const tacLabelH = `${m[24]}/${m[22]}`;
+    const tacLabelA = `${m[25]}/${m[23]}`;
+    document.getElementById('val-tackles-home').innerText = tacLabelH;
+    document.getElementById('val-tackles-away').innerText = tacLabelA;
+    updateBar('tackles', m[24], m[25], false, true);
+
+    // Cartons Rouges (colonnes 28, 29)
+    document.getElementById('val-red-home').innerText = m[28] || 0;
+    document.getElementById('val-red-away').innerText = m[29] || 0;
+
+    // Homme du match (index 27)
+    const motmContainer = document.getElementById('motm-container');
+    const motmName = m[27] || 'N/A';
+    if (motmName !== 'N/A') {
+        motmContainer.innerHTML = `
+            <a href="player.html?id=${encodeURIComponent(motmName)}" 
+               style="color: var(--fuma-primary); text-decoration: none; font-weight: bold;">
+               <i class="fas fa-user-check"></i> ${motmName}
+            </a>`;
+    }
 }
 
     // --- SI LE MATCH EST JOUÉ ---
