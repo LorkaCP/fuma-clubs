@@ -9,16 +9,22 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // URL de base pour les matchs (votre CSV principal)
     const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=";
     const FINAL_URL = BASE_URL + gid;
+
+    // URL pour les statistiques des joueurs
+    const PLAYER_STATS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=158406798&single=true&output=csv";
+
+    let currentMatchId = null;
 
     fetch(FINAL_URL)
         .then(response => response.text())
         .then(csvText => {
             const rows = parseCSV(csvText);
             
-            // On cherche maintenant l'équipe domicile en colonne 6 et extérieur en colonne 7
-            const match = rows.find(r => r[6] === homeName && r[7] === awayName);
+            // Recherche du match spécifique
+            const match = rows.find(r => r[1] === homeName && r[2] === awayName);
 
             const loader = document.getElementById('loader-container');
             const mainContent = document.getElementById('main-content');
@@ -27,152 +33,140 @@ document.addEventListener('DOMContentLoaded', () => {
             if (mainContent) mainContent.style.display = 'block';
 
             if (match) {
+                currentMatchId = match[3]; // Capture de l'IDMatch (index 3 dans Matches.csv)
                 updateUI(match);
+                setupPlayerToggle(PLAYER_STATS_URL, currentMatchId);
             } else {
                 console.error("Match non trouvé dans le CSV");
             }
         })
-        .catch(err => {
-            console.error("Erreur lors du fetch :", err);
-        });
+        .catch(err => console.error("Erreur chargement match:", err));
 });
 
 /**
- * Parse le CSV en gérant les guillemets
- */
-function parseCSV(text) {
-    const lines = text.split('\n');
-    return lines.map(line => {
-        const result = [];
-        let cur = '';
-        let inQuotes = false;
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            if (char === '"') inQuotes = !inQuotes;
-            else if (char === ',' && !inQuotes) {
-                result.push(cur.trim());
-                cur = '';
-            } else {
-                cur += char;
-            }
-        }
-        result.push(cur.trim());
-        return result;
-    });
-}
-
-/**
- * Met à jour l'interface avec les données du match (Structure 2026)
- */
-/**
- * Met à jour l'interface avec les données du match (Structure 2026)
- */
-/**
- * Met à jour l'intégralité de l'interface avec les données du match
- * @param {Array} m - La ligne du CSV correspondant au match
- */
-/**
- * Met à jour l'intégralité de l'interface avec les données du match (Structure 2026)
+ * Met à jour l'interface principale avec les données du match
  */
 function updateUI(m) {
-    // 1. ÉLÉMENTS DU DOM
-    const statsContainer = document.querySelector('.stats-container');
-    const scoreDisplay = document.getElementById('score-display');
-    const replayLink = document.getElementById('link-replay');
+    // Labels et Logos
+    document.getElementById('match-date').innerText = m[0].split(' ')[0];
+    document.getElementById('name-home').innerText = m[1];
+    document.getElementById('name-away').innerText = m[2];
+    document.getElementById('logo-home').src = `logos/${m[1]}.png`;
+    document.getElementById('logo-away').src = `logos/${m[2]}.png`;
 
-    // 2. DÉTECTION : Le match est-il déjà joué ?
-    // On vérifie si la colonne ScoreHome (index 9) est vide ou nulle
-    const isPlayed = m[9] !== "" && m[9] !== undefined && m[9] !== null;
+    // Score
+    document.getElementById('score-display').innerText = `${m[4]} : ${m[5]}`;
 
-    // 3. INFOS GÉNÉRALES (Toujours affichées)
-    document.getElementById('matchday-label').innerText = `Matchday ${m[0]}`;
-    document.getElementById('match-date').innerText = m[1];
+    // Buteurs
+    document.getElementById('strikers-home').innerHTML = formatStrikers(m[6]);
+    document.getElementById('strikers-away').innerHTML = formatStrikers(m[7]);
 
-    // Logos et Noms (index 3 et 4 pour les logos, 6 et 7 pour les noms)
-    const logoHomeImg = document.getElementById('logo-home');
-    const logoAwayImg = document.getElementById('logo-away');
-    logoHomeImg.src = m[3];
-    logoAwayImg.src = m[4];
+    // Barres de statistiques (Possession, Tirs, Passes, Tacles)
+    updateBar('poss', m[8], m[9], true);
+    updateBar('shots', m[10], m[11], false);
     
-    const styleLink = "color: inherit; text-decoration: none; transition: 0.2s;";
-    document.getElementById('name-home').innerHTML = `<a href="club.html?name=${encodeURIComponent(m[6])}" style="${styleLink}">${m[6]}</a>`;
-    document.getElementById('name-away').innerHTML = `<a href="club.html?name=${encodeURIComponent(m[7])}" style="${styleLink}">${m[7]}</a>`;
+    // Pour les passes et tacles, on affiche "Réussis (Précision)"
+    const labelPassHome = `${m[13]} (${m[14]}%)`;
+    const labelPassAway = `${m[13]} (${m[15]}%)`; 
+    updateBar('passes', m[14], m[15], false, true); 
+    document.getElementById('val-passes-home').innerText = `${m[12]} (${m[14]}%)`;
+    document.getElementById('val-passes-away').innerText = `${m[13]} (${m[15]}%)`;
 
-    // 4. LOGIQUE D'AFFICHAGE CONDITIONNELLE
-    if (!isPlayed) {
-        // --- CAS : MATCH NON JOUÉ ---
-        scoreDisplay.innerText = "VS";
-        if (replayLink) replayLink.style.display = 'none';
+    // Tacles
+    document.getElementById('val-tackles-home').innerText = `${m[18]}/${m[16]}`;
+    document.getElementById('val-tackles-away').innerText = `${m[19]}/${m[17]}`;
+    updateBar('tackles', m[18], m[19], false, true);
 
-        const hName = encodeURIComponent(m[6]);
-        const aName = encodeURIComponent(m[7]);
-        const currentGid = new URLSearchParams(window.location.search).get('gid');
+    // Cartons Rouges
+    document.getElementById('val-red-home').innerText = m[20];
+    document.getElementById('val-red-away').innerText = m[21];
 
-        // On injecte le bouton d'encodage
-        statsContainer.innerHTML = `
-            <div style="text-align: center; padding: 50px 20px; background: rgba(212, 175, 55, 0.05); border-radius: 15px; border: 1px dashed var(--fuma-primary); margin: 20px;">
-                <i class="fas fa-file-signature" style="font-size: 3rem; color: var(--fuma-primary); margin-bottom: 20px;"></i>
-                <h3 style="margin-bottom: 10px; font-weight: 800; letter-spacing: 1px;">MATCH NON ENCODÉ</h3>
-                <p style="color: var(--fuma-text-dim); margin-bottom: 25px; font-size: 0.9rem;">Les statistiques de cette rencontre ne sont pas encore disponibles.</p>
-                
-                <a href="report.html?home=${hName}&away=${aName}&gid=${currentGid}" 
-                   style="display: inline-block; padding: 15px 35px; background: var(--fuma-primary); color: #000; text-decoration: none; border-radius: 50px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">
-                   <i class="fas fa-plus-circle"></i> Encoder le score
-                </a>
-            </div>
-        `;
-        return; // On arrête là
-    }
-
-    // --- CAS : MATCH JOUÉ ---
-    // Score (index 9 et 10)
-    scoreDisplay.innerText = `${m[9]} : ${m[10]}`;
-
-    // Lien Replay (index 5)
-    if (replayLink) {
-        if (m[5] && m[5] !== "" && m[5] !== "#") {
-            replayLink.href = m[5];
-            replayLink.style.display = 'inline-flex';
-        } else {
-            replayLink.style.display = 'none';
-        }
-    }
-
-    // Statistiques Barres
-    // Possession (13, 14), Tirs (15, 16)
-    updateBar('poss', m[13], m[14], true);
-    updateBar('shots', m[15], m[16], false);
-
-    // Passes (17, 18) et Précision (19, 20)
-    document.getElementById('val-passes-home').innerText = `${m[17]} (${m[19]}%)`;
-    document.getElementById('val-passes-away').innerText = `${m[18]} (${m[20]}%)`;
-    updateBar('passes', m[17], m[18], false, true);
-
-    // Tacles Tentés (21, 22) et Réussis (23, 24)
-    document.getElementById('val-tackles-home').innerText = `${m[23]}/${m[21]}`;
-    document.getElementById('val-tackles-away').innerText = `${m[24]}/${m[22]}`;
-    updateBar('tackles', m[23], m[24], false, true);
-
-    // Cartons Rouges (25, 26)
-    document.getElementById('val-red-home').innerText = m[25] || '0';
-    document.getElementById('val-red-away').innerText = m[26] || '0';
-
-    // Buteurs (11, 12)
-    document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
-    document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
-    
-    // Homme du match (27)
-    const motmContainer = document.getElementById('motm-name');
-    const motmName = m[27] || 'N/A';
-    if (motmName !== 'N/A') {
-        motmContainer.innerHTML = `
-            <a href="player.html?id=${encodeURIComponent(motmName)}" style="color: var(--fuma-primary); text-decoration: none; font-weight: bold;">
-                <i class="fas fa-user-check"></i> ${motmName}
-            </a>`;
+    // Homme du Match
+    const motmName = m[22];
+    if (motmName) {
+        document.getElementById('motm-name').innerText = motmName;
     }
 }
+
 /**
- * Anime les barres de statistiques et met à jour les labels textuels
+ * Initialise le bouton pour afficher/masquer les joueurs
+ */
+function setupPlayerToggle(url, matchId) {
+    const btn = document.getElementById('toggle-player-stats');
+    const wrapper = document.getElementById('player-stats-wrapper');
+    
+    if (!btn) return;
+
+    btn.onclick = () => {
+        if (wrapper.classList.contains('hidden')) {
+            wrapper.classList.remove('hidden');
+            btn.innerHTML = `<i class="fas fa-chevron-up"></i> MASQUER LES STATS`;
+            if (document.getElementById('player-stats-body').children.length === 0) {
+                fetchPlayerStats(url, matchId);
+            }
+        } else {
+            wrapper.classList.add('hidden');
+            btn.innerHTML = `<i class="fas fa-users"></i> VOIR LES STATS JOUEURS`;
+        }
+    };
+}
+
+/**
+ * Récupère les stats individuelles et les filtre par IDMatch
+ */
+function fetchPlayerStats(url, targetId) {
+    const tbody = document.getElementById('player-stats-body');
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">Chargement des performances...</td></tr>`;
+
+    fetch(url)
+        .then(res => res.text())
+        .then(csvText => {
+            const rows = parseCSV(csvText);
+            const seen = new Set();
+            
+            // Filtrage par IDMatch (index 1) et nom joueur (index 3) pour éviter les doublons
+            const filtered = rows.filter(r => {
+                const isMatch = r[1] === targetId;
+                if (isMatch && !seen.has(r[3])) {
+                    seen.add(r[3]);
+                    return true;
+                }
+                return false;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">Aucune donnée individuelle.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(p => {
+                const note = parseFloat(p[4]) || 0;
+                const noteColor = note >= 7 ? 'var(--fuma-primary)' : (note < 5.5 ? '#ff4d4d' : '#fff');
+                
+                // Rapport Passes: Réussies (index 9) / Tentées (index 8) + % (index 10)
+                const passesDisplay = `${p[9]}/${p[8]} <span style="font-size:0.7rem; color:#777;">(${p[10]}%)</span>`;
+                
+                return `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 12px 8px;">
+                        <div style="font-weight: 600;">${p[3]}</div>
+                        <div style="font-size: 0.65rem; color: #aaa; text-transform: uppercase;">${p[2]}</div>
+                    </td>
+                    <td style="text-align:center; font-weight: 800; color: ${noteColor};">${p[4]}</td>
+                    <td style="text-align:center;">${p[5]}</td>
+                    <td style="text-align:center;">${p[6]}</td>
+                    <td style="text-align:center;">${passesDisplay}</td>
+                    <td style="text-align:center; font-weight: 600; color: var(--fuma-primary);">${p[12]}</td>
+                </tr>`;
+            }).join('');
+        })
+        .catch(err => {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Erreur de chargement.</td></tr>`;
+        });
+}
+
+/**
+ * Anime les barres de statistiques
  */
 function updateBar(id, valH, valA, isPercent, onlyBar = false) {
     const h = parseFloat(String(valH).replace('%', '').replace(',', '.')) || 0;
@@ -194,19 +188,24 @@ function updateBar(id, valH, valA, isPercent, onlyBar = false) {
     if(barA) barA.style.width = (100 - percH) + '%';
 }
 
-/**
- * Formate la liste des buteurs
- */
-
 function formatStrikers(str) {
-    // On vérifie si la chaîne est vide ou nulle
     if (!str || str === '0' || str.trim() === '') return '';
-    
-    // On divise par "|" au lieu de ","
-    return str.split('|').map(s => {
-        const name = s.trim();
-        if (!name) return ''; // Évite les divs vides si on a des barres en trop
-        return `<div>${name} <i class="fas fa-futbol" style="font-size: 0.7rem; opacity: 0.6;"></i></div>`;
-    }).join('');
+    return str.split('|').map(s => `<div><i class="fas fa-futbol" style="font-size:0.6rem;"></i> ${s.trim()}</div>`).join('');
 }
 
+function parseCSV(text) {
+    return text.split('\n').map(row => {
+        let cells = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < row.length; i++) {
+            if (row[i] === '"') inQuotes = !inQuotes;
+            else if (row[i] === ',' && !inQuotes) {
+                cells.push(current.trim());
+                current = '';
+            } else current += row[i];
+        }
+        cells.push(current.trim());
+        return cells;
+    });
+}
