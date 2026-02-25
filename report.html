@@ -112,6 +112,11 @@
                 </div>
             </div>
 
+            <div id="players-stats-container" style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 20px;">
+    <div id="home-players-list" class="report-card"><h3>Joueurs (Home)</h3><div class="list"></div></div>
+    <div id="away-players-list" class="report-card"><h3>Joueurs (Away)</h3><div class="list"></div></div>
+</div>
+
             <div style="padding: 0 20px;">
                 <button type="submit" id="btn-submit" class="submit-button" 
                         style="width: 100%; padding: 20px; background: var(--fuma-primary); color: #000; border: none; border-radius: 10px; font-weight: 800; font-size: 1.1rem; cursor: pointer; text-transform: uppercase; transition: 0.3s;">
@@ -159,7 +164,7 @@
     // --- 1. CONFIGURATION ET DICTIONNAIRE ---
     const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=1610453677&single=true&output=csv";
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyI-SMPkKDGoGg48Bke8ELycDUbgLXGgwmn83Ydz8ipfd7NO0gWYhwAR4t-kuF2wfUB/exec";
-
+    const PLAYERS_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=420142588&single=true&output=csv";
     // AJOUTEZ VOS CORRESPONDANCES ICI : "Nom sur le site": "Nom dans le CSV/Jeu"
    const CLUB_ALIASES = {
     "fuma y pasa": "f y pasa", // "Nom sur site": "Nom dans le CSV"
@@ -199,41 +204,69 @@
     document.getElementById('name-away').innerText = awayName;
 
     // --- 4. RECHERCHE DES MATCHS ---
-    window.addEventListener('DOMContentLoaded', async () => {
-        const statusEl = document.getElementById('loading-status');
-        try {
-            const response = await fetch(GLOBAL_DATA_URL);
-            const csvText = await response.text();
-            
-            // Parsing CSV (gestion des virgules et guillemets)
-            const rows = csvText.split('\n').map(row => 
-                row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.replace(/^"|"$/g, '').trim())
-            );
+    window.fillFormFromIndex = async function(index) {
+    const m = window.tempMatchesData[index];
+    const matchID = m[3]; // IDMatch est en colonne 4 (index 3) 
+    const isReverse = (normalizeName(m[1]) === normalizeName(awayName));
 
-            // Noms cibles nettoyés
-            const targetHomeClean = normalizeName(homeName);
-            const targetAwayClean = normalizeName(normalizeName(awayName));
+    // 1. Remplissage des stats collectives (votre code existant)
+    const map = {
+        'in-sh': isReverse ? 5 : 4, 'in-sa': isReverse ? 4 : 5,
+        'in-stH': isReverse ? 7 : 6, 'in-stA': isReverse ? 6 : 7,
+        'in-posH': isReverse ? 9 : 8, 'in-posA': isReverse ? 8 : 9,
+        'in-shoH': isReverse ? 11 : 10, 'in-shoA': isReverse ? 10 : 11,
+        'in-pasAttH': isReverse ? 13 : 12, 'in-pasAttA': isReverse ? 12 : 13,
+        'in-accH': isReverse ? 15 : 14, 'in-accA': isReverse ? 14 : 15,
+        'in-tacAttH': isReverse ? 17 : 16, 'in-tacAttA': isReverse ? 16 : 17,
+        'in-tacMadH': isReverse ? 19 : 18, 'in-tacMadA': isReverse ? 18 : 19,
+        'in-redH': isReverse ? 21 : 20, 'in-redA': isReverse ? 20 : 21
+    };
 
-            const foundMatches = rows.filter(r => {
-                if (!r[1] || !r[2]) return false;
-                
-                const rowHomeClean = normalizeName(r[1]);
-                const rowAwayClean = normalizeName(r[2]);
+    for (let [id, colIndex] of Object.entries(map)) {
+        let el = document.getElementById(id);
+        if(el) el.value = m[colIndex] || (id.includes('red') ? 0 : "");
+    }
+    document.getElementById('in-motm').value = m[22] || "";
 
-                return (rowHomeClean === targetHomeClean && rowAwayClean === targetAwayClean) || 
-                       (rowHomeClean === targetAwayClean && rowAwayClean === targetHomeClean);
-            });
+    // 2. RÉCUPÉRATION DES STATS JOUEURS
+    try {
+        const response = await fetch(PLAYERS_DATA_URL);
+        const csvText = await response.text();
+        const rows = csvText.split('\n').map(row => row.split(','));
 
-            if (foundMatches.length > 0) {
-                statusEl.innerHTML = `<span style="color:var(--fuma-primary)"><i class="fas fa-check-circle"></i> ${foundMatches.length} match(s) trouvé(s).</span>`;
-                displayMatchSelector(foundMatches);
-            } else {
-                statusEl.innerHTML = `<span style="color:#ff4d4d"><i class="fas fa-exclamation-triangle"></i> Aucun match trouvé dans la base pour ces équipes.</span>`;
-            }
-        } catch (err) {
-            statusEl.innerText = "Erreur de connexion.";
+        // Filtrer les joueurs par IDMatch 
+        const matchPlayers = rows.filter(r => r[0] === matchID);
+
+        // Affichage
+        displayPlayers(matchPlayers, m[1], m[2]); // m[1]=Home original, m[2]=Away original
+    } catch (err) {
+        console.error("Erreur joueurs:", err);
+    }
+    
+    alert("Données du match et des joueurs importées !");
+};
+
+function displayPlayers(players, originalHome, originalAway) {
+    const homeList = document.querySelector('#home-players-list .list');
+    const awayList = document.querySelector('#away-players-list .list');
+    
+    homeList.innerHTML = "";
+    awayList.innerHTML = "";
+
+    players.forEach(p => {
+        // p[1] = Team, p[2] = PlayerName, p[3] = Rating, p[4] = Goals, p[5] = Assists 
+        const playerHtml = `
+            <div style="font-size: 0.8rem; border-bottom: 1px solid #333; padding: 5px 0;">
+                <strong>${p[2]}</strong> - Note: ${p[3]} | G: ${p[4]} | A: ${p[5]}
+            </div>`;
+        
+        if (p[1] === originalHome) {
+            homeList.innerHTML += playerHtml;
+        } else {
+            awayList.innerHTML += playerHtml;
         }
     });
+}
 
     // --- 5. AFFICHAGE ET REMPLISSAGE ---
     function displayMatchSelector(matches) {
