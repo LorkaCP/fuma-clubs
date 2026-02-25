@@ -412,13 +412,69 @@ window.combineSelectedMatches = async function() {
     alert("Matchs fusionnés avec succès !");
 };
 
-      async function fetchPlayersForTwoMatches(id1, id2) {
+      // --- FONCTION DE FUSION DES MATCHS (MI-TEMPS 1 + 2) ---
+window.processSelectedMatches = async function() {
+    const selectedCheckboxes = document.querySelectorAll('.match-checkbox:checked');
+    
+    if (selectedCheckboxes.length !== 2) {
+        alert("Veuillez sélectionner exactement 2 matchs (les deux mi-temps).");
+        return;
+    }
+
+    // Récupération des données brutes des deux matchs sélectionnés
+    const m1 = window.tempMatchesData[selectedCheckboxes[0].value];
+    const m2 = window.tempMatchesData[selectedCheckboxes[1].value];
+    
+    // Vérification du sens du match (si l'équipe sélectionnée est Home ou Away dans le CSV)
+    const isRev1 = (normalizeName(m1[1]) === normalizeName(awayName));
+    const isRev2 = (normalizeName(m2[1]) === normalizeName(awayName));
+
+    // Fonctions utilitaires pour le calcul
+    const sum = (colH, colA, isR1, isR2) => {
+        return (parseInt(m1[isR1 ? colA : colH]) || 0) + (parseInt(m2[isR2 ? colA : colH]) || 0);
+    };
+    const avg = (colH, colA, isR1, isR2) => {
+        return Math.round(((parseInt(m1[isR1 ? colA : colH]) || 0) + (parseInt(m2[isR2 ? colA : colH]) || 0)) / 2);
+    };
+
+    // 1. Remplissage des statistiques d'équipe dans le formulaire
+    document.getElementById('in-sh').value = sum(4, 5, isRev1, isRev2); // Score Home
+    document.getElementById('in-sa').value = sum(5, 4, isRev1, isRev2); // Score Away
+    
+    document.getElementById('in-posH').value = avg(8, 9, isRev1, isRev2); // Possession
+    document.getElementById('in-posA').value = avg(9, 8, isRev1, isRev2);
+    
+    document.getElementById('in-shoH').value = sum(10, 11, isRev1, isRev2); // Tirs
+    document.getElementById('in-shoA').value = sum(11, 10, isRev1, isRev2);
+
+    document.getElementById('in-pasAttH').value = sum(12, 13, isRev1, isRev2); // Passes
+    document.getElementById('in-pasAttA').value = sum(13, 12, isRev1, isRev2);
+    
+    document.getElementById('in-accH').value = avg(14, 15, isRev1, isRev2); // Précision %
+    document.getElementById('in-accA').value = avg(15, 14, isRev1, isRev2);
+
+    document.getElementById('in-redH').value = sum(20, 21, isRev1, isRev2); // Cartons Rouges
+    document.getElementById('in-redA').value = sum(21, 20, isRev1, isRev2);
+
+    // Concaténation des buteurs
+    const buteursH = (m1[isRev1 ? 7 : 6] + " / " + m2[isRev2 ? 7 : 6]).replace(/undefined|null/g, "").trim();
+    const buteursA = (m1[isRev1 ? 6 : 7] + " / " + m2[isRev2 ? 6 : 7]).replace(/undefined|null/g, "").trim();
+    document.getElementById('in-stH').value = buteursH === "/" ? "" : buteursH;
+    document.getElementById('in-stA').value = buteursA === "/" ? "" : buteursA;
+
+    // 2. Lancement de la fusion des joueurs
+    await fetchPlayersForTwoMatches(m1[3].trim(), m2[3].trim());
+    
+    alert("Les données des deux mi-temps ont été fusionnées avec succès !");
+};
+
+// --- FONCTION DE FUSION DES STATISTIQUES JOUEURS ---
+async function fetchPlayersForTwoMatches(id1, id2) {
     try {
         const response = await fetch(PLAYERS_DATA_URL);
         const csvText = await response.text();
         const rows = csvText.split('\n').map(row => row.split(','));
         
-        // On filtre les joueurs présents dans l'un ou l'autre match
         const playersMap = {};
 
         rows.forEach(r => {
@@ -426,29 +482,31 @@ window.combineSelectedMatches = async function() {
             if (mId === id1 || mId === id2) {
                 const pName = r[1];
                 if (!playersMap[pName]) {
-                    playersMap[pName] = [...r]; // On copie la ligne
-                    // On convertit les colonnes numériques pour l'addition
+                    playersMap[pName] = [...r]; 
+                    // Conversion initiale en nombres pour les colonnes de stats
                     [5,6,7,8,9,10,12,13,15,16].forEach(idx => playersMap[pName][idx] = parseFloat(r[idx]) || 0);
                 } else {
-                    // Si le joueur existe déjà, on additionne les stats clés
+                    // Addition des stats cumulatives (Buts, Assists, Tirs, Passes, Tacles, Rouges)
                     [6,7,8,9,10,12,13,15,16].forEach(idx => {
                         playersMap[pName][idx] += (parseFloat(r[idx]) || 0);
                     });
-                    // Moyenne pour la note (colonne 5)
-                    playersMap[pName][5] = ((playersMap[pName][5] + (parseFloat(r[5]) || 0)) / 2).toFixed(1);
+                    // Moyenne pour la note du match
+                    playersMap[pName][5] = ((parseFloat(playersMap[pName][5]) + (parseFloat(r[5]) || 0)) / 2).toFixed(1);
                 }
             }
         });
 
-        // Recalcul des pourcentages après fusion
+        // Recalcul des pourcentages de réussite globaux sur les deux matchs
         Object.values(playersMap).forEach(p => {
             p[11] = p[9] > 0 ? Math.round((p[10] / p[9]) * 100) : 0; // % Passes
             p[14] = p[12] > 0 ? Math.round((p[13] / p[12]) * 100) : 0; // % Tacles
         });
 
+        // Envoi vers la fonction d'affichage HTML
         displayPlayers(Object.values(playersMap));
+        
     } catch (err) {
-        console.error("Erreur fusion joueurs:", err);
+        console.error("Erreur lors de la fusion des joueurs:", err);
     }
 }
 
