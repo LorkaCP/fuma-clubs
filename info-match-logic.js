@@ -7,8 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!gid) return console.error("Aucun GID spécifié");
 
     const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=";
-    
-    // CORRECTION : Utilisation du GID 2011937196 pour les stats joueurs
     const PLAYER_STATS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=2011937196&single=true&output=csv";
 
     let currentMatchId = null;
@@ -17,16 +15,19 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(res => res.text())
         .then(csvText => {
             const rows = parseCSV(csvText);
+            // Dans FIXTURES_S1DIV1.csv : Home=6, Away=7
             const match = rows.find(r => r[6] === homeName && r[7] === awayName);
 
-            if (document.getElementById('loader-container')) document.getElementById('loader-container').style.display = 'none';
-            if (document.getElementById('main-content')) document.getElementById('main-content').style.display = 'block';
+            document.getElementById('loader-container').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
 
             if (match) {
-                // Nettoyage de l'ID Match (Index 8)
-                currentMatchId = String(match[8]).replace(/\D/g, '').trim(); 
+                // Nettoyage agressif de l'ID extrait (index 8)
+                currentMatchId = String(match[8]).replace(/["']/g, "").trim(); 
                 updateUI(match);
                 setupPlayerToggle(PLAYER_STATS_URL, currentMatchId);
+            } else {
+                document.getElementById('main-content').innerHTML = `<div style="text-align:center;padding:50px;">Match non trouvé.</div>`;
             }
         });
 });
@@ -57,6 +58,24 @@ function updateUI(m) {
     document.getElementById('motm-name').innerText = m[27] || "N/A";
 }
 
+function setupPlayerToggle(url, matchId) {
+    const btn = document.getElementById('toggle-player-stats');
+    const wrapper = document.getElementById('player-stats-wrapper');
+
+    btn.onclick = () => {
+        if (wrapper.classList.contains('hidden')) {
+            wrapper.classList.remove('hidden');
+            btn.innerHTML = `<i class="fas fa-chevron-up"></i> MASQUER LES STATS`;
+            if (document.getElementById('player-stats-body').children.length === 0) {
+                fetchPlayerStats(url, matchId);
+            }
+        } else {
+            wrapper.classList.add('hidden');
+            btn.innerHTML = `<i class="fas fa-users"></i> VOIR LES STATS JOUEURS`;
+        }
+    };
+}
+
 function fetchPlayerStats(url, targetId) {
     const tbody = document.getElementById('player-stats-body');
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">Chargement...</td></tr>`;
@@ -67,9 +86,10 @@ function fetchPlayerStats(url, targetId) {
             const rows = parseCSV(csvText);
             const seen = new Set();
             
+            // FILTRAGE : On compare l'index 1 (IDMatch) avec targetId
             const filtered = rows.filter(r => {
-                if (!r[1] || r[1] === "IDMatch") return false;
-                const cleanRowId = String(r[1]).replace(/\D/g, '').trim();
+                if (!r[1]) return false;
+                const cleanRowId = String(r[1]).replace(/["']/g, "").trim();
                 const playerName = String(r[3] || "").trim();
 
                 if (cleanRowId === targetId && playerName !== "" && !seen.has(playerName)) {
@@ -80,18 +100,15 @@ function fetchPlayerStats(url, targetId) {
             });
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:orange;">Aucune stat individuelle trouvée.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:orange;">Aucune stat individuelle (ID Match cherché : ${targetId})</td></tr>`;
                 return;
             }
 
-            // Tri par note
-            filtered.sort((a, b) => parseFloat(b[4].replace(',', '.')) - parseFloat(a[4].replace(',', '.')));
+            filtered.sort((a, b) => parseFloat(b[4]) - parseFloat(a[4]));
 
             tbody.innerHTML = filtered.map(p => {
-                const note = parseFloat(p[4].replace(',', '.')) || 0;
-                // Note en Or si >= 7.5, sinon blanc
-                const noteColor = note >= 7.5 ? '#d4af37' : (note < 5.5 ? '#ff4d4d' : '#fff');
-                
+                const note = parseFloat(p[4]) || 0;
+                const noteColor = note >= 7 ? '#d4af37' : (note < 5.5 ? '#ff4d4d' : '#fff');
                 return `
                 <tr>
                     <td style="padding: 12px 8px;">
@@ -102,26 +119,24 @@ function fetchPlayerStats(url, targetId) {
                     <td style="text-align:center;">${p[5]}</td>
                     <td style="text-align:center;">${p[6]}</td>
                     <td style="text-align:center;">${p[9]}/${p[8]} <span style="font-size:0.7rem; color:#777;">(${p[10]}%)</span></td>
-                    <td style="text-align:center; color: #fff;">${p[12]}</td>
+                    <td style="text-align:center; font-weight: 600; color: #d4af37;">${p[12]}</td>
                 </tr>`;
             }).join('');
         });
 }
+
 function updateBar(id, valH, valA, isPercent, onlyBar = false) {
     const h = parseFloat(String(valH).replace(',', '.')) || 0;
     const a = parseFloat(String(valA).replace(',', '.')) || 0;
     const total = h + a;
     const percH = total === 0 ? 50 : (h / total) * 100;
+
     if (!onlyBar) {
-        const lh = document.getElementById(`val-${id}-home`);
-        const la = document.getElementById(`val-${id}-away`);
-        if(lh) lh.innerText = isPercent ? (Math.round(h) + '%') : h;
-        if(la) la.innerText = isPercent ? (Math.round(a) + '%') : a;
+        if(document.getElementById(`val-${id}-home`)) document.getElementById(`val-${id}-home`).innerText = isPercent ? (Math.round(h) + '%') : h;
+        if(document.getElementById(`val-${id}-away`)) document.getElementById(`val-${id}-away`).innerText = isPercent ? (Math.round(a) + '%') : a;
     }
-    const bh = document.getElementById(`bar-${id}-home`);
-    const ba = document.getElementById(`bar-${id}-away`);
-    if(bh) bh.style.width = percH + '%';
-    if(ba) ba.style.width = (100 - percH) + '%';
+    if(document.getElementById(`bar-${id}-home`)) document.getElementById(`bar-${id}-home`).style.width = percH + '%';
+    if(document.getElementById(`bar-${id}-away`)) document.getElementById(`bar-${id}-away`).style.width = (100 - percH) + '%';
 }
 
 function formatStrikers(str) {
@@ -130,7 +145,7 @@ function formatStrikers(str) {
 }
 
 function parseCSV(text) {
-    // Nettoie les retours à la ligne parasites et divise par ligne
+    // Sépare par ligne, puis nettoie chaque ligne des retours chariots
     return text.split(/\r?\n/).filter(l => l.trim() !== "").map(line => {
         const result = [];
         let cur = '', inQuotes = false;
