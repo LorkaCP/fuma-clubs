@@ -107,5 +107,39 @@ function fetchPlayerStats(url, targetId) {
             }).join('');
         });
 }
+function updateBar(id, valH, valA, isPercent, onlyBar = false) {
+    const h = parseFloat(String(valH).replace(',', '.')) || 0;
+    const a = parseFloat(String(valA).replace(',', '.')) || 0;
+    const total = h + a;
+    const percH = total === 0 ? 50 : (h / total) * 100;
+    if (!onlyBar) {
+        const lh = document.getElementById(`val-${id}-home`);
+        const la = document.getElementById(`val-${id}-away`);
+        if(lh) lh.innerText = isPercent ? (Math.round(h) + '%') : h;
+        if(la) la.innerText = isPercent ? (Math.round(a) + '%') : a;
+    }
+    const bh = document.getElementById(`bar-${id}-home`);
+    const ba = document.getElementById(`bar-${id}-away`);
+    if(bh) bh.style.width = percH + '%';
+    if(ba) ba.style.width = (100 - percH) + '%';
+}
 
-// ... garder les fonctions setupPlayerToggle, updateBar, formatStrikers et parseCSV identiques au précédent ...
+function formatStrikers(str) {
+    if (!str || str === '0' || str.trim() === '') return '';
+    return str.split('|').map(s => `<div><i class="fas fa-futbol" style="font-size:0.6rem;"></i> ${s.trim()}</div>`).join('');
+}
+
+function parseCSV(text) {
+    // Nettoie les retours à la ligne parasites et divise par ligne
+    return text.split(/\r?\n/).filter(l => l.trim() !== "").map(line => {
+        const result = [];
+        let cur = '', inQuotes = false;
+        for (let char of line) {
+            if (char === '"') inQuotes = !inQuotes;
+            else if (char === ',' && !inQuotes) { result.push(cur.trim()); cur = ''; }
+            else cur += char;
+        }
+        result.push(cur.trim());
+        return result;
+    });
+}
