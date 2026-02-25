@@ -96,19 +96,28 @@ function updateUI(m) {
 
     // --- LOGIQUE D'AFFICHAGE CONDITIONNELLE ---
     if (!isPlayed) {
-        // Affichage pour match non joué
-        scoreDisplay.innerText = "VS";
-        if (replayLink) replayLink.style.display = 'none';
-        
-        // Remplace le contenu des stats par un message d'attente
-        statsContainer.innerHTML = `
-            <div style="text-align: center; padding: 40px 20px; color: var(--fuma-text-dim);">
-                <i class="far fa-calendar-alt" style="font-size: 2rem; margin-bottom: 15px; color: var(--fuma-primary);"></i>
-                <p style="font-weight: 600; letter-spacing: 1px;">THIS MATCH HAS NOT BEEN PLAYED YET</p>
-            </div>
-        `;
-        return; // Arrête la fonction ici
-    }
+    const hName = encodeURIComponent(homeName);
+    const aName = encodeURIComponent(awayName);
+    
+    // On passe le GID actuel pour que le formulaire sache où chercher les données existantes
+    const reportUrl = `report.html?home=${hName}&away=${aName}&gid=${gid}`;
+
+    scoreDisplay.innerText = "VS";
+    if (replayLink) replayLink.style.display = 'none';
+
+    statsContainer.innerHTML = `
+        <div style="text-align: center; padding: 40px 20px; color: var(--fuma-text-dim);">
+            <i class="far fa-calendar-alt" style="font-size: 2rem; margin-bottom: 15px; color: var(--fuma-primary);"></i>
+            <p style="font-weight: 600; letter-spacing: 1px; margin-bottom: 20px;">CE MATCH N'A PAS ENCORE ÉTÉ ENCODÉ</p>
+            
+            <a href="${reportUrl}" 
+               style="display: inline-block; padding: 12px 25px; background: var(--fuma-primary); color: #000; text-decoration: none; border-radius: 50px; font-weight: 800; font-size: 0.8rem; transition: transform 0.2s;">
+               <i class="fas fa-edit"></i> ENCODER LE SCORE
+            </a>
+        </div>
+    `;
+    return;
+}
 
     // --- SI LE MATCH EST JOUÉ ---
     // Score : ScoreHome (9), ScoreAway (10)
