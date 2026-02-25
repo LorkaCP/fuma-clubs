@@ -116,7 +116,7 @@
             margin-bottom: 15px;
         }
 
-        /* Boutons */
+        /* Bouton Revoir le Match */
         .btn-replay {
             display: inline-flex;
             align-items: center;
@@ -131,8 +131,6 @@
             text-transform: uppercase;
             transition: transform 0.2s, background 0.2s;
             white-space: nowrap;
-            border: none;
-            cursor: pointer;
         }
 
         .btn-replay:hover {
@@ -140,7 +138,9 @@
             background: #fff;
         }
 
-        /* Stats Collectives */
+        .btn-replay i { font-size: 0.8rem; }
+
+        /* Stats */
         .stats-container { 
             background: var(--fuma-bg-card); 
             border-radius: 20px; 
@@ -189,23 +189,7 @@
             font-weight: 800; 
             font-size: 1.3rem !important; 
             color: var(--fuma-primary); 
-            margin: 0;
         }
-
-        /* Stats Joueurs Table */
-        #player-stats-wrapper { margin-top: 25px; }
-        .player-table-container {
-            overflow-x: auto;
-            background: var(--fuma-bg-card);
-            border-radius: 15px;
-            border: var(--fuma-border);
-            padding: 10px;
-        }
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        th { padding: 10px; color: var(--fuma-primary); font-size: 0.7rem; text-transform: uppercase; border-bottom: 2px solid #333; text-align: left; }
-        td { padding: 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-
-        .hidden { display: none !important; }
 
         @media (max-width: 500px) {
             .score-header {
@@ -220,22 +204,31 @@
             .strikers-list { font-size: 0.6rem; }
             .btn-replay { padding: 6px 10px; font-size: 0.55rem; }
         }
+
+        .hidden { display: none !important; }
+.no-match-message { 
+    text-align: center; 
+    padding: 40px; 
+    color: var(--fuma-text-dim); 
+    font-style: italic; 
+}
     </style>
 </head>
 <body>
 
     <div id="loader-container">
         <div class="fuma-spinner"></div>
-        <p>Chargement des données...</p>
+        <p>Loading...</p>
     </div>
 
     <div class="match-detail-wrapper" id="main-content">
         
         <a href="league.html?tab=fixtures" style="color: var(--fuma-text-dim); text-decoration: none; margin-bottom: 15px; display: inline-block; font-size: 0.9rem;">
-            <i class="fas fa-arrow-left"></i> FIXTURES
-        </a>
+    <i class="fas fa-arrow-left"></i> FIXTURES
+</a>
 
         <div class="match-meta">
+            <span id="matchday-label">Matchday --</span> • 
             <span id="match-date">--/--/--</span>
         </div>
 
@@ -261,94 +254,67 @@
         </div>
 
         <div class="stats-container">
-            <div class="stat-row">
-                <div class="stat-label">
-                    <span id="val-poss-home">0%</span>
-                    <span>Possession</span>
-                    <span id="val-poss-away">0%</span>
-                </div>
-                <div class="progress-container">
-                    <div id="bar-poss-home" class="progress-bar bar-home" style="width: 50%"></div>
-                    <div id="bar-poss-away" class="progress-bar bar-away" style="width: 50%"></div>
-                </div>
-            </div>
-
-            <div class="stat-row">
-                <div class="stat-label">
-                    <span id="val-shots-home">0</span>
-                    <span>Shots</span>
-                    <span id="val-shots-away">0</span>
-                </div>
-                <div class="progress-container">
-                    <div id="bar-shots-home" class="progress-bar bar-home" style="width: 50%"></div>
-                    <div id="bar-shots-away" class="progress-bar bar-away" style="width: 50%"></div>
-                </div>
-            </div>
-
-            <div class="stat-row">
-                <div class="stat-label">
-                    <span id="val-passes-home">0 (0%)</span>
-                    <span>Passes (Acc.)</span>
-                    <span id="val-passes-away">0 (0%)</span>
-                </div>
-                <div class="progress-container">
-                    <div id="bar-passes-home" class="progress-bar bar-home" style="width: 50%"></div>
-                    <div id="bar-passes-away" class="progress-bar bar-away" style="width: 50%"></div>
-                </div>
-            </div>
-
-            <div class="stat-row">
-                <div class="stat-label">
-                    <span id="val-tackles-home">0/0</span>
-                    <span>Tackles (Made/Att)</span>
-                    <span id="val-tackles-away">0/0</span>
-                </div>
-                <div class="progress-container">
-                    <div id="bar-tackles-home" class="progress-bar bar-home" style="width: 50%"></div>
-                    <div id="bar-tackles-away" class="progress-bar bar-away" style="width: 50%"></div>
-                </div>
-            </div>
-
-            <div class="stat-row" style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
-                <div class="stat-label" style="margin-bottom: 0;">
-                    <span id="val-red-home" style="color: #ff4d4d; font-size: 1.2rem;">0</span>
-                    <span style="color: #ff4d4d;"><i class="fas fa-square"></i> Red Cards</span>
-                    <span id="val-red-away" style="color: #ff4d4d; font-size: 1.2rem;">0</span>
-                </div>
-            </div>
-
-            <div class="motm-card">
-                <h3><i class="fas fa-crown"></i> MAN OF THE MATCH</h3>
-                <p id="motm-name" class="motm-name">-</p>
-            </div>
+    <div class="stat-row">
+        <div class="stat-label">
+            <span id="val-poss-home">0%</span>
+            <span>Possession</span>
+            <span id="val-poss-away">0%</span>
         </div>
-
-        <div style="text-align: center; margin: 30px 0;">
-            <button id="toggle-player-stats" class="btn-replay" style="background: transparent; border: 1px solid var(--fuma-primary); color: var(--fuma-primary);">
-                <i class="fas fa-users"></i> VOIR LES STATS JOUEURS
-            </button>
+        <div class="progress-container">
+            <div id="bar-poss-home" class="progress-bar bar-home" style="width: 50%"></div>
+            <div id="bar-poss-away" class="progress-bar bar-away" style="width: 50%"></div>
         </div>
+    </div>
 
-        <div id="player-stats-wrapper" class="hidden">
-            <h3 style="text-align: center; color: var(--fuma-primary); font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 15px; text-transform: uppercase;">Performances Individuelles</h3>
-            <div class="player-table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Joueur</th>
-                            <th style="text-align:center;">Note</th>
-                            <th style="text-align:center;">B</th>
-                            <th style="text-align:center;">A</th>
-                            <th style="text-align:center;">Passes (R/T)</th>
-                            <th style="text-align:center;">Tacles R.</th>
-                        </tr>
-                    </thead>
-                    <tbody id="player-stats-body">
-                        </tbody>
-                </table>
-            </div>
+    <div class="stat-row">
+        <div class="stat-label">
+            <span id="val-shots-home">0</span>
+            <span>Shots</span>
+            <span id="val-shots-away">0</span>
         </div>
-        
+        <div class="progress-container">
+            <div id="bar-shots-home" class="progress-bar bar-home" style="width: 50%"></div>
+            <div id="bar-shots-away" class="progress-bar bar-away" style="width: 50%"></div>
+        </div>
+    </div>
+
+    <div class="stat-row">
+        <div class="stat-label">
+            <span id="val-passes-home">0 (0%)</span>
+            <span>Passes (Acc.)</span>
+            <span id="val-passes-away">0 (0%)</span>
+        </div>
+        <div class="progress-container">
+            <div id="bar-passes-home" class="progress-bar bar-home" style="width: 50%"></div>
+            <div id="bar-passes-away" class="progress-bar bar-away" style="width: 50%"></div>
+        </div>
+    </div>
+
+    <div class="stat-row">
+        <div class="stat-label">
+    <span id="val-tackles-home">0/0</span>
+    <span>Tackles (Made/Att)</span>
+    <span id="val-tackles-away">0/0</span>
+</div>
+        <div class="progress-container">
+            <div id="bar-tackles-home" class="progress-bar bar-home" style="width: 50%"></div>
+            <div id="bar-tackles-away" class="progress-bar bar-away" style="width: 50%"></div>
+        </div>
+    </div>
+
+    <div class="stat-row" style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+        <div class="stat-label" style="margin-bottom: 0;">
+            <span id="val-red-home" style="color: #ff4d4d; font-size: 1.2rem;">0</span>
+            <span style="color: #ff4d4d;"><i class="fas fa-square"></i> Red Cards</span>
+            <span id="val-red-away" style="color: #ff4d4d; font-size: 1.2rem;">0</span>
+        </div>
+    </div>
+
+    <div class="motm-card">
+        <h3><i class="fas fa-crown"></i> MAN OF THE MATCH</h3>
+        <p id="motm-name" class="motm-name">-</p>
+    </div>
+</div>
     </div>
 
     <script src="info-match-logic.js"></script>
