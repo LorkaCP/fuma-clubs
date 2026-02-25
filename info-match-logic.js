@@ -15,19 +15,16 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(res => res.text())
         .then(csvText => {
             const rows = parseCSV(csvText);
-            // Dans FIXTURES_S1DIV1.csv : Home=6, Away=7
             const match = rows.find(r => r[6] === homeName && r[7] === awayName);
 
             document.getElementById('loader-container').style.display = 'none';
             document.getElementById('main-content').style.display = 'block';
 
             if (match) {
-                // Nettoyage agressif de l'ID extrait (index 8)
-                currentMatchId = String(match[8]).replace(/["']/g, "").trim(); 
+                // On nettoie l'ID de tout ce qui n'est pas un chiffre
+                currentMatchId = String(match[8]).replace(/\D/g, '').trim(); 
                 updateUI(match);
                 setupPlayerToggle(PLAYER_STATS_URL, currentMatchId);
-            } else {
-                document.getElementById('main-content').innerHTML = `<div style="text-align:center;padding:50px;">Match non trouvé.</div>`;
             }
         });
 });
@@ -41,18 +38,14 @@ function updateUI(m) {
     document.getElementById('score-display').innerText = `${m[9]} : ${m[10]}`;
     document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
     document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
-
     updateBar('poss', m[13], m[14], true);
     updateBar('shots', m[15], m[16], false);
-    
     document.getElementById('val-passes-home').innerText = `${m[17]} (${m[19]}%)`;
     document.getElementById('val-passes-away').innerText = `${m[18]} (${m[20]}%)`;
     updateBar('passes', m[19], m[20], false, true);
-
     document.getElementById('val-tackles-home').innerText = `${m[23]}/${m[21]}`;
     document.getElementById('val-tackles-away').innerText = `${m[24]}/${m[22]}`;
     updateBar('tackles', m[23], m[24], false, true);
-
     document.getElementById('val-red-home').innerText = m[25];
     document.getElementById('val-red-away').innerText = m[26];
     document.getElementById('motm-name').innerText = m[27] || "N/A";
@@ -61,7 +54,6 @@ function updateUI(m) {
 function setupPlayerToggle(url, matchId) {
     const btn = document.getElementById('toggle-player-stats');
     const wrapper = document.getElementById('player-stats-wrapper');
-
     btn.onclick = () => {
         if (wrapper.classList.contains('hidden')) {
             wrapper.classList.remove('hidden');
@@ -86,10 +78,11 @@ function fetchPlayerStats(url, targetId) {
             const rows = parseCSV(csvText);
             const seen = new Set();
             
-            // FILTRAGE : On compare l'index 1 (IDMatch) avec targetId
             const filtered = rows.filter(r => {
-                if (!r[1]) return false;
-                const cleanRowId = String(r[1]).replace(/["']/g, "").trim();
+                if (!r[1] || r[1] === "IDMatch") return false;
+                
+                // NETTOYAGE EXTRÊME : on ne garde que les chiffres
+                const cleanRowId = String(r[1]).replace(/\D/g, '').trim();
                 const playerName = String(r[3] || "").trim();
 
                 if (cleanRowId === targetId && playerName !== "" && !seen.has(playerName)) {
@@ -100,7 +93,7 @@ function fetchPlayerStats(url, targetId) {
             });
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:orange;">Aucune stat individuelle (ID Match cherché : ${targetId})</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:orange;">Aucune stat trouvée (ID cherché: ${targetId})</td></tr>`;
                 return;
             }
 
@@ -130,13 +123,16 @@ function updateBar(id, valH, valA, isPercent, onlyBar = false) {
     const a = parseFloat(String(valA).replace(',', '.')) || 0;
     const total = h + a;
     const percH = total === 0 ? 50 : (h / total) * 100;
-
     if (!onlyBar) {
-        if(document.getElementById(`val-${id}-home`)) document.getElementById(`val-${id}-home`).innerText = isPercent ? (Math.round(h) + '%') : h;
-        if(document.getElementById(`val-${id}-away`)) document.getElementById(`val-${id}-away`).innerText = isPercent ? (Math.round(a) + '%') : a;
+        const lh = document.getElementById(`val-${id}-home`);
+        const la = document.getElementById(`val-${id}-away`);
+        if(lh) lh.innerText = isPercent ? (Math.round(h) + '%') : h;
+        if(la) la.innerText = isPercent ? (Math.round(a) + '%') : a;
     }
-    if(document.getElementById(`bar-${id}-home`)) document.getElementById(`bar-${id}-home`).style.width = percH + '%';
-    if(document.getElementById(`bar-${id}-away`)) document.getElementById(`bar-${id}-away`).style.width = (100 - percH) + '%';
+    const bh = document.getElementById(`bar-${id}-home`);
+    const ba = document.getElementById(`bar-${id}-away`);
+    if(bh) bh.style.width = percH + '%';
+    if(ba) ba.style.width = (100 - percH) + '%';
 }
 
 function formatStrikers(str) {
@@ -145,7 +141,7 @@ function formatStrikers(str) {
 }
 
 function parseCSV(text) {
-    // Sépare par ligne, puis nettoie chaque ligne des retours chariots
+    // Nettoie les retours à la ligne parasites et divise par ligne
     return text.split(/\r?\n/).filter(l => l.trim() !== "").map(line => {
         const result = [];
         let cur = '', inQuotes = false;
