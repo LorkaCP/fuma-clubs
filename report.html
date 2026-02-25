@@ -297,27 +297,38 @@
         alert("Données du match et des joueurs importées !");
     };
 
-    function displayPlayers(players, originalHome, originalAway) {
-        const homeList = document.querySelector('#home-players-list .list');
-        const awayList = document.querySelector('#away-players-list .list');
-        homeList.innerHTML = "";
-        awayList.innerHTML = "";
+    function displayPlayers(players) {
+    const homeList = document.getElementById('home-players-list');
+    const awayList = document.getElementById('away-players-list');
+    homeList.innerHTML = ""; awayList.innerHTML = "";
 
-        players.forEach(p => {
-            const playerHtml = `
-                <div style="font-size: 0.8rem; border-bottom: 1px solid #333; padding: 5px 0; color: #eee;">
-                    <strong>${p[1]}</strong> - Note: ${p[5]} | G: ${p[6]} | A: ${p[7]}
-                </div>`;
-            
-            // On compare avec le nom de l'équipe dans la ligne du match
-            if (p[2] === originalHome) {
-                homeList.innerHTML += playerHtml;
-            } else {
-                awayList.innerHTML += playerHtml;
-            }
-        });
-    }
+    players.forEach(p => {
+        // p[1]: Nom, p[5]: Note, p[6]: Buts, p[7]: Assists, p[8]: Tirs, 
+        // p[9]: Passes, p[10]: P. Réussies, p[11]: % P., p[12]: Tacles, 
+        // p[13]: T. Réussis, p[14]: % T., p[15]: Rouge, p[16]: MotM
+        
+        const playerHtml = `
+            <div class="player-stat-row">
+                <span class="player-name-header">${p[1]} ${p[16] == 1 ? '⭐' : ''}</span>
+                <div class="stats-grid">
+                    <div class="stat-item">Note: <strong>${p[5]}</strong></div>
+                    <div class="stat-item">Buts: ${p[6]}</div>
+                    <div class="stat-item">Assists: ${p[7]}</div>
+                    <div class="stat-item">Tirs: ${p[8]}</div>
+                    <div class="stat-item">Passes: ${p[10]}/${p[9]} (${p[11]}%)</div>
+                    <div class="stat-item">Tacles: ${p[13]}/${p[12]} (${p[14]}%)</div>
+                    <div class="stat-item">Rouge: ${p[15]}</div>
+                </div>
+            </div>`;
 
+        // Identification de l'équipe (Index 2 dans le CSV)
+        if (p[2] === homeName) {
+            homeList.innerHTML += playerHtml;
+        } else {
+            awayList.innerHTML += playerHtml;
+        }
+    });
+}
     // --- 5. ENVOI ---
     document.getElementById('match-report-form').onsubmit = async (e) => {
         e.preventDefault();
