@@ -161,28 +161,33 @@
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyI-SMPkKDGoGg48Bke8ELycDUbgLXGgwmn83Ydz8ipfd7NO0gWYhwAR4t-kuF2wfUB/exec";
 
     // AJOUTEZ VOS CORRESPONDANCES ICI : "Nom sur le site": "Nom dans le CSV/Jeu"
-    const CLUB_ALIASES = {
-        "CroSer FC": "CroSer FC",
-        "Fuma Y Pasa": "F Y PASA",
-        
-    };
+   const CLUB_ALIASES = {
+    "fuma y pasa": "f y pasa", // "Nom sur site": "Nom dans le CSV"
+    "croser fc": "croser fc",
+    "fuma clubs a": "fuma clubs a",
+    "ac titans": "ac titans"
+};
 
     // --- 2. FONCTIONS DE NETTOYAGE INTELLIGENT ---
     function normalizeName(name) {
-        if (!name) return "";
-        let n = name.toLowerCase().trim();
-        
-        // On vérifie d'abord si le nom est dans le dictionnaire
-        if (CLUB_ALIASES[n]) {
-            n = CLUB_ALIASES[n];
-        }
-
-        // Nettoyage standard (accents, caractères spéciaux, FC/SC)
-        return n.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                .replace(/\b(fc|sc|club|as|ol|de)\b/gi, "")
-                .replace(/[^a-z0-9]/g, "")
-                .trim();
+    if (!name) return "";
+    
+    // 1. Mise en minuscule et retrait des espaces superflus pour la comparaison
+    let n = name.toLowerCase().trim();
+    
+    // 2. Vérification de l'alias
+    // Si "fuma y pasa" est trouvé, il devient "f y pasa"
+    if (CLUB_ALIASES[n]) {
+        n = CLUB_ALIASES[n];
     }
+
+    // 3. Nettoyage final pour la sécurité
+    // Supprime les accents, les particules (fc, sc) et tout ce qui n'est pas alphanumérique
+    return n.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .replace(/\b(fc|sc|club|as|ol|de)\b/gi, "")
+            .replace(/[^a-z0-9]/g, "")
+            .trim();
+}
 
     // --- 3. RÉCUPÉRATION DES PARAMÈTRES URL ---
     const params = new URLSearchParams(window.location.search);
