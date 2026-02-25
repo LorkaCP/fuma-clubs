@@ -4,92 +4,86 @@ document.addEventListener('DOMContentLoaded', () => {
     const homeName = params.get('home');
     const awayName = params.get('away');
 
-    if (!gid) {
-        console.error("Aucun GID spécifié");
-        return;
-    }
+    if (!gid) return console.error("Aucun GID spécifié");
 
-    // URL de base pour les matchs (votre CSV principal)
+    // Vos URLs Google Sheets
     const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=";
-    const FINAL_URL = BASE_URL + gid;
-
-    // URL pour les statistiques des joueurs
     const PLAYER_STATS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=158406798&single=true&output=csv";
 
     let currentMatchId = null;
 
-    fetch(FINAL_URL)
-        .then(response => response.text())
+    fetch(BASE_URL + gid)
+        .then(res => res.text())
         .then(csvText => {
             const rows = parseCSV(csvText);
             
-            // CORRECTION ICI : Dans Matches.csv, Home est index 1, Away est index 2
-            const match = rows.find(r => r[1] === homeName && r[2] === awayName);
+            // STRUCTURE FIXTURES_S1DIV1 : 
+            // Index 6 = TeamHome, Index 7 = TeamAway
+            const match = rows.find(r => r[6] === homeName && r[7] === awayName);
 
-            const loader = document.getElementById('loader-container');
-            const mainContent = document.getElementById('main-content');
-            
-            if (loader) loader.style.display = 'none';
-            if (mainContent) mainContent.style.display = 'block';
+            document.getElementById('loader-container').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
 
             if (match) {
-                currentMatchId = match[3]; // IDMatch est à l'index 3
+                // Index 8 = IDMatch dans votre fichier FIXTURES
+                currentMatchId = match[8]; 
                 updateUI(match);
                 setupPlayerToggle(PLAYER_STATS_URL, currentMatchId);
             } else {
-                console.error("Match non trouvé. Vérifiez les noms d'équipes dans l'URL et le CSV.");
-                const content = document.getElementById('main-content');
-                content.innerHTML = `<div class='no-match-message'>Match non trouvé (${homeName} vs ${awayName})</div>`;
+                document.getElementById('main-content').innerHTML = `
+                    <div style="text-align:center; padding:50px; color:#aaa;">
+                        <i class="fas fa-exclamation-triangle" style="font-size:2rem; color:var(--fuma-primary);"></i>
+                        <p>Match non trouvé : <b>${homeName}</b> vs <b>${awayName}</b></p>
+                        <p style="font-size:0.7rem;">Vérifiez que les noms dans l'URL correspondent au fichier Fixtures.</p>
+                    </div>`;
             }
-        })
-        .catch(err => console.error("Erreur chargement match:", err));
+        });
 });
 
 function updateUI(m) {
-    // Date & Équipes
-    document.getElementById('match-date').innerText = m[0]; // Date (index 0)
-    document.getElementById('name-home').innerText = m[1];
-    document.getElementById('name-away').innerText = m[2];
-    document.getElementById('logo-home').src = `logos/${m[1]}.png`;
-    document.getElementById('logo-away').src = `logos/${m[2]}.png`;
-
-    // Score
-    document.getElementById('score-display').innerText = `${m[4]} : ${m[5]}`;
-
-    // Buteurs
-    document.getElementById('strikers-home').innerHTML = formatStrikers(m[6]);
-    document.getElementById('strikers-away').innerHTML = formatStrikers(m[7]);
-
-    // Barres de stats (Utilisation des index du CSV Matches)
-    updateBar('poss', m[8], m[9], true);    // Possession
-    updateBar('shots', m[10], m[11], false); // Tirs
+    // Les index correspondent à FIXTURES_S1DIV1.csv
+    document.getElementById('match-date').innerText = m[1]; // StartDate
+    document.getElementById('name-home').innerText = m[6]; // TeamHome
+    document.getElementById('name-away').innerText = m[7]; // TeamAway
+    document.getElementById('logo-home').src = `logos/${m[6]}.png`;
+    document.getElementById('logo-away').src = `logos/${m[7]}.png`;
     
-    // Passes (Labels spécifiques)
-    document.getElementById('val-passes-home').innerText = `${m[12]} (${m[14]}%)`;
-    document.getElementById('val-passes-away').innerText = `${m[13]} (${m[15]}%)`;
-    updateBar('passes', m[14], m[15], false, true);
+    // Scores (Index 9 et 10)
+    document.getElementById('score-display').innerText = `${m[9]} : ${m[10]}`;
 
-    // Tacles
-    document.getElementById('val-tackles-home').innerText = `${m[18]}/${m[16]}`;
-    document.getElementById('val-tackles-away').innerText = `${m[19]}/${m[17]}`;
-    updateBar('tackles', m[18], m[19], false, true);
+    // Buteurs (Index 11 et 12)
+    document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
+    document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
 
-    // Rouges & MotM
-    document.getElementById('val-red-home').innerText = m[20];
-    document.getElementById('val-red-away').innerText = m[21];
-    document.getElementById('motm-name').innerText = m[22];
+    // Stats Collectives
+    updateBar('poss', m[13], m[14], true);    // Possession (Index 13, 14)
+    updateBar('shots', m[15], m[16], false);  // Tirs (Index 15, 16)
+
+    // Passes (Labels: Index 17/18 pour tentées, Index 19/20 pour %)
+    document.getElementById('val-passes-home').innerText = `${m[17]} (${m[19]}%)`;
+    document.getElementById('val-passes-away').innerText = `${m[18]} (${m[20]}%)`;
+    updateBar('passes', m[19], m[20], false, true); 
+
+    // Tacles (Labels: Index 23/24 pour réussis, Index 21/22 pour tentés)
+    document.getElementById('val-tackles-home').innerText = `${m[23]}/${m[21]}`;
+    document.getElementById('val-tackles-away').innerText = `${m[24]}/${m[22]}`;
+    updateBar('tackles', m[23], m[24], false, true);
+
+    // Cartons & MOTM (Index 25, 26 et 27)
+    document.getElementById('val-red-home').innerText = m[25];
+    document.getElementById('val-red-away').innerText = m[26];
+    document.getElementById('motm-name').innerText = m[27] || "N/A";
 }
 
 function setupPlayerToggle(url, matchId) {
     const btn = document.getElementById('toggle-player-stats');
     const wrapper = document.getElementById('player-stats-wrapper');
-    if (!btn) return;
 
     btn.onclick = () => {
         if (wrapper.classList.contains('hidden')) {
             wrapper.classList.remove('hidden');
             btn.innerHTML = `<i class="fas fa-chevron-up"></i> MASQUER LES STATS`;
-            if (document.getElementById('player-stats-body').innerHTML.trim() === "") {
+            if (document.getElementById('player-stats-body').children.length === 0) {
                 fetchPlayerStats(url, matchId);
             }
         } else {
@@ -109,17 +103,11 @@ function fetchPlayerStats(url, targetId) {
             const rows = parseCSV(csvText);
             const seen = new Set();
             
-            // Filtrage par IDMatch (index 1 dans Stats_Joueurs.csv)
-            const filtered = rows.filter(r => {
-                if (r[1] === targetId && !seen.has(r[3])) {
-                    seen.add(r[3]);
-                    return true;
-                }
-                return false;
-            });
+            // Stats_Joueurs.csv : IDMatch est index 1, Joueur index 3, Equipe index 2
+            const filtered = rows.filter(r => r[1] === targetId && !seen.has(r[3]) && seen.add(r[3]));
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">Aucune stat individuelle disponible pour l'ID : ${targetId}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">Aucune donnée pour l'ID ${targetId}</td></tr>`;
                 return;
             }
 
@@ -145,17 +133,21 @@ function fetchPlayerStats(url, targetId) {
 }
 
 function updateBar(id, valH, valA, isPercent, onlyBar = false) {
-    const h = parseFloat(String(valH).replace('%', '').replace(',', '.')) || 0;
-    const a = parseFloat(String(valA).replace('%', '').replace(',', '.')) || 0;
+    const h = parseFloat(String(valH).replace(',', '.')) || 0;
+    const a = parseFloat(String(valA).replace(',', '.')) || 0;
     const total = h + a;
     const percH = total === 0 ? 50 : (h / total) * 100;
 
     if (!onlyBar) {
-        if(document.getElementById(`val-${id}-home`)) document.getElementById(`val-${id}-home`).innerText = isPercent ? (Math.round(h) + '%') : h;
-        if(document.getElementById(`val-${id}-away`)) document.getElementById(`val-${id}-away`).innerText = isPercent ? (Math.round(a) + '%') : a;
+        const lh = document.getElementById(`val-${id}-home`);
+        const la = document.getElementById(`val-${id}-away`);
+        if(lh) lh.innerText = isPercent ? (Math.round(h) + '%') : h;
+        if(la) la.innerText = isPercent ? (Math.round(a) + '%') : a;
     }
-    if(document.getElementById(`bar-${id}-home`)) document.getElementById(`bar-${id}-home`).style.width = percH + '%';
-    if(document.getElementById(`bar-${id}-away`)) document.getElementById(`bar-${id}-away`).style.width = (100 - percH) + '%';
+    const bh = document.getElementById(`bar-${id}-home`);
+    const ba = document.getElementById(`bar-${id}-away`);
+    if(bh) bh.style.width = percH + '%';
+    if(ba) ba.style.width = (100 - percH) + '%';
 }
 
 function formatStrikers(str) {
@@ -164,8 +156,7 @@ function formatStrikers(str) {
 }
 
 function parseCSV(text) {
-    const lines = text.split(/\r?\n/);
-    return lines.map(line => {
+    return text.split(/\r?\n/).filter(line => line.trim() !== "").map(line => {
         const result = [];
         let cur = '', inQuotes = false;
         for (let char of line) {
