@@ -332,16 +332,20 @@
             if (mId === id1 || mId === id2) {
                 const pName = r[1];
                 if (!playersMap[pName]) {
-                    playersMap[pName] = [...r];
-                    [5, 6, 7, 8, 9, 10, 12, 13, 15, 16].forEach(idx => {
-                        playersMap[pName][idx] = parseFloat(r[idx]) || 0;
-                    });
-                } else {
-                    [6, 7, 8, 9, 10, 12, 13, 15, 16].forEach(idx => {
-                        playersMap[pName][idx] += (parseFloat(r[idx]) || 0);
-                    });
-                    playersMap[pName][5] = parseFloat(((playersMap[pName][5] + (parseFloat(r[5]) || 0)) / 2).toFixed(1));
-                }
+    playersMap[pName] = [...r]; // Copie la ligne entière
+    // On s'assure que la position (index 3) reste telle quelle (texte)
+    // On initialise les valeurs numériques pour les calculs
+    [5, 6, 7, 8, 9, 10, 12, 13, 15, 16].forEach(idx => {
+        playersMap[pName][idx] = parseFloat(r[idx]) || 0;
+    });
+} else {
+    // Pour la deuxième mi-temps, on additionne les stats mais on garde la position de la 1ère mi-temps
+    [6, 7, 8, 9, 10, 12, 13, 15, 16].forEach(idx => {
+        playersMap[pName][idx] += (parseFloat(r[idx]) || 0);
+    });
+    // Moyenne de la note
+    playersMap[pName][5] = parseFloat(((playersMap[pName][5] + (parseFloat(r[5]) || 0)) / 2).toFixed(1));
+}
             }
         });
 
@@ -379,27 +383,29 @@
 }
 
     function displayPlayers(players) {
-        const homeList = document.querySelector('#home-players-list .list');
-        const awayList = document.querySelector('#away-players-list .list');
-        homeList.innerHTML = ""; awayList.innerHTML = "";
+    const homeList = document.querySelector('#home-players-list .list');
+    const awayList = document.querySelector('#away-players-list .list');
+    homeList.innerHTML = ""; awayList.innerHTML = "";
 
-        players.forEach(p => {
-            const playerHtml = `
-                <div class="player-stat-row">
-                    <span class="player-name-header">${p[1]} ${p[16] == 1 ? '⭐' : ''}</span>
-                    <div class="stats-grid">
-                        <div class="stat-item">Note: <strong>${p[5]}</strong></div>
-                        <div class="stat-item">Buts: ${p[6]}</div>
-                        <div class="stat-item">Assists: ${p[7]}</div>
-                        <div class="stat-item">Tirs: ${p[8]}</div>
-                        <div class="stat-item">Passes: ${p[10]}/${p[9]} (${p[11]}%)</div>
-                        <div class="stat-item">Tacles: ${p[13]}/${p[12]} (${p[14]}%)</div>
-                    </div>
-                </div>`;
-            if (p[2] === homeName) homeList.innerHTML += playerHtml;
-            else awayList.innerHTML += playerHtml;
-        });
-    }
+    players.forEach(p => {
+        const playerHtml = `
+            <div class="player-stat-row">
+                <span class="player-name-header">
+                    ${p[1]} <span style="color: #888; font-size: 0.7rem;">[${p[3] || 'N/A'}]</span> ${p[16] == 1 ? '⭐' : ''}
+                </span>
+                <div class="stats-grid">
+                    <div class="stat-item">Note: <strong>${p[5]}</strong></div>
+                    <div class="stat-item">Buts: ${p[6]}</div>
+                    <div class="stat-item">Assists: ${p[7]}</div>
+                    <div class="stat-item">Tirs: ${p[8]}</div>
+                    <div class="stat-item">Passes: ${p[10]}/${p[9]} (${p[11]}%)</div>
+                    <div class="stat-item">Tacles: ${p[13]}/${p[12]} (${p[14]}%)</div>
+                </div>
+            </div>`;
+        if (p[2] === homeName) homeList.innerHTML += playerHtml;
+        else awayList.innerHTML += playerHtml;
+    });
+}
 
     // --- 5. ENVOI FINAL ---
     document.getElementById('match-report-form').onsubmit = async (e) => {
