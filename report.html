@@ -15,310 +15,272 @@
 </head>
 <body>
     <div class="fuma-container">
-        <header style="text-align: center; padding: 30px 0;">
-            <h1 style="color: var(--fuma-primary); font-weight: 800; letter-spacing: 2px; margin: 0;">DATA REPORT SYSTEM</h1>
-            <p style="color: var(--fuma-text-dim); font-size: 0.9rem;">Enregistrement des statistiques officielles FUMA</p>
-        </header>
+    <header style="text-align: center; padding: 30px 0;">
+        <h1 style="color: var(--fuma-primary); font-weight: 800; letter-spacing: 2px; margin: 0;">DATA REPORT SYSTEM</h1>
+        <p style="color: var(--fuma-text-dim); font-size: 0.9rem;">Enregistrement des statistiques officielles FUMA</p>
+    </header>
 
-        <div id="import-section" style="max-width: 800px; margin: 0 auto 30px auto; padding: 0 20px;">
-            <div id="loading-status" style="text-align: center; margin-bottom: 10px; font-weight: 600;">
-                <i class="fas fa-spinner fa-spin"></i> Recherche de matchs existants...
-            </div>
-            <div id="match-selector-container">
-                </div>
+    <div id="import-section" style="max-width: 800px; margin: 0 auto 30px auto; padding: 0 20px;">
+        <div id="loading-status" style="text-align: center; margin-bottom: 10px; font-weight: 600;">
+            <i class="fas fa-spinner fa-spin"></i> Recherche de matchs existants...
         </div>
-
-        <form id="match-report-form" style="max-width: 900px; margin: 0 auto; padding-bottom: 100px;">
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 20px;">
-                
-                <div class="report-card" style="background: #151515; border: 1px solid #333; border-radius: 15px; padding: 20px;">
-                    <h2 id="name-home" style="color: var(--fuma-primary); text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px;">HOME</h2>
-                    
-                    <label>Score Final</label>
-                    <input type="number" name="sh" id="in-sh" placeholder="0" required>
-
-                    <label>Buteurs (Noms / Minutes)</label>
-                    <input type="text" name="stH" id="in-stH" placeholder="ex: Messi 12', 45'">
-
-                    <label>Possession %</label>
-                    <input type="number" name="posH" id="in-posH" placeholder="50">
-
-                    <label>Tirs Totaux</label>
-                    <input type="number" name="shoH" id="in-shoH" placeholder="0">
-
-                    <label>Passes Tentées</label>
-                    <input type="number" name="pasAttH" id="in-pasAttH" placeholder="0">
-
-                    <label>Précision des Passes %</label>
-                    <input type="number" name="accH" id="in-accH" placeholder="0">
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div>
-                            <label>Tacles réussis</label>
-                            <input type="number" name="tacMadH" id="in-tacMadH" placeholder="0">
-                        </div>
-                        <div>
-                            <label>Tacles tentés</label>
-                            <input type="number" name="tacAttH" id="in-tacAttH" placeholder="0">
-                        </div>
-                    </div>
-
-                    <label>Cartons Rouges</label>
-                    <input type="number" name="redH" id="in-redH" value="0">
-                </div>
-
-                <div class="report-card" style="background: #151515; border: 1px solid #333; border-radius: 15px; padding: 20px;">
-                    <h2 id="name-away" style="color: var(--fuma-primary); text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px;">AWAY</h2>
-                    
-                    <label>Score Final</label>
-                    <input type="number" name="sa" id="in-sa" placeholder="0" required>
-
-                    <label>Buteurs (Noms / Minutes)</label>
-                    <input type="text" name="stA" id="in-stA" placeholder="ex: Haaland 88'">
-
-                    <label>Possession %</label>
-                    <input type="number" name="posA" id="in-posA" placeholder="50">
-
-                    <label>Tirs Totaux</label>
-                    <input type="number" name="shoA" id="in-shoA" placeholder="0">
-
-                    <label>Passes Tentées</label>
-                    <input type="number" name="pasAttA" id="in-pasAttA" placeholder="0">
-
-                    <label>Précision des Passes %</label>
-                    <input type="number" name="accA" id="in-accA" placeholder="0">
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div>
-                            <label>Tacles réussis</label>
-                            <input type="number" name="tacMadA" id="in-tacMadA" placeholder="0">
-                        </div>
-                        <div>
-                            <label>Tacles tentés</label>
-                            <input type="number" name="tacAttA" id="in-tacAttA" placeholder="0">
-                        </div>
-                    </div>
-
-                    <label>Cartons Rouges</label>
-                    <input type="number" name="redA" id="in-redA" value="0">
-                </div>
-            </div>
-
-            <div style="padding: 20px;">
-                <div style="background: #1a1a1a; padding: 20px; border-radius: 15px; border: 1px solid var(--fuma-primary);">
-                    <label style="margin-top: 0;">MAN OF THE MATCH (NOM COMPLET)</label>
-                    <input type="text" name="motm" id="in-motm" placeholder="Nom du joueur">
-                </div>
-            </div>
-
-            <div id="players-stats-container" style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 20px;">
-    <div id="home-players-list" class="report-card"><h3>Joueurs (Home)</h3><div class="list"></div></div>
-    <div id="away-players-list" class="report-card"><h3>Joueurs (Away)</h3><div class="list"></div></div>
-</div>
-
-            <div style="padding: 0 20px;">
-                <button type="submit" id="btn-submit" class="submit-button" 
-                        style="width: 100%; padding: 20px; background: var(--fuma-primary); color: #000; border: none; border-radius: 10px; font-weight: 800; font-size: 1.1rem; cursor: pointer; text-transform: uppercase; transition: 0.3s;">
-                    <i class="fas fa-cloud-upload-alt"></i> Valider et enregistrer le match
-                </button>
-            </div>
-
-        </form>
+        <div id="match-selector-container"></div>
     </div>
 
+    <form id="match-report-form" style="max-width: 900px; margin: 0 auto; padding-bottom: 100px;">
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 20px;">
+            <div class="report-card">
+                <h2 id="name-home" class="team-title">HOME</h2>
+                <label>Score Final</label>
+                <input type="number" name="sh" id="in-sh" required>
+                <label>Buteurs (Noms / Minutes)</label>
+                <input type="text" name="stH" id="in-stH">
+                <label>Possession %</label>
+                <input type="number" name="posH" id="in-posH">
+                <label>Tirs Totaux</label>
+                <input type="number" name="shoH" id="in-shoH">
+                <label>Passes Tentées</label>
+                <input type="number" name="pasAttH" id="in-pasAttH">
+                <label>Précision des Passes %</label>
+                <input type="number" name="accH" id="in-accH">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div><label>Tacles réussis</label><input type="number" name="tacMadH" id="in-tacMadH"></div>
+                    <div><label>Tacles tentés</label><input type="number" name="tacAttH" id="in-tacAttH"></div>
+                </div>
+                <label>Cartons Rouges</label>
+                <input type="number" name="redH" id="in-redH" value="0">
+            </div>
+
+            <div class="report-card">
+                <h2 id="name-away" class="team-title">AWAY</h2>
+                <label>Score Final</label>
+                <input type="number" name="sa" id="in-sa" required>
+                <label>Buteurs (Noms / Minutes)</label>
+                <input type="text" name="stA" id="in-stA">
+                <label>Possession %</label>
+                <input type="number" name="posA" id="in-posA">
+                <label>Tirs Totaux</label>
+                <input type="number" name="shoA" id="in-shoA">
+                <label>Passes Tentées</label>
+                <input type="number" name="pasAttA" id="in-pasAttA">
+                <label>Précision des Passes %</label>
+                <input type="number" name="accA" id="in-accA">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div><label>Tacles réussis</label><input type="number" name="tacMadA" id="in-tacMadA"></div>
+                    <div><label>Tacles tentés</label><input type="number" name="tacAttA" id="in-tacAttA"></div>
+                </div>
+                <label>Cartons Rouges</label>
+                <input type="number" name="redA" id="in-redA" value="0">
+            </div>
+        </div>
+
+        <div style="padding: 20px;">
+            <div class="motm-section">
+                <label style="margin-top: 0;">MAN OF THE MATCH (NOM COMPLET)</label>
+                <input type="text" name="motm" id="in-motm" placeholder="Nom du joueur">
+            </div>
+        </div>
+
+        <div id="players-stats-container">
+            <div id="home-players-list">
+                <h3 class="list-title">Stats Joueurs (Domicile)</h3>
+                <div class="list"></div>
+            </div>
+            <div id="away-players-list">
+                <h3 class="list-title">Stats Joueurs (Extérieur)</h3>
+                <div class="list"></div>
+            </div>
+        </div>
+
+        <div style="padding: 40px 20px;">
+            <button type="submit" id="btn-submit" class="submit-button">
+                <i class="fas fa-cloud-upload-alt"></i> Valider et enregistrer le match
+            </button>
+        </div>
+    </form>
+</div>
+
     <style>
-        label {
-            display: block;
-            margin-top: 15px;
-            margin-bottom: 5px;
-            font-size: 0.75rem;
-            color: var(--fuma-text-dim);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        input {
-            width: 100%;
-            padding: 12px;
-            background: #000;
-            border: 1px solid #333;
-            color: #fff;
-            border-radius: 8px;
-            font-family: 'Poppins', sans-serif;
-            box-sizing: border-box;
-        }
-        input:focus {
-            outline: none;
-            border-color: var(--fuma-primary);
-        }
-        .submit-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
-        }
-        .select-match-btn:hover {
-            border-color: var(--fuma-primary) !important;
-            background: #303030 !important;
-        }
+     :root {
+    --fuma-primary: #d4af37;
+    --fuma-bg: #000;
+    --fuma-card: #151515;
+    --fuma-border: #333;
+    --fuma-text-dim: #aaa;
+}
+
+/* Structure Formulaire */
+.report-card {
+    background: var(--fuma-card);
+    border: 1px solid var(--fuma-border);
+    border-radius: 15px;
+    padding: 20px;
+}
+.team-title {
+    color: var(--fuma-primary);
+    text-align: center;
+    border-bottom: 1px solid var(--fuma-border);
+    padding-bottom: 10px;
+}
+.motm-section {
+    background: #1a1a1a;
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid var(--fuma-primary);
+}
+
+/* Stats Individuelles */
+#players-stats-container {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 0 20px;
+}
+.list-title {
+    color: var(--fuma-text-dim);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+}
+.player-card {
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+.player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+    margin-bottom: 8px;
+}
+.player-name { font-weight: 800; color: #fff; text-transform: uppercase; }
+.player-rating { font-weight: 900; color: var(--fuma-primary); font-size: 1.1rem; }
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+.stat-item { font-size: 0.75rem; color: #ccc; }
+.stat-label { color: var(--fuma-text-dim); display: block; font-size: 0.6rem; text-transform: uppercase; }
+.stat-val { font-weight: 600; color: #fff; }
+
+/* Badges */
+.badge-motm { background: var(--fuma-primary); color: #000; padding: 2px 5px; border-radius: 3px; font-size: 0.6rem; font-weight: 800; }
+.badge-red { background: #ff4444; color: #fff; padding: 2px 5px; border-radius: 3px; font-size: 0.6rem; font-weight: 800; }
+
+/* Boutons */
+.submit-button {
+    width: 100%;
+    padding: 20px;
+    background: var(--fuma-primary);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    cursor: pointer;
+    text-transform: uppercase;
+}
     </style>
   <script>
-    // --- 1. CONFIGURATION ---
-    const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=1610453677&single=true&output=csv";
-    const PLAYERS_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=420142588&single=true&output=csv";
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyI-SMPkKDGoGg48Bke8ELycDUbgLXGgwmn83Ydz8ipfd7NO0gWYhwAR4t-kuF2wfUB/exec";
+  // --- CONFIGURATION ---
+const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=1610453677&single=true&output=csv";
+const PLAYERS_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=420142588&single=true&output=csv";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyI-SMPkKDGoGg48Bke8ELycDUbgLXGgwmn83Ydz8ipfd7NO0gWYhwAR4t-kuF2wfUB/exec";
 
-    const CLUB_ALIASES = {
-        "fuma y pasa": "f y pasa",
-        "croser fc": "croser fc",
-        "fuma clubs a": "fuma clubs a",
-        "ac titans": "ac titans"
-    };
+const params = new URLSearchParams(window.location.search);
+const homeName = params.get('home') || "";
+const awayName = params.get('away') || "";
+const currentGid = params.get('gid');
 
-    const params = new URLSearchParams(window.location.search);
-    const homeName = params.get('home') || "";
-    const awayName = params.get('away') || "";
-    const currentGid = params.get('gid');
+document.getElementById('name-home').innerText = homeName;
+document.getElementById('name-away').innerText = awayName;
 
-    document.getElementById('name-home').innerText = homeName;
-    document.getElementById('name-away').innerText = awayName;
+// --- FONCTIONS DE CHARGEMENT ---
+async function init() {
+    const statusEl = document.getElementById('loading-status');
+    try {
+        const response = await fetch(GLOBAL_DATA_URL);
+        const data = await response.text();
+        const rows = data.split('\n').map(r => r.split(','));
+        const normHome = normalize(homeName);
+        const normAway = normalize(awayName);
 
-    // --- 2. NORMALISATION ---
-    function normalizeName(name) {
-        if (!name) return "";
-        let n = name.toLowerCase().trim();
-        if (CLUB_ALIASES[n]) n = CLUB_ALIASES[n];
-        return n.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                .replace(/\b(fc|sc|club|as|ol|de)\b/gi, "")
-                .replace(/[^a-z0-9]/g, "")
-                .trim();
-    }
-
-    // --- 3. CHARGEMENT INITIAL (Ce qui manquait) ---
-    async function init() {
-        const statusEl = document.getElementById('loading-status');
-        try {
-            const response = await fetch(GLOBAL_DATA_URL);
-            const data = await response.text();
-            const rows = data.split('\n').map(r => r.split(','));
-            
-            const normHome = normalizeName(homeName);
-            const normAway = normalizeName(awayName);
-
-            // Filtre les matchs correspondant aux deux équipes (peu importe l'ordre)
-            const matches = rows.filter(r => {
-                const rHome = normalizeName(r[1]);
-                const rAway = normalizeName(r[2]);
-                return (rHome === normHome && rAway === normAway) || 
-                       (rHome === normAway && rAway === normHome);
-            });
-
-            if (matches.length > 0) {
-                statusEl.innerHTML = `<i class="fas fa-check"></i> ${matches.length} match(s) trouvé(s)`;
-                displayMatchSelector(matches);
-            } else {
-                statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Aucun match trouvé dans la base.';
-            }
-        } catch (err) {
-            statusEl.innerHTML = "Erreur de chargement des données.";
-            console.error(err);
-        }
-    }
-
-    // --- 4. AFFICHAGE ET REMPLISSAGE ---
-    function displayMatchSelector(matches) {
-        const container = document.getElementById('match-selector-container');
-        window.tempMatchesData = matches;
-        let html = '<div style="display: flex; flex-direction: column; gap: 8px;">';
-        matches.forEach((m, i) => {
-            html += `
-                <button type="button" onclick="fillFormFromIndex(${i})" class="select-match-btn" 
-                        style="text-align: left; background: #252525; color: #fff; border: 1px solid #444; padding: 12px; cursor: pointer; border-radius: 6px;">
-                    <i class="far fa-calendar-alt"></i> ${m[0]} | <strong>${m[1]}</strong> ${m[4]}-${m[5]} <strong>${m[2]}</strong>
-                </button>`;
+        const matches = rows.filter(r => {
+            const h = normalize(r[1]); const a = normalize(r[2]);
+            return (h === normHome && a === normAway) || (h === normAway && a === normHome);
         });
-        container.innerHTML = html + '</div>';
-    }
 
-    window.fillFormFromIndex = async function(index) {
-        const m = window.tempMatchesData[index];
-        const matchID = m[3].trim(); 
-        const isReverse = (normalizeName(m[1]) === normalizeName(awayName));
-
-        // Mapping des colonnes du CSV MATCHES vers les IDs du formulaire
-        const map = {
-            'in-sh': isReverse ? 5 : 4, 'in-sa': isReverse ? 4 : 5,
-            'in-stH': isReverse ? 7 : 6, 'in-stA': isReverse ? 6 : 7,
-            'in-posH': isReverse ? 9 : 8, 'in-posA': isReverse ? 8 : 9,
-            'in-shoH': isReverse ? 11 : 10, 'in-shoA': isReverse ? 10 : 11,
-            'in-pasAttH': isReverse ? 13 : 12, 'in-pasAttA': isReverse ? 12 : 13,
-            'in-accH': isReverse ? 15 : 14, 'in-accA': isReverse ? 14 : 15,
-            'in-tacAttH': isReverse ? 17 : 16, 'in-tacAttA': isReverse ? 16 : 17,
-            'in-tacMadH': isReverse ? 19 : 18, 'in-tacMadA': isReverse ? 18 : 19,
-            'in-redH': isReverse ? 21 : 20, 'in-redA': isReverse ? 20 : 21
-        };
-
-        for (let [id, colIndex] of Object.entries(map)) {
-            let el = document.getElementById(id);
-            if(el) el.value = m[colIndex] || (id.includes('red') ? 0 : "");
+        if (matches.length > 0) {
+            displayMatchSelector(matches);
+            statusEl.innerHTML = "Matchs trouvés.";
+        } else {
+            statusEl.innerHTML = "Aucun match trouvé.";
         }
-        document.getElementById('in-motm').value = m[22] || "";
+    } catch (err) { statusEl.innerHTML = "Erreur."; }
+}
 
-        // RÉCUPÉRATION DES STATS JOUEURS (Second Fichier)
-        try {
-            const response = await fetch(PLAYERS_DATA_URL);
-            const csvText = await response.text();
-            const rows = csvText.split('\n').map(row => row.split(','));
-            const matchPlayers = rows.filter(r => r[0].trim() === matchID);
-            displayPlayers(matchPlayers, m[1], m[2]); 
-        } catch (err) {
-            console.error("Erreur joueurs:", err);
-        }
-        alert("Données du match et des joueurs importées !");
+function normalize(s) { return s.toLowerCase().trim().normalize("NFD").replace(/[^a-z0-9]/g, ""); }
+
+window.fillFormFromIndex = async function(index) {
+    const m = window.tempMatchesData[index];
+    const matchID = m[3].trim();
+    const isReverse = (normalize(m[1]) === normalize(awayName));
+
+    // Mapping Auto des stats collectives (index selon votre CSV global)
+    const map = {
+        'in-sh': isReverse ? 5 : 4, 'in-sa': isReverse ? 4 : 5,
+        'in-stH': isReverse ? 7 : 6, 'in-stA': isReverse ? 6 : 7,
+        'in-posH': isReverse ? 9 : 8, 'in-posA': isReverse ? 8 : 9,
+        'in-shoH': isReverse ? 11 : 10, 'in-shoA': isReverse ? 10 : 11,
+        'in-pasAttH': isReverse ? 13 : 12, 'in-pasAttA': isReverse ? 12 : 13,
+        'in-accH': isReverse ? 15 : 14, 'in-accA': isReverse ? 14 : 15,
+        'in-tacMadH': isReverse ? 19 : 18, 'in-tacMadA': isReverse ? 18 : 19,
+        'in-redH': isReverse ? 21 : 20, 'in-redA': isReverse ? 20 : 21
     };
 
-    function displayPlayers(players, originalHome, originalAway) {
-        const homeList = document.querySelector('#home-players-list .list');
-        const awayList = document.querySelector('#away-players-list .list');
-        homeList.innerHTML = "";
-        awayList.innerHTML = "";
-
-        players.forEach(p => {
-            const playerHtml = `
-                <div style="font-size: 0.8rem; border-bottom: 1px solid #333; padding: 5px 0; color: #eee;">
-                    <strong>${p[1]}</strong> - Note: ${p[5]} | G: ${p[6]} | A: ${p[7]}
-                </div>`;
-            
-            // On compare avec le nom de l'équipe dans la ligne du match
-            if (p[2] === originalHome) {
-                homeList.innerHTML += playerHtml;
-            } else {
-                awayList.innerHTML += playerHtml;
-            }
-        });
+    for (let [id, col] of Object.entries(map)) {
+        if(document.getElementById(id)) document.getElementById(id).value = m[col] || 0;
     }
+    document.getElementById('in-motm').value = m[22] || "";
 
-    // --- 5. ENVOI ---
-    document.getElementById('match-report-form').onsubmit = async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('btn-submit');
-        btn.innerText = "ENREGISTREMENT...";
-        btn.disabled = true;
+    // Chargement des Stats Joueurs détaillées
+    const resp = await fetch(PLAYERS_DATA_URL);
+    const csv = await resp.text();
+    const players = csv.split('\n').map(r => r.split(',')).filter(r => r[0].trim() === matchID);
+    displayPlayers(players, m[1], m[2]);
+};
 
-        const data = Object.fromEntries(new FormData(e.target).entries());
-        data.home = homeName; data.away = awayName; data.gid = currentGid;
+function displayPlayers(players, hName, aName) {
+    const hList = document.querySelector('#home-players-list .list');
+    const aList = document.querySelector('#away-players-list .list');
+    hList.innerHTML = ""; aList.innerHTML = "";
 
-        try {
-            await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-            alert("Rapport enregistré avec succès !");
-            window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
-        } catch (e) {
-            alert("Erreur lors de l'envoi");
-            btn.disabled = false;
-            btn.innerText = "Valider et enregistrer le match";
-        }
-    };
+    players.forEach(p => {
+        const html = `
+            <div class="player-card">
+                <div class="player-header">
+                    <span class="player-name">${p[1]} ${parseInt(p[16])? '<span class="badge-motm">MOTM</span>':''}</span>
+                    <span class="player-rating">${p[5]}</span>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item"><span class="stat-label">G / A</span><span class="stat-val">${p[6]}/${p[7]}</span></div>
+                    <div class="stat-item"><span class="stat-label">Tirs</span><span class="stat-val">${p[8]}</span></div>
+                    <div class="stat-item"><span class="stat-label">Passes %</span><span class="stat-val">${p[10]}/${p[9]} (${p[11]}%)</span></div>
+                    <div class="stat-item"><span class="stat-label">Tacles %</span><span class="stat-val">${p[13]}/${p[12]} (${p[14]}%)</span></div>
+                </div>
+            </div>`;
+        if (p[2] === hName) hList.innerHTML += html; else aList.innerHTML += html;
+    });
+}
 
-    // Lancement de la recherche
-    init();
+init();
 </script>
 </body>
 </html>
