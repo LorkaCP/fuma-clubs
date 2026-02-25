@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!gid) return console.error("Aucun GID spécifié");
 
     const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=";
+    // URL spécifique pour l'onglet Stats_Joueurs
     const PLAYER_STATS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=2011937196&single=true&output=csv";
 
     let currentMatchId = null;
@@ -15,15 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(res => res.text())
         .then(csvText => {
             const rows = parseCSV(csvText);
-            // Dans FIXTURES_S1DIV1.csv : Home=6, Away=7
+            // Recherche du match dans FIXTURES (Home=6, Away=7)
             const match = rows.find(r => r[6] === homeName && r[7] === awayName);
 
             document.getElementById('loader-container').style.display = 'none';
             document.getElementById('main-content').style.display = 'block';
 
             if (match) {
-                // Nettoyage agressif de l'ID extrait (index 8)
-                currentMatchId = String(match[8]).replace(/["']/g, "").trim(); 
+                currentMatchId = String(match[8]).trim(); // On force l'ID en texte propre
                 updateUI(match);
                 setupPlayerToggle(PLAYER_STATS_URL, currentMatchId);
             } else {
@@ -86,13 +86,14 @@ function fetchPlayerStats(url, targetId) {
             const rows = parseCSV(csvText);
             const seen = new Set();
             
-            // FILTRAGE : On compare l'index 1 (IDMatch) avec targetId
+            // FILTRAGE ULTRA-ROBUSTE
             const filtered = rows.filter(r => {
-                if (!r[1]) return false;
-                const cleanRowId = String(r[1]).replace(/["']/g, "").trim();
-                const playerName = String(r[3] || "").trim();
-
-                if (cleanRowId === targetId && playerName !== "" && !seen.has(playerName)) {
+                if (!r[1] || !r[3]) return false;
+                const rowId = String(r[1]).trim();
+                const playerName = String(r[3]).trim();
+                
+                // On compare l'ID (colonne B) et on évite les doublons de noms
+                if (rowId === targetId && !seen.has(playerName)) {
                     seen.add(playerName);
                     return true;
                 }
@@ -100,15 +101,18 @@ function fetchPlayerStats(url, targetId) {
             });
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:orange;">Aucune stat individuelle (ID Match cherché : ${targetId})</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:orange;">Aucune stat individuelle (ID: ${targetId})</td></tr>`;
                 return;
             }
 
+            // Tri par note (index 4)
             filtered.sort((a, b) => parseFloat(b[4]) - parseFloat(a[4]));
 
             tbody.innerHTML = filtered.map(p => {
                 const note = parseFloat(p[4]) || 0;
                 const noteColor = note >= 7 ? '#d4af37' : (note < 5.5 ? '#ff4d4d' : '#fff');
+                const passesDisp = `${p[9]}/${p[8]} <span style="font-size:0.7rem; color:#777;">(${p[10]}%)</span>`;
+                
                 return `
                 <tr>
                     <td style="padding: 12px 8px;">
@@ -118,7 +122,7 @@ function fetchPlayerStats(url, targetId) {
                     <td style="text-align:center; font-weight: 800; color: ${noteColor};">${p[4]}</td>
                     <td style="text-align:center;">${p[5]}</td>
                     <td style="text-align:center;">${p[6]}</td>
-                    <td style="text-align:center;">${p[9]}/${p[8]} <span style="font-size:0.7rem; color:#777;">(${p[10]}%)</span></td>
+                    <td style="text-align:center;">${passesDisp}</td>
                     <td style="text-align:center; font-weight: 600; color: #d4af37;">${p[12]}</td>
                 </tr>`;
             }).join('');
@@ -145,11 +149,13 @@ function formatStrikers(str) {
 }
 
 function parseCSV(text) {
-    // Sépare par ligne, puis nettoie chaque ligne des retours chariots
-    return text.split(/\r?\n/).filter(l => l.trim() !== "").map(line => {
+    // On divise par ligne et on nettoie les caractères de retour chariot (\r)
+    return text.split(/\n/).map(line => {
         const result = [];
         let cur = '', inQuotes = false;
-        for (let char of line) {
+        // On nettoie la ligne de tout caractère parasite en fin de ligne
+        const cleanLine = line.replace('\r', '').trim();
+        for (let char of cleanLine) {
             if (char === '"') inQuotes = !inQuotes;
             else if (char === ',' && !inQuotes) { result.push(cur.trim()); cur = ''; }
             else cur += char;
