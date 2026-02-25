@@ -197,7 +197,16 @@ function updateBar(id, valH, valA, isPercent, onlyBar = false) {
 /**
  * Formate la liste des buteurs
  */
+
 function formatStrikers(str) {
+    // On vérifie si la chaîne est vide ou nulle
     if (!str || str === '0' || str.trim() === '') return '';
-    return str.split(',').map(s => `<div>${s.trim()} <i class="fas fa-futbol" style="font-size: 0.7rem; opacity: 0.6;"></i></div>`).join('');
+    
+    // On divise par "|" au lieu de ","
+    return str.split('|').map(s => {
+        const name = s.trim();
+        if (!name) return ''; // Évite les divs vides si on a des barres en trop
+        return `<div>${name} <i class="fas fa-futbol" style="font-size: 0.7rem; opacity: 0.6;"></i></div>`;
+    }).join('');
 }
+
