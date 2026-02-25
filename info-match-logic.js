@@ -64,34 +64,62 @@ function parseCSV(text) {
 /**
  * Met à jour l'interface avec les données du match (Structure 2026)
  */
+/**
+ * Met à jour l'interface avec les données du match (Structure 2026)
+ */
 function updateUI(m) {
+    // Éléments de l'interface
+    const statsContainer = document.querySelector('.stats-container');
+    const scoreDisplay = document.getElementById('score-display');
+    const replayLink = document.getElementById('link-replay');
+
+    // Vérification si le match a été joué (Colonnes ScoreHome index 9 et ScoreAway index 10)
+    // On vérifie si la cellule est vide ou contient un caractère non numérique
+    const isPlayed = m[9] !== "" && m[10] !== "" && m[9] !== null;
+
     // Infos générales : Matchday (0), StartDate (1)
     document.getElementById('matchday-label').innerText = `Matchday ${m[0]}`;
     document.getElementById('match-date').innerText = m[1];
 
-    // Logos et Noms (Cliquables) - TeamHome (5), TeamAway (6), Crests (3,4)
+    // Logos et Noms (Cliquables) - TeamHome (6), TeamAway (7), Crests (3,4)
     const logoHomeImg = document.getElementById('logo-home');
     const logoAwayImg = document.getElementById('logo-away');
     logoHomeImg.src = m[3];
     logoAwayImg.src = m[4];
+    
     logoHomeImg.onclick = () => window.location.href = `club.html?name=${encodeURIComponent(m[6])}`;
     logoAwayImg.onclick = () => window.location.href = `club.html?name=${encodeURIComponent(m[7])}`;
 
     const styleLink = "color: inherit; text-decoration: none; transition: 0.2s;";
     document.getElementById('name-home').innerHTML = `<a href="club.html?name=${encodeURIComponent(m[6])}" style="${styleLink}">${m[6]}</a>`;
     document.getElementById('name-away').innerHTML = `<a href="club.html?name=${encodeURIComponent(m[7])}" style="${styleLink}">${m[7]}</a>`;
-    
-    // Score : ScoreHome (9), ScoreAway (10)
-    document.getElementById('score-display').innerText = `${m[9]} : ${m[10]}`;
 
-    // --- CORRECTION LIEN REPLAY (Colonne H = Index 7) ---
-   // --- LIEN REPLAY (Colonne H = Index 5) ---
-    const replayLink = document.getElementById('link-replay');
+    // --- LOGIQUE D'AFFICHAGE CONDITIONNELLE ---
+    if (!isPlayed) {
+        // Affichage pour match non joué
+        scoreDisplay.innerText = "VS";
+        if (replayLink) replayLink.style.display = 'none';
+        
+        // Remplace le contenu des stats par un message d'attente
+        statsContainer.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: var(--fuma-text-dim);">
+                <i class="far fa-calendar-alt" style="font-size: 2rem; margin-bottom: 15px; color: var(--fuma-primary);"></i>
+                <p style="font-weight: 600; letter-spacing: 1px;">THIS MATCH HAS NOT BEEN PLAYED YET</p>
+            </div>
+        `;
+        return; // Arrête la fonction ici
+    }
+
+    // --- SI LE MATCH EST JOUÉ ---
+    // Score : ScoreHome (9), ScoreAway (10)
+    scoreDisplay.innerText = `${m[9]} : ${m[10]}`;
+
+    // Lien Replay (Colonne index 5)
     if (replayLink) {
-       if (m[5] && m[5] !== "" && m[5] !== "#") {
-    replayLink.href = m[5];
-    replayLink.style.display = 'inline-flex';
-} else {
+        if (m[5] && m[5] !== "" && m[5] !== "#") {
+            replayLink.href = m[5];
+            replayLink.style.display = 'inline-flex';
+        } else {
             replayLink.style.display = 'none';
         }
     }
@@ -107,17 +135,15 @@ function updateUI(m) {
     const accHome = m[19];
     const passAway = m[18];
     const accAway = m[20];
-    
     document.getElementById('val-passes-home').innerText = `${passHome} (${accHome}%)`;
     document.getElementById('val-passes-away').innerText = `${passAway} (${accAway}%)`;
-    updateBar('passes', passHome, passAway, false, true); 
+    updateBar('passes', passHome, passAway, false, true);
 
     // 4) Tacles Tentés (21, 22) avec Tacles Réussis (23, 24)
     const tackAttHome = m[21];
     const tackMadeHome = m[23];
     const tackAttAway = m[22];
     const tackMadeAway = m[24];
-
     document.getElementById('val-tackles-home').innerText = `${tackMadeHome}/${tackAttHome}`;
     document.getElementById('val-tackles-away').innerText = `${tackMadeAway}/${tackAttAway}`;
     updateBar('tackles', tackMadeHome, tackMadeAway, false, true);
