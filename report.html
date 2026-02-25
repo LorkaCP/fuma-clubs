@@ -330,37 +330,41 @@
         rows.forEach(r => {
             const mId = r[0] ? r[0].trim() : "";
             if (mId === id1 || mId === id2) {
-                const pName = r[1];
+                const pName = r[1]; // Nom du joueur
+                
                 if (!playersMap[pName]) {
-    playersMap[pName] = [...r]; // Copie la ligne entière
-    // On s'assure que la position (index 3) reste telle quelle (texte)
-    // On initialise les valeurs numériques pour les calculs
-    [5, 6, 7, 8, 9, 10, 12, 13, 15, 16].forEach(idx => {
-        playersMap[pName][idx] = parseFloat(r[idx]) || 0;
-    });
-} else {
-    // Pour la deuxième mi-temps, on additionne les stats mais on garde la position de la 1ère mi-temps
-    [6, 7, 8, 9, 10, 12, 13, 15, 16].forEach(idx => {
-        playersMap[pName][idx] += (parseFloat(r[idx]) || 0);
-    });
-    // Moyenne de la note
-    playersMap[pName][5] = parseFloat(((playersMap[pName][5] + (parseFloat(r[5]) || 0)) / 2).toFixed(1));
-}
+                    // Premier passage : on initialise l'entrée avec une copie de la ligne
+                    playersMap[pName] = [...r];
+                    
+                    // Conversion des colonnes numériques pour permettre les calculs
+                    // 5:Note, 6:Buts, 7:Assists, 8:Tirs, 9:PassesT, 10:PassesR, 12:TaclesT, 13:TaclesR, 15:Rouge, 16:Motm
+                    [5, 6, 7, 8, 9, 10, 12, 13, 15, 16].forEach(idx => {
+                        playersMap[pName][idx] = parseFloat(r[idx]) || 0;
+                    });
+                } else {
+                    // Deuxième passage : on additionne les statistiques
+                    [6, 7, 8, 9, 10, 12, 13, 15, 16].forEach(idx => {
+                        playersMap[pName][idx] += (parseFloat(r[idx]) || 0);
+                    });
+                    
+                    // Moyenne de la note sur les deux mi-temps
+                    playersMap[pName][5] = parseFloat(((playersMap[pName][5] + (parseFloat(r[5]) || 0)) / 2).toFixed(1));
+                }
             }
         });
 
         const finalPlayers = Object.values(playersMap);
 
-        // --- NOUVELLE LOGIQUE MOTM ---
+        // --- CALCULS FINAUX ET MOTM ---
         let bestNote = 0;
         let motmName = "";
 
         finalPlayers.forEach(p => {
-            // Recalcul des %
-            p[11] = p[9] > 0 ? Math.round((p[10] / p[9]) * 100) : 0;
-            p[14] = p[12] > 0 ? Math.round((p[13] / p[12]) * 100) : 0;
+            // Recalcul des % de précision après fusion
+            p[11] = p[9] > 0 ? Math.round((p[10] / p[9]) * 100) : 0;   // % Passes
+            p[14] = p[12] > 0 ? Math.round((p[13] / p[12]) * 100) : 0; // % Tacles
 
-            // Détection de la meilleure note
+            // Détection du meilleur joueur (MOTM automatique basé sur la note)
             const playerNote = p[5];
             if (playerNote > bestNote) {
                 bestNote = playerNote;
@@ -368,20 +372,20 @@
             }
         });
 
-        // Injection automatique dans l'input MOTM
+        // Injection automatique du nom du MOTM dans le champ du formulaire
         if (motmName) {
             document.getElementById('in-motm').value = motmName;
         }
-        // -----------------------------
 
+        // Mise à jour de la variable globale et affichage
         currentPlayersData = finalPlayers;
         displayPlayers(currentPlayersData);
 
     } catch (err) {
-        console.error("Erreur lors de la récupération des joueurs:", err);
+        console.error("Erreur lors de la récupération et fusion des joueurs:", err);
+        alert("Erreur lors de la fusion des joueurs. Vérifiez la console.");
     }
 }
-
     function displayPlayers(players) {
     const homeList = document.querySelector('#home-players-list .list');
     const awayList = document.querySelector('#away-players-list .list');
