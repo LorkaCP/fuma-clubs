@@ -161,40 +161,18 @@
         }
     </style>
   <script>
-    // --- 1. CONFIGURATION ET DICTIONNAIRE ---
+    // --- 1. CONFIGURATION ---
     const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=1610453677&single=true&output=csv";
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyI-SMPkKDGoGg48Bke8ELycDUbgLXGgwmn83Ydz8ipfd7NO0gWYhwAR4t-kuF2wfUB/exec";
     const PLAYERS_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=420142588&single=true&output=csv";
-    // AJOUTEZ VOS CORRESPONDANCES ICI : "Nom sur le site": "Nom dans le CSV/Jeu"
-   const CLUB_ALIASES = {
-    "fuma y pasa": "f y pasa", // "Nom sur site": "Nom dans le CSV"
-    "croser fc": "croser fc",
-    "fuma clubs a": "fuma clubs a",
-    "ac titans": "ac titans"
-};
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyI-SMPkKDGoGg48Bke8ELycDUbgLXGgwmn83Ydz8ipfd7NO0gWYhwAR4t-kuF2wfUB/exec";
 
-    // --- 2. FONCTIONS DE NETTOYAGE INTELLIGENT ---
-    function normalizeName(name) {
-    if (!name) return "";
-    
-    // 1. Mise en minuscule et retrait des espaces superflus pour la comparaison
-    let n = name.toLowerCase().trim();
-    
-    // 2. Vérification de l'alias
-    // Si "fuma y pasa" est trouvé, il devient "f y pasa"
-    if (CLUB_ALIASES[n]) {
-        n = CLUB_ALIASES[n];
-    }
+    const CLUB_ALIASES = {
+        "fuma y pasa": "f y pasa",
+        "croser fc": "croser fc",
+        "fuma clubs a": "fuma clubs a",
+        "ac titans": "ac titans"
+    };
 
-    // 3. Nettoyage final pour la sécurité
-    // Supprime les accents, les particules (fc, sc) et tout ce qui n'est pas alphanumérique
-    return n.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-            .replace(/\b(fc|sc|club|as|ol|de)\b/gi, "")
-            .replace(/[^a-z0-9]/g, "")
-            .trim();
-}
-
-    // --- 3. RÉCUPÉRATION DES PARAMÈTRES URL ---
     const params = new URLSearchParams(window.location.search);
     const homeName = params.get('home') || "";
     const awayName = params.get('away') || "";
@@ -203,74 +181,52 @@
     document.getElementById('name-home').innerText = homeName;
     document.getElementById('name-away').innerText = awayName;
 
-    // --- 4. RECHERCHE DES MATCHS ---
-    window.fillFormFromIndex = async function(index) {
-    const m = window.tempMatchesData[index];
-    const matchID = m[3]; // IDMatch est en colonne 4 (index 3) 
-    const isReverse = (normalizeName(m[1]) === normalizeName(awayName));
-
-    // 1. Remplissage des stats collectives (votre code existant)
-    const map = {
-        'in-sh': isReverse ? 5 : 4, 'in-sa': isReverse ? 4 : 5,
-        'in-stH': isReverse ? 7 : 6, 'in-stA': isReverse ? 6 : 7,
-        'in-posH': isReverse ? 9 : 8, 'in-posA': isReverse ? 8 : 9,
-        'in-shoH': isReverse ? 11 : 10, 'in-shoA': isReverse ? 10 : 11,
-        'in-pasAttH': isReverse ? 13 : 12, 'in-pasAttA': isReverse ? 12 : 13,
-        'in-accH': isReverse ? 15 : 14, 'in-accA': isReverse ? 14 : 15,
-        'in-tacAttH': isReverse ? 17 : 16, 'in-tacAttA': isReverse ? 16 : 17,
-        'in-tacMadH': isReverse ? 19 : 18, 'in-tacMadA': isReverse ? 18 : 19,
-        'in-redH': isReverse ? 21 : 20, 'in-redA': isReverse ? 20 : 21
-    };
-
-    for (let [id, colIndex] of Object.entries(map)) {
-        let el = document.getElementById(id);
-        if(el) el.value = m[colIndex] || (id.includes('red') ? 0 : "");
+    // --- 2. NORMALISATION ---
+    function normalizeName(name) {
+        if (!name) return "";
+        let n = name.toLowerCase().trim();
+        if (CLUB_ALIASES[n]) n = CLUB_ALIASES[n];
+        return n.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                .replace(/\b(fc|sc|club|as|ol|de)\b/gi, "")
+                .replace(/[^a-z0-9]/g, "")
+                .trim();
     }
-    document.getElementById('in-motm').value = m[22] || "";
 
-    // 2. RÉCUPÉRATION DES STATS JOUEURS
-    try {
-        const response = await fetch(PLAYERS_DATA_URL);
-        const csvText = await response.text();
-        const rows = csvText.split('\n').map(row => row.split(','));
+    // --- 3. CHARGEMENT INITIAL (Ce qui manquait) ---
+    async function init() {
+        const statusEl = document.getElementById('loading-status');
+        try {
+            const response = await fetch(GLOBAL_DATA_URL);
+            const data = await response.text();
+            const rows = data.split('\n').map(r => r.split(','));
+            
+            const normHome = normalizeName(homeName);
+            const normAway = normalizeName(awayName);
 
-        // Filtrer les joueurs par IDMatch 
-        const matchPlayers = rows.filter(r => r[0] === matchID);
+            // Filtre les matchs correspondant aux deux équipes (peu importe l'ordre)
+            const matches = rows.filter(r => {
+                const rHome = normalizeName(r[1]);
+                const rAway = normalizeName(r[2]);
+                return (rHome === normHome && rAway === normAway) || 
+                       (rHome === normAway && rAway === normHome);
+            });
 
-        // Affichage
-        displayPlayers(matchPlayers, m[1], m[2]); // m[1]=Home original, m[2]=Away original
-    } catch (err) {
-        console.error("Erreur joueurs:", err);
-    }
-    
-    alert("Données du match et des joueurs importées !");
-};
-
-function displayPlayers(players, originalHome, originalAway) {
-    const homeList = document.querySelector('#home-players-list .list');
-    const awayList = document.querySelector('#away-players-list .list');
-    
-    homeList.innerHTML = "";
-    awayList.innerHTML = "";
-
-    players.forEach(p => {
-        // p[1] = Team, p[2] = PlayerName, p[3] = Rating, p[4] = Goals, p[5] = Assists 
-        const playerHtml = `
-            <div style="font-size: 0.8rem; border-bottom: 1px solid #333; padding: 5px 0;">
-                <strong>${p[2]}</strong> - Note: ${p[3]} | G: ${p[4]} | A: ${p[5]}
-            </div>`;
-        
-        if (p[1] === originalHome) {
-            homeList.innerHTML += playerHtml;
-        } else {
-            awayList.innerHTML += playerHtml;
+            if (matches.length > 0) {
+                statusEl.innerHTML = `<i class="fas fa-check"></i> ${matches.length} match(s) trouvé(s)`;
+                displayMatchSelector(matches);
+            } else {
+                statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Aucun match trouvé dans la base.';
+            }
+        } catch (err) {
+            statusEl.innerHTML = "Erreur de chargement des données.";
+            console.error(err);
         }
-    });
-}
+    }
 
-    // --- 5. AFFICHAGE ET REMPLISSAGE ---
+    // --- 4. AFFICHAGE ET REMPLISSAGE ---
     function displayMatchSelector(matches) {
         const container = document.getElementById('match-selector-container');
+        window.tempMatchesData = matches;
         let html = '<div style="display: flex; flex-direction: column; gap: 8px;">';
         matches.forEach((m, i) => {
             html += `
@@ -280,15 +236,14 @@ function displayPlayers(players, originalHome, originalAway) {
                 </button>`;
         });
         container.innerHTML = html + '</div>';
-        window.tempMatchesData = matches;
     }
 
-    window.fillFormFromIndex = function(index) {
+    window.fillFormFromIndex = async function(index) {
         const m = window.tempMatchesData[index];
-        // Détection de l'inversion (comparaison nettoyée)
+        const matchID = m[3].trim(); 
         const isReverse = (normalizeName(m[1]) === normalizeName(awayName));
 
-        // Remplissage avec inversion automatique
+        // Mapping des colonnes du CSV MATCHES vers les IDs du formulaire
         const map = {
             'in-sh': isReverse ? 5 : 4, 'in-sa': isReverse ? 4 : 5,
             'in-stH': isReverse ? 7 : 6, 'in-stA': isReverse ? 6 : 7,
@@ -305,12 +260,43 @@ function displayPlayers(players, originalHome, originalAway) {
             let el = document.getElementById(id);
             if(el) el.value = m[colIndex] || (id.includes('red') ? 0 : "");
         }
-        
         document.getElementById('in-motm').value = m[22] || "";
-        alert("Données importées !");
+
+        // RÉCUPÉRATION DES STATS JOUEURS (Second Fichier)
+        try {
+            const response = await fetch(PLAYERS_DATA_URL);
+            const csvText = await response.text();
+            const rows = csvText.split('\n').map(row => row.split(','));
+            const matchPlayers = rows.filter(r => r[0].trim() === matchID);
+            displayPlayers(matchPlayers, m[1], m[2]); 
+        } catch (err) {
+            console.error("Erreur joueurs:", err);
+        }
+        alert("Données du match et des joueurs importées !");
     };
 
-    // --- 6. ENVOI ---
+    function displayPlayers(players, originalHome, originalAway) {
+        const homeList = document.querySelector('#home-players-list .list');
+        const awayList = document.querySelector('#away-players-list .list');
+        homeList.innerHTML = "";
+        awayList.innerHTML = "";
+
+        players.forEach(p => {
+            const playerHtml = `
+                <div style="font-size: 0.8rem; border-bottom: 1px solid #333; padding: 5px 0; color: #eee;">
+                    <strong>${p[1]}</strong> - Note: ${p[5]} | G: ${p[6]} | A: ${p[7]}
+                </div>`;
+            
+            // On compare avec le nom de l'équipe dans la ligne du match
+            if (p[2] === originalHome) {
+                homeList.innerHTML += playerHtml;
+            } else {
+                awayList.innerHTML += playerHtml;
+            }
+        });
+    }
+
+    // --- 5. ENVOI ---
     document.getElementById('match-report-form').onsubmit = async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn-submit');
@@ -322,12 +308,17 @@ function displayPlayers(players, originalHome, originalAway) {
 
         try {
             await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-            alert("Score enregistré !");
+            alert("Rapport enregistré avec succès !");
             window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
         } catch (e) {
-            alert("Erreur"); btn.disabled = false;
+            alert("Erreur lors de l'envoi");
+            btn.disabled = false;
+            btn.innerText = "Valider et enregistrer le match";
         }
     };
+
+    // Lancement de la recherche
+    init();
 </script>
 </body>
 </html>
