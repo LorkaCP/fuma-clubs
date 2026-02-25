@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-PcJxL7wtGaYMKFV-Cz2tugYbvDBgVR13cj1WQXcqLLho0K6sfLvSYhAQhGgzDLqSBQ/exec'; 
 
     
-    // --- 3. INJECTION DU MENU ---
+   // --- 3. INJECTION DU MENU COMPLET ---
     function injectNavigation() {
         const nav = document.getElementById('main-nav');
         if (!nav) return;
@@ -23,11 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
 
                 <div class="nav-links" id="nav-links-container">
-                    <a href="index.html">Home</a>
-                    <a href="league.html">League</a>
-                    <a href="clubs.html">Clubs</a>
-                    <a href="players.html">Players</a>
-                    <a href="#">Rules</a>
+                    <a href="index.html" id="nav-home">Home</a>
+                    <a href="league.html" id="nav-league">League</a>
+                    <a href="clubs.html" id="nav-clubs">Clubs</a>
+                    <a href="players.html" id="nav-players">Players</a>
+                    <a href="rules.html" id="nav-rules">Rules</a>
                     <a href="${discordServerLink}" target="_blank" style="color: #5865F2;">
                         <i class="fab fa-discord"></i> Discord
                     </a>
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        // Gestion du lien actif
+        // Gestion automatique du lien "Active"
         const currentPage = window.location.pathname.split("/").pop() || 'index.html';
         const allLinks = nav.querySelectorAll('.nav-links a');
         allLinks.forEach(link => {
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Menu Burger Mobile
+        // Gestion du Menu Burger Mobile
         const burger = document.getElementById('burger-menu');
         const linksContainer = document.getElementById('nav-links-container');
         if (burger && linksContainer) {
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Appeler l'injection immédiatement
+    // On lance l'injection du menu dès le chargement
     injectNavigation();
     
     
@@ -220,3 +220,4 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('search-player')?.addEventListener('input', applyFilters);
 
 });
+
