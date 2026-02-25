@@ -224,33 +224,56 @@
 
     // 5. REMPLISSAGE AUTOMATIQUE DU FORMULAIRE
     window.fillFormFromIndex = function(index) {
-        const m = window.tempMatchesData[index];
-        
-        // Mappage des colonnes du Google Sheet 1 vers les champs du formulaire
-        // Index basés sur votre liste : 0:Date, 1:Home, 2:Away, 3:ID, 4:SH, 5:SA, 6:StH, 7:StA, 8:PosH...
-        document.getElementById('in-sh').value = m[4];
-        document.getElementById('in-sa').value = m[5];
-        document.getElementById('in-stH').value = m[6];
-        document.getElementById('in-stA').value = m[7];
-        document.getElementById('in-posH').value = m[8];
-        document.getElementById('in-posA').value = m[9];
-        document.getElementById('in-shoH').value = m[10];
-        document.getElementById('in-shoA').value = m[11];
-        document.getElementById('in-pasAttH').value = m[12];
-        document.getElementById('in-pasAttA').value = m[13];
-        document.getElementById('in-accH').value = m[14];
-        document.getElementById('in-accA').value = m[15];
-        document.getElementById('in-tacAttH').value = m[16];
-        document.getElementById('in-tacAttA').value = m[17];
-        document.getElementById('in-tacMadH').value = m[18];
-        document.getElementById('in-tacMadA').value = m[19];
-        document.getElementById('in-redH').value = m[20] || 0;
-        document.getElementById('in-redA').value = m[21] || 0;
-        document.getElementById('in-motm').value = m[22];
+    const m = window.tempMatchesData[index];
+    
+    // On vérifie si les équipes sont dans le même sens que la page actuelle
+    // homeName et awayName sont récupérés des paramètres de l'URL
+    const isReverse = (m[1].trim() === awayName.trim()); 
 
-        alert("Données importées ! Vérifiez les champs avant de valider.");
-    };
+    // Mappage précis selon votre CSV
+    // Si isReverse est vrai, on prend la colonne de l'autre équipe
+    
+    // Scores
+    document.getElementById('in-sh').value = isReverse ? m[5] : m[4];
+    document.getElementById('in-sa').value = isReverse ? m[4] : m[5];
+    
+    // Buteurs
+    document.getElementById('in-stH').value = isReverse ? m[7] : m[6];
+    document.getElementById('in-stA').value = isReverse ? m[6] : m[7];
+    
+    // Possession (Index 8 et 9)
+    document.getElementById('in-posH').value = isReverse ? m[9] : m[8];
+    document.getElementById('in-posA').value = isReverse ? m[8] : m[9];
+    
+    // Tirs (Index 10 et 11)
+    document.getElementById('in-shoH').value = isReverse ? m[11] : m[10];
+    document.getElementById('in-shoA').value = isReverse ? m[10] : m[11];
+    
+    // Passes Tentées (Index 12 et 13)
+    document.getElementById('in-pasAttH').value = isReverse ? m[13] : m[12];
+    document.getElementById('in-pasAttA').value = isReverse ? m[12] : m[13];
+    
+    // Précision % (Index 14 et 15)
+    document.getElementById('in-accH').value = isReverse ? m[15] : m[14];
+    document.getElementById('in-accA').value = isReverse ? m[14] : m[15];
+    
+    // Tacles Tentés (Index 16 et 17)
+    document.getElementById('in-tacAttH').value = isReverse ? m[17] : m[16];
+    document.getElementById('in-tacAttA').value = isReverse ? m[16] : m[17];
+    
+    // Tacles Réussis (Index 18 et 19)
+    document.getElementById('in-tacMadH').value = isReverse ? m[19] : m[18];
+    document.getElementById('in-tacMadA').value = isReverse ? m[18] : m[19];
+    
+    // Cartons Rouges (Index 20 et 21)
+    document.getElementById('in-redH').value = isReverse ? m[21] : m[20];
+    document.getElementById('in-redA').value = isReverse ? m[20] : m[21];
+    
+    // Homme du Match (Index 22)
+    document.getElementById('in-motm').value = m[22];
 
+    alert(isReverse ? "Match importé (Données inversées pour correspondre au sens Home/Away)" : "Match importé avec succès !");
+};
     // 6. ENVOI DU FORMULAIRE VIA POST (Apps Script)
     document.getElementById('match-report-form').onsubmit = async (e) => {
         e.preventDefault();
