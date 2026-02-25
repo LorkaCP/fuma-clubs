@@ -14,104 +14,280 @@
     </style>
 </head>
 <body>
-    <div class="report-form-container">
-        <h1 style="text-align: center; color: #d4af37;">DATA REPORT</h1>
-        <p id="loading-status" style="text-align: center; font-size: 0.9rem;">Vérification des données existantes...</p>
+    <div class="fuma-container">
+        <header style="text-align: center; padding: 30px 0;">
+            <h1 style="color: var(--fuma-primary); font-weight: 800; letter-spacing: 2px; margin: 0;">DATA REPORT SYSTEM</h1>
+            <p style="color: var(--fuma-text-dim); font-size: 0.9rem;">Enregistrement des statistiques officielles FUMA</p>
+        </header>
 
-        <form id="match-report-form">
-            <div class="grid-stats">
-                <div class="team-sec">
-                    <h2 id="name-home">HOME</h2>
-                    <label>Score</label><input type="number" name="sh" id="in-sh">
-                    <label>Buteurs (ex: Messi 12', 45')</label><input type="text" name="stH" id="in-stH">
-                    <label>Possession %</label><input type="number" name="posH" id="in-posH">
-                    <label>Tirs</label><input type="number" name="shoH" id="in-shoH">
-                    <label>Passes Tentées</label><input type="number" name="pasAttH" id="in-pasAttH">
-                    <label>Précision %</label><input type="number" name="accH" id="in-accH">
-                    <label>Tacles Réussis</label><input type="number" name="tacMadH" id="in-tacMadH">
-                    <label>Tacles Tentés</label><input type="number" name="tacAttH" id="in-tacAttH">
-                </div>
-
-                <div class="team-sec">
-                    <h2 id="name-away">AWAY</h2>
-                    <label>Score</label><input type="number" name="sa" id="in-sa">
-                    <label>Buteurs</label><input type="text" name="stA" id="in-stA">
-                    <label>Possession %</label><input type="number" name="posA" id="in-posA">
-                    <label>Tirs</label><input type="number" name="shoA" id="in-shoA">
-                    <label>Passes Tentées</label><input type="number" name="pasAttA" id="in-pasAttA">
-                    <label>Précision %</label><input type="number" name="accA" id="in-accA">
-                    <label>Tacles Réussis</label><input type="number" name="tacMadA" id="in-tacMadA">
-                    <label>Tacles Tentés</label><input type="number" name="tacAttA" id="in-tacAttA">
-                </div>
+        <div id="import-section" style="max-width: 800px; margin: 0 auto 30px auto; padding: 0 20px;">
+            <div id="loading-status" style="text-align: center; margin-bottom: 10px; font-weight: 600;">
+                <i class="fas fa-spinner fa-spin"></i> Recherche de matchs existants...
             </div>
+            <div id="match-selector-container">
+                </div>
+        </div>
+
+        <form id="match-report-form" style="max-width: 900px; margin: 0 auto; padding-bottom: 100px;">
             
-            <div class="team-sec" style="margin-top:20px;">
-                <label>Homme du Match (MotM)</label>
-                <input type="text" name="motm" id="in-motm" placeholder="Nom du joueur">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 20px;">
+                
+                <div class="report-card" style="background: #151515; border: 1px solid #333; border-radius: 15px; padding: 20px;">
+                    <h2 id="name-home" style="color: var(--fuma-primary); text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px;">HOME</h2>
+                    
+                    <label>Score Final</label>
+                    <input type="number" name="sh" id="in-sh" placeholder="0" required>
+
+                    <label>Buteurs (Noms / Minutes)</label>
+                    <input type="text" name="stH" id="in-stH" placeholder="ex: Messi 12', 45'">
+
+                    <label>Possession %</label>
+                    <input type="number" name="posH" id="in-posH" placeholder="50">
+
+                    <label>Tirs Totaux</label>
+                    <input type="number" name="shoH" id="in-shoH" placeholder="0">
+
+                    <label>Passes Tentées</label>
+                    <input type="number" name="pasAttH" id="in-pasAttH" placeholder="0">
+
+                    <label>Précision des Passes %</label>
+                    <input type="number" name="accH" id="in-accH" placeholder="0">
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label>Tacles réussis</label>
+                            <input type="number" name="tacMadH" id="in-tacMadH" placeholder="0">
+                        </div>
+                        <div>
+                            <label>Tacles tentés</label>
+                            <input type="number" name="tacAttH" id="in-tacAttH" placeholder="0">
+                        </div>
+                    </div>
+
+                    <label>Cartons Rouges</label>
+                    <input type="number" name="redH" id="in-redH" value="0">
+                </div>
+
+                <div class="report-card" style="background: #151515; border: 1px solid #333; border-radius: 15px; padding: 20px;">
+                    <h2 id="name-away" style="color: var(--fuma-primary); text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px;">AWAY</h2>
+                    
+                    <label>Score Final</label>
+                    <input type="number" name="sa" id="in-sa" placeholder="0" required>
+
+                    <label>Buteurs (Noms / Minutes)</label>
+                    <input type="text" name="stA" id="in-stA" placeholder="ex: Haaland 88'">
+
+                    <label>Possession %</label>
+                    <input type="number" name="posA" id="in-posA" placeholder="50">
+
+                    <label>Tirs Totaux</label>
+                    <input type="number" name="shoA" id="in-shoA" placeholder="0">
+
+                    <label>Passes Tentées</label>
+                    <input type="number" name="pasAttA" id="in-pasAttA" placeholder="0">
+
+                    <label>Précision des Passes %</label>
+                    <input type="number" name="accA" id="in-accA" placeholder="0">
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label>Tacles réussis</label>
+                            <input type="number" name="tacMadA" id="in-tacMadA" placeholder="0">
+                        </div>
+                        <div>
+                            <label>Tacles tentés</label>
+                            <input type="number" name="tacAttA" id="in-tacAttA" placeholder="0">
+                        </div>
+                    </div>
+
+                    <label>Cartons Rouges</label>
+                    <input type="number" name="redA" id="in-redA" value="0">
+                </div>
             </div>
 
-            <button type="submit" class="submit-btn" id="btn-submit">ENREGISTRER SUR LE GOOGLE SHEET</button>
+            <div style="padding: 20px;">
+                <div style="background: #1a1a1a; padding: 20px; border-radius: 15px; border: 1px solid var(--fuma-primary);">
+                    <label style="margin-top: 0;">MAN OF THE MATCH (NOM COMPLET)</label>
+                    <input type="text" name="motm" id="in-motm" placeholder="Nom du joueur">
+                </div>
+            </div>
+
+            <div style="padding: 0 20px;">
+                <button type="submit" id="btn-submit" class="submit-button" 
+                        style="width: 100%; padding: 20px; background: var(--fuma-primary); color: #000; border: none; border-radius: 10px; font-weight: 800; font-size: 1.1rem; cursor: pointer; text-transform: uppercase; transition: 0.3s;">
+                    <i class="fas fa-cloud-upload-alt"></i> Valider et enregistrer le match
+                </button>
+            </div>
+
         </form>
     </div>
 
-    <script>
-        const params = new URLSearchParams(window.location.search);
-        const home = params.get('home');
-        const away = params.get('away');
-        const gid = params.get('gid');
-        
-        document.getElementById('name-home').innerText = home;
-        document.getElementById('name-away').innerText = away;
+    <style>
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-size: 0.75rem;
+            color: var(--fuma-text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #000;
+            border: 1px solid #333;
+            color: #fff;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            box-sizing: border-box;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--fuma-primary);
+        }
+        .submit-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
+        }
+        .select-match-btn:hover {
+            border-color: var(--fuma-primary) !important;
+            background: #303030 !important;
+        }
+    </style>
+   <script>
+    // 1. CONFIGURATION DES URLS
+    // URL de la feuille "Matches" du premier Google Sheet (Publié en CSV)
+    const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vREfI8S8fkz3U_S37N7U2hVf0p6S_m_A1I8Vf-v-v-v-v-v-v/pub?gid=1610453677&single=true&output=csv";
+    
+    // URL de votre déploiement Google Apps Script (doPost)
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyI-SMPkKDGoGg48Bke8ELycDUbgLXGgwmn83Ydz8ipfd7NO0gWYhwAR4t-kuF2wfUB/exec";
 
-        // LOGIQUE DE PRÉ-REMPLISSAGE (Lecture du CSV existant)
-        const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=";
-        
-        fetch(BASE_URL + gid)
-            .then(r => r.text())
-            .then(csv => {
-                const rows = csv.split('\n').map(row => row.split(',').map(cell => cell.replace(/^"|"$/g, '')));
-                const match = rows.find(r => r[6] === home && r[7] === away);
-                
-                if(match && match[8] !== "") { // Si un score existe déjà en colonne 8
-                    document.getElementById('in-sh').value = match[8];
-                    document.getElementById('in-sa').value = match[9];
-                    // On pourrait pré-remplir les autres colonnes ici selon votre structure CSV
-                    document.getElementById('loading-status').innerText = "Données actuelles chargées (Mode Modification)";
-                } else {
-                    document.getElementById('loading-status').innerText = "Nouveau rapport de match";
-                }
+    // 2. RECUPERATION DES PARAMETRES URL
+    const params = new URLSearchParams(window.location.search);
+    const homeName = params.get('home');
+    const awayName = params.get('away');
+    const currentGid = params.get('gid');
+
+    document.getElementById('name-home').innerText = homeName;
+    document.getElementById('name-away').innerText = awayName;
+
+    // 3. CHARGEMENT DES MATCHS EXISTANTS POUR PRE-REMPLISSAGE
+    window.addEventListener('DOMContentLoaded', async () => {
+        const statusEl = document.getElementById('loading-status');
+        try {
+            const response = await fetch(GLOBAL_DATA_URL);
+            const csvText = await response.text();
+            
+            // Parsing simple du CSV
+            const rows = csvText.split('\n').map(row => {
+                // Gestion des guillemets dans le CSV
+                return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.replace(/^"|"$/g, '').trim());
             });
 
-        // ENVOI VERS APPS SCRIPT
-        document.getElementById('match-report-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-submit');
-            btn.innerText = "ENVOI EN COURS...";
-            btn.disabled = true;
+            // On cherche les matchs entre ces deux équipes (Home vs Away OU Away vs Home)
+            // Selon votre structure : Col 1 = TeamHome, Col 2 = TeamAway
+            const foundMatches = rows.filter(r => 
+                (r[1] === homeName && r[2] === awayName) || (r[1] === awayName && r[2] === homeName)
+            );
 
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData.entries());
-            data.home = home;
-            data.away = away;
-
-            try {
-                // REMPLACEZ PAR VOTRE URL DE DÉPLOIEMENT APPS SCRIPT
-                const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyI-SMPkKDGoGg48Bke8ELycDUbgLXGgwmn83Ydz8ipfd7NO0gWYhwAR4t-kuF2wfUB/exec";
-                
-                await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify(data)
-                });
-
-                alert("Match enregistré avec succès !");
-                window.location.href = `info-match.html?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}&gid=${gid}`;
-            } catch (err) {
-                alert("Erreur lors de l'envoi");
-                btn.disabled = false;
-                btn.innerText = "RÉESSAYER";
+            if (foundMatches.length > 0) {
+                statusEl.innerHTML = `<span style="color: #d4af37;"><i class="fas fa-info-circle"></i> ${foundMatches.length} match(s) trouvé(s) dans la base. Choisissez celui à importer :</span>`;
+                displayMatchSelector(foundMatches);
+            } else {
+                statusEl.innerText = "Aucun match existant trouvé. Saisie manuelle requise.";
             }
-        };
-    </script>
+        } catch (err) {
+            console.error("Erreur de chargement base centrale:", err);
+            statusEl.innerText = "Erreur de connexion à la base de données.";
+        }
+    });
+
+    // 4. AFFICHAGE DU SELECTEUR DE MATCHS
+    function displayMatchSelector(matches) {
+        const selectorContainer = document.getElementById('match-selector-container');
+        if (!selectorContainer) return;
+
+        let html = '<div style="display: flex; flex-direction: column; gap: 8px; margin-top:10px;">';
+        matches.forEach((m, index) => {
+            // Affichage : Date - Home Score - Away Team
+            html += `
+                <button type="button" onclick="fillFormFromIndex(${index})" class="select-match-btn" 
+                        style="text-align: left; background: #252525; color: #fff; border: 1px solid #444; padding: 12px; cursor: pointer; border-radius: 6px; font-size: 0.85rem;">
+                    <i class="far fa-calendar-alt"></i> ${m[0]} | <strong>${m[1]}</strong> ${m[4]}-${m[5]} <strong>${m[2]}</strong> (ID: ${m[3]})
+                </button>`;
+        });
+        html += '</div>';
+        selectorContainer.innerHTML = html;
+        window.tempMatchesData = matches; // Stockage temporaire
+    }
+
+    // 5. REMPLISSAGE AUTOMATIQUE DU FORMULAIRE
+    window.fillFormFromIndex = function(index) {
+        const m = window.tempMatchesData[index];
+        
+        // Mappage des colonnes du Google Sheet 1 vers les champs du formulaire
+        // Index basés sur votre liste : 0:Date, 1:Home, 2:Away, 3:ID, 4:SH, 5:SA, 6:StH, 7:StA, 8:PosH...
+        document.getElementById('in-sh').value = m[4];
+        document.getElementById('in-sa').value = m[5];
+        document.getElementById('in-stH').value = m[6];
+        document.getElementById('in-stA').value = m[7];
+        document.getElementById('in-posH').value = m[8];
+        document.getElementById('in-posA').value = m[9];
+        document.getElementById('in-shoH').value = m[10];
+        document.getElementById('in-shoA').value = m[11];
+        document.getElementById('in-pasAttH').value = m[12];
+        document.getElementById('in-pasAttA').value = m[13];
+        document.getElementById('in-accH').value = m[14];
+        document.getElementById('in-accA').value = m[15];
+        document.getElementById('in-tacAttH').value = m[16];
+        document.getElementById('in-tacAttA').value = m[17];
+        document.getElementById('in-tacMadH').value = m[18];
+        document.getElementById('in-tacMadA').value = m[19];
+        document.getElementById('in-redH').value = m[20] || 0;
+        document.getElementById('in-redA').value = m[21] || 0;
+        document.getElementById('in-motm').value = m[22];
+
+        alert("Données importées ! Vérifiez les champs avant de valider.");
+    };
+
+    // 6. ENVOI DU FORMULAIRE VIA POST (Apps Script)
+    document.getElementById('match-report-form').onsubmit = async (e) => {
+        e.preventDefault();
+        
+        const btn = document.getElementById('btn-submit');
+        btn.innerText = "ENVOI EN COURS...";
+        btn.disabled = true;
+
+        // Collecte des données
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        
+        // Ajout des infos de contexte
+        data.home = homeName;
+        data.away = awayName;
+        data.matchId = "M-" + Date.now(); // Génération d'un ID unique si absent
+
+        try {
+            // Note: mode 'no-cors' car Google Apps Script ne renvoie pas de headers CORS standard
+            await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                cache: 'no-cache',
+                body: JSON.stringify(data)
+            });
+
+            alert("Le score a été enregistré avec succès dans le Google Sheet !");
+            // Retour à la page du match
+            window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
+            
+        } catch (error) {
+            console.error("Erreur lors de l'envoi:", error);
+            alert("Erreur lors de l'enregistrement. Vérifiez votre connexion.");
+            btn.disabled = false;
+            btn.innerText = "RÉESSAYER L'ENREGISTREMENT";
+        }
+    };
+</script>
 </body>
 </html>
