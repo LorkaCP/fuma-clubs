@@ -350,6 +350,101 @@
         }
     };
 
+window.combineSelectedMatches = async function() {
+    const checked = document.querySelectorAll('.match-checkbox:checked');
+    if (checked.length !== 2) {
+        alert("Veuillez sélectionner exactement 2 matchs pour les fusionner.");
+        return;
+    }
+
+    const idx1 = checked[0].value;
+    const idx2 = checked[1].value;
+    const m1 = window.tempMatchesData[idx1];
+    const m2 = window.tempMatchesData[idx2];
+
+    // On détermine si les équipes sont inversées par rapport aux paramètres de l'URL
+    const isReverse1 = (normalizeName(m1[1]) === normalizeName(awayName));
+    const isReverse2 = (normalizeName(m2[1]) === normalizeName(awayName));
+
+    // Fonction utilitaire pour extraire la valeur selon le sens du match
+    const getVal = (m, rev, homeCol, awayCol) => parseInt(m[rev ? awayCol : homeCol]) || 0;
+    const getTxt = (m, rev, homeCol, awayCol) => m[rev ? awayCol : homeCol] || "";
+
+    // CALCUL DE FUSION (Addition ou Moyenne selon la stat)
+    const combinedData = {
+        'in-sh': getVal(m1, isReverse1, 4, 5) + getVal(m2, isReverse2, 4, 5),
+        'in-sa': getVal(m1, isReverse1, 5, 4) + getVal(m2, isReverse2, 5, 4),
+        'in-stH': getTxt(m1, isReverse1, 6, 7) + " / " + getTxt(m2, isReverse2, 6, 7),
+        'in-stA': getTxt(m1, isReverse1, 7, 6) + " / " + getTxt(m2, isReverse2, 7, 6),
+        'in-posH': Math.round((getVal(m1, isReverse1, 8, 9) + getVal(m2, isReverse2, 8, 9)) / 2),
+        'in-posA': Math.round((getVal(m1, isReverse1, 9, 8) + getVal(m2, isReverse2, 9, 8)) / 2),
+        'in-shoH': getVal(m1, isReverse1, 10, 11) + getVal(m2, isReverse2, 10, 11),
+        'in-shoA': getVal(m1, isReverse1, 11, 10) + getVal(m2, isReverse2, 11, 10),
+        'in-pasAttH': getVal(m1, isReverse1, 12, 13) + getVal(m2, isReverse2, 12, 13),
+        'in-pasAttA': getVal(m1, isReverse1, 13, 12) + getVal(m2, isReverse2, 13, 12),
+        'in-accH': Math.round((getVal(m1, isReverse1, 14, 15) + getVal(m2, isReverse2, 14, 15)) / 2),
+        'in-accA': Math.round((getVal(m1, isReverse1, 15, 14) + getVal(m2, isReverse2, 15, 14)) / 2),
+        'in-tacAttH': getVal(m1, isReverse1, 16, 17) + getVal(m2, isReverse2, 16, 17),
+        'in-tacAttA': getVal(m1, isReverse1, 17, 16) + getVal(m2, isReverse2, 17, 16),
+        'in-tacMadH': getVal(m1, isReverse1, 18, 19) + getVal(m2, isReverse2, 18, 19),
+        'in-tacMadA': getVal(m1, isReverse1, 19, 18) + getVal(m2, isReverse2, 19, 18),
+        'in-redH': getVal(m1, isReverse1, 20, 21) + getVal(m2, isReverse2, 20, 21),
+        'in-redA': getVal(m1, isReverse1, 21, 20) + getVal(m2, isReverse2, 21, 20)
+    };
+
+    // Remplissage du formulaire
+    for (let [id, val] of Object.entries(combinedData)) {
+        let el = document.getElementById(id);
+        if (el) el.value = val;
+    }
+
+    // Gestion des joueurs (Cumul des deux matchs)
+    fetchPlayersForTwoMatches(m1[3].trim(), m2[3].trim());
+    
+    alert("Matchs fusionnés avec succès !");
+};
+
+      async function fetchPlayersForTwoMatches(id1, id2) {
+    try {
+        const response = await fetch(PLAYERS_DATA_URL);
+        const csvText = await response.text();
+        const rows = csvText.split('\n').map(row => row.split(','));
+        
+        // On filtre les joueurs présents dans l'un ou l'autre match
+        const playersMap = {};
+
+        rows.forEach(r => {
+            const mId = r[0].trim();
+            if (mId === id1 || mId === id2) {
+                const pName = r[1];
+                if (!playersMap[pName]) {
+                    playersMap[pName] = [...r]; // On copie la ligne
+                    // On convertit les colonnes numériques pour l'addition
+                    [5,6,7,8,9,10,12,13,15,16].forEach(idx => playersMap[pName][idx] = parseFloat(r[idx]) || 0);
+                } else {
+                    // Si le joueur existe déjà, on additionne les stats clés
+                    [6,7,8,9,10,12,13,15,16].forEach(idx => {
+                        playersMap[pName][idx] += (parseFloat(r[idx]) || 0);
+                    });
+                    // Moyenne pour la note (colonne 5)
+                    playersMap[pName][5] = ((playersMap[pName][5] + (parseFloat(r[5]) || 0)) / 2).toFixed(1);
+                }
+            }
+        });
+
+        // Recalcul des pourcentages après fusion
+        Object.values(playersMap).forEach(p => {
+            p[11] = p[9] > 0 ? Math.round((p[10] / p[9]) * 100) : 0; // % Passes
+            p[14] = p[12] > 0 ? Math.round((p[13] / p[12]) * 100) : 0; // % Tacles
+        });
+
+        displayPlayers(Object.values(playersMap));
+    } catch (err) {
+        console.error("Erreur fusion joueurs:", err);
+    }
+}
+
+      
     // Lancement de la recherche
     init();
 </script>
