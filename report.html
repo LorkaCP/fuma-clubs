@@ -214,7 +214,7 @@
                 .trim();
     }
 
-    // --- 3. CHARGEMENT INITIAL (Ce qui manquait) ---
+    // --- 3. RECHERCHE DES MATCHS ---
     async function init() {
         const statusEl = document.getElementById('loading-status');
         try {
@@ -225,7 +225,6 @@
             const normHome = normalizeName(homeName);
             const normAway = normalizeName(awayName);
 
-            // Filtre les matchs correspondant aux deux équipes (peu importe l'ordre)
             const matches = rows.filter(r => {
                 const rHome = normalizeName(r[1]);
                 const rAway = normalizeName(r[2]);
@@ -234,110 +233,148 @@
             });
 
             if (matches.length > 0) {
-                statusEl.innerHTML = `<i class="fas fa-check"></i> ${matches.length} match(s) trouvé(s)`;
+                statusEl.innerHTML = `<i class="fas fa-check"></i> ${matches.length} mi-temps trouvées`;
                 displayMatchSelector(matches);
             } else {
-                statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Aucun match trouvé dans la base.';
+                statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Aucun match trouvé.';
             }
         } catch (err) {
-            statusEl.innerHTML = "Erreur de chargement des données.";
+            statusEl.innerHTML = "Erreur de chargement.";
             console.error(err);
         }
     }
 
-    // --- 4. AFFICHAGE ET REMPLISSAGE ---
     function displayMatchSelector(matches) {
-    const container = document.getElementById('match-selector-container');
-    window.tempMatchesData = matches; // Stockage temporaire des résultats de recherche
-    let html = '<div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">';
-    
-    matches.forEach((m, i) => {
+        const container = document.getElementById('match-selector-container');
+        window.tempMatchesData = matches;
+        let html = '<div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">';
+        
+        matches.forEach((m, i) => {
+            html += `
+                <label style="display: flex; align-items: center; background: #252525; border: 1px solid #444; padding: 12px; cursor: pointer; border-radius: 6px; color: #fff;">
+                    <input type="checkbox" class="match-checkbox" value="${i}" style="width: 20px; height: 20px; margin-right: 15px;">
+                    <span><i class="far fa-calendar-alt"></i> ${m[0]} | <strong>${m[1]}</strong> ${m[4]}-${m[5]} <strong>${m[2]}</strong></span>
+                </label>`;
+        });
+
         html += `
-            <label style="display: flex; align-items: center; background: #252525; border: 1px solid #444; padding: 12px; cursor: pointer; border-radius: 6px; color: #fff;">
-                <input type="checkbox" class="match-checkbox" value="${i}" style="width: 20px; height: 20px; margin-right: 15px;">
-                <span><i class="far fa-calendar-alt"></i> ${m[0]} | <strong>${m[1]}</strong> ${m[4]}-${m[5]} <strong>${m[2]}</strong></span>
-            </label>`;
-    });
+            <button type="button" onclick="processSelectedMatches()" 
+                    style="background: #d4af37; color: #000; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase; width:100%;">
+                Fusionner les 2 mi-temps sélectionnées
+            </button>
+        </div>`;
+        container.innerHTML = html;
+    }
 
-    html += `
-        <button type="button" onclick="processSelectedMatches()" 
-                style="background: #d4af37; color: #000; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase;">
-            Fusionner les 2 mi-temps sélectionnées
-        </button>
-    </div>`;
-    container.innerHTML = html;
-}
-
-    window.fillFormFromIndex = async function(index) {
-        const m = window.tempMatchesData[index];
-        const matchID = m[3].trim(); 
-        const isReverse = (normalizeName(m[1]) === normalizeName(awayName));
-
-        // Mapping des colonnes du CSV MATCHES vers les IDs du formulaire
-        const map = {
-            'in-sh': isReverse ? 5 : 4, 'in-sa': isReverse ? 4 : 5,
-            'in-stH': isReverse ? 7 : 6, 'in-stA': isReverse ? 6 : 7,
-            'in-posH': isReverse ? 9 : 8, 'in-posA': isReverse ? 8 : 9,
-            'in-shoH': isReverse ? 11 : 10, 'in-shoA': isReverse ? 10 : 11,
-            'in-pasAttH': isReverse ? 13 : 12, 'in-pasAttA': isReverse ? 12 : 13,
-            'in-accH': isReverse ? 15 : 14, 'in-accA': isReverse ? 14 : 15,
-            'in-tacAttH': isReverse ? 17 : 16, 'in-tacAttA': isReverse ? 16 : 17,
-            'in-tacMadH': isReverse ? 19 : 18, 'in-tacMadA': isReverse ? 18 : 19,
-            'in-redH': isReverse ? 21 : 20, 'in-redA': isReverse ? 20 : 21
-        };
-
-        for (let [id, colIndex] of Object.entries(map)) {
-            let el = document.getElementById(id);
-            if(el) el.value = m[colIndex] || (id.includes('red') ? 0 : "");
+    // --- 4. LOGIQUE DE FUSION (EQUIPE + JOUEURS) ---
+    window.processSelectedMatches = async function() {
+        const selectedCheckboxes = document.querySelectorAll('.match-checkbox:checked');
+        
+        if (selectedCheckboxes.length !== 2) {
+            alert("Veuillez sélectionner exactement 2 matchs pour fusionner les mi-temps.");
+            return;
         }
-        document.getElementById('in-motm').value = m[22] || "";
 
-        // RÉCUPÉRATION DES STATS JOUEURS (Second Fichier)
+        const m1 = window.tempMatchesData[selectedCheckboxes[0].value];
+        const m2 = window.tempMatchesData[selectedCheckboxes[1].value];
+        
+        const isRev1 = (normalizeName(m1[1]) === normalizeName(awayName));
+        const isRev2 = (normalizeName(m2[1]) === normalizeName(awayName));
+
+        const sum = (colH, colA, isR1, isR2) => (parseInt(m1[isR1 ? colA : colH]) || 0) + (parseInt(m2[isR2 ? colA : colH]) || 0);
+        const avg = (colH, colA, isR1, isR2) => Math.round(((parseInt(m1[isR1 ? colA : colH]) || 0) + (parseInt(m2[isR2 ? colA : colH]) || 0)) / 2);
+
+        // Stats Equipe
+        document.getElementById('in-sh').value = sum(4, 5, isRev1, isRev2); 
+        document.getElementById('in-sa').value = sum(5, 4, isRev1, isRev2); 
+        document.getElementById('in-posH').value = avg(8, 9, isRev1, isRev2); 
+        document.getElementById('in-posA').value = avg(9, 8, isRev1, isRev2);
+        document.getElementById('in-shoH').value = sum(10, 11, isRev1, isRev2); 
+        document.getElementById('in-shoA').value = sum(11, 10, isRev1, isRev2);
+        document.getElementById('in-pasAttH').value = sum(12, 13, isRev1, isRev2); 
+        document.getElementById('in-pasAttA').value = sum(13, 12, isRev1, isRev2);
+        document.getElementById('in-accH').value = avg(14, 15, isRev1, isRev2); 
+        document.getElementById('in-accA').value = avg(15, 14, isRev1, isRev2);
+        
+        // Tacles Equipe
+        document.getElementById('in-tacAttH').value = sum(16, 17, isRev1, isRev2); 
+        document.getElementById('in-tacAttA').value = sum(17, 16, isRev1, isRev2);
+        document.getElementById('in-tacMadH').value = sum(18, 19, isRev1, isRev2); 
+        document.getElementById('in-tacMadA').value = sum(19, 18, isRev1, isRev2);
+
+        document.getElementById('in-redH').value = sum(20, 21, isRev1, isRev2); 
+        document.getElementById('in-redA').value = sum(21, 20, isRev1, isRev2);
+
+        // Buteurs avec " | "
+        const bH1 = (m1[isRev1 ? 7 : 6] || "").trim();
+        const bH2 = (m2[isRev2 ? 7 : 6] || "").trim();
+        const bA1 = (m1[isRev1 ? 6 : 7] || "").trim();
+        const bA2 = (m2[isRev2 ? 6 : 7] || "").trim();
+
+        document.getElementById('in-stH').value = [bH1, bH2].filter(x => x !== "").join(" | ");
+        document.getElementById('in-stA').value = [bA1, bA2].filter(x => x !== "").join(" | ");
+
+        // Fusion Joueurs
+        await fetchPlayersForTwoMatches(m1[3].trim(), m2[3].trim());
+        alert("Fusion terminée ! Vérifiez les statistiques avant de valider.");
+    };
+
+    async function fetchPlayersForTwoMatches(id1, id2) {
         try {
             const response = await fetch(PLAYERS_DATA_URL);
             const csvText = await response.text();
             const rows = csvText.split('\n').map(row => row.split(','));
-            const matchPlayers = rows.filter(r => r[0].trim() === matchID);
-            displayPlayers(matchPlayers, m[1], m[2]); 
-        } catch (err) {
-            console.error("Erreur joueurs:", err);
-        }
-        alert("Données du match et des joueurs importées !");
-    };
+            const playersMap = {};
+
+            rows.forEach(r => {
+                const mId = r[0].trim();
+                if (mId === id1 || mId === id2) {
+                    const pName = r[1];
+                    if (!playersMap[pName]) {
+                        playersMap[pName] = [...r]; 
+                        [5,6,7,8,9,10,12,13,15,16].forEach(idx => playersMap[pName][idx] = parseFloat(r[idx]) || 0);
+                    } else {
+                        [6,7,8,9,10,12,13,15,16].forEach(idx => {
+                            playersMap[pName][idx] += (parseFloat(r[idx]) || 0);
+                        });
+                        playersMap[pName][5] = ((parseFloat(playersMap[pName][5]) + (parseFloat(r[5]) || 0)) / 2).toFixed(1);
+                    }
+                }
+            });
+
+            Object.values(playersMap).forEach(p => {
+                p[11] = p[9] > 0 ? Math.round((p[10] / p[9]) * 100) : 0;
+                p[14] = p[12] > 0 ? Math.round((p[13] / p[12]) * 100) : 0;
+            });
+
+            displayPlayers(Object.values(playersMap));
+        } catch (err) { console.error("Erreur joueurs:", err); }
+    }
 
     function displayPlayers(players) {
-    const homeList = document.getElementById('home-players-list');
-    const awayList = document.getElementById('away-players-list');
-    homeList.innerHTML = ""; awayList.innerHTML = "";
+        const homeList = document.querySelector('#home-players-list .list');
+        const awayList = document.querySelector('#away-players-list .list');
+        homeList.innerHTML = ""; awayList.innerHTML = "";
 
-    players.forEach(p => {
-        // p[1]: Nom, p[5]: Note, p[6]: Buts, p[7]: Assists, p[8]: Tirs, 
-        // p[9]: Passes, p[10]: P. Réussies, p[11]: % P., p[12]: Tacles, 
-        // p[13]: T. Réussis, p[14]: % T., p[15]: Rouge, p[16]: MotM
-        
-        const playerHtml = `
-            <div class="player-stat-row">
-                <span class="player-name-header">${p[1]} ${p[16] == 1 ? '⭐' : ''}</span>
-                <div class="stats-grid">
-                    <div class="stat-item">Note: <strong>${p[5]}</strong></div>
-                    <div class="stat-item">Buts: ${p[6]}</div>
-                    <div class="stat-item">Assists: ${p[7]}</div>
-                    <div class="stat-item">Tirs: ${p[8]}</div>
-                    <div class="stat-item">Passes: ${p[10]}/${p[9]} (${p[11]}%)</div>
-                    <div class="stat-item">Tacles: ${p[13]}/${p[12]} (${p[14]}%)</div>
-                    <div class="stat-item">Rouge: ${p[15]}</div>
-                </div>
-            </div>`;
+        players.forEach(p => {
+            const playerHtml = `
+                <div class="player-stat-row">
+                    <span class="player-name-header">${p[1]} ${p[16] == 1 ? '⭐' : ''}</span>
+                    <div class="stats-grid">
+                        <div class="stat-item">Note: <strong>${p[5]}</strong></div>
+                        <div class="stat-item">Buts: ${p[6]}</div>
+                        <div class="stat-item">Assists: ${p[7]}</div>
+                        <div class="stat-item">Tirs: ${p[8]}</div>
+                        <div class="stat-item">Passes: ${p[10]}/${p[9]} (${p[11]}%)</div>
+                        <div class="stat-item">Tacles: ${p[13]}/${p[12]} (${p[14]}%)</div>
+                    </div>
+                </div>`;
+            if (p[2] === homeName) homeList.innerHTML += playerHtml;
+            else awayList.innerHTML += playerHtml;
+        });
+    }
 
-        // Identification de l'équipe (Index 2 dans le CSV)
-        if (p[2] === homeName) {
-            homeList.innerHTML += playerHtml;
-        } else {
-            awayList.innerHTML += playerHtml;
-        }
-    });
-}
-    // --- 5. ENVOI ---
+    // --- 5. ENVOI FINAL ---
     document.getElementById('match-report-form').onsubmit = async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn-submit');
@@ -358,164 +395,8 @@
         }
     };
 
-window.combineSelectedMatches = async function() {
-    const checked = document.querySelectorAll('.match-checkbox:checked');
-    if (checked.length !== 2) {
-        alert("Veuillez sélectionner exactement 2 matchs pour les fusionner.");
-        return;
-    }
-
-    const idx1 = checked[0].value;
-    const idx2 = checked[1].value;
-    const m1 = window.tempMatchesData[idx1];
-    const m2 = window.tempMatchesData[idx2];
-
-    // On détermine si les équipes sont inversées par rapport aux paramètres de l'URL
-    const isReverse1 = (normalizeName(m1[1]) === normalizeName(awayName));
-    const isReverse2 = (normalizeName(m2[1]) === normalizeName(awayName));
-
-    // Fonction utilitaire pour extraire la valeur selon le sens du match
-    const getVal = (m, rev, homeCol, awayCol) => parseInt(m[rev ? awayCol : homeCol]) || 0;
-    const getTxt = (m, rev, homeCol, awayCol) => m[rev ? awayCol : homeCol] || "";
-
-    // CALCUL DE FUSION (Addition ou Moyenne selon la stat)
-    const combinedData = {
-        'in-sh': getVal(m1, isReverse1, 4, 5) + getVal(m2, isReverse2, 4, 5),
-        'in-sa': getVal(m1, isReverse1, 5, 4) + getVal(m2, isReverse2, 5, 4),
-        'in-stH': getTxt(m1, isReverse1, 6, 7) + " / " + getTxt(m2, isReverse2, 6, 7),
-        'in-stA': getTxt(m1, isReverse1, 7, 6) + " / " + getTxt(m2, isReverse2, 7, 6),
-        'in-posH': Math.round((getVal(m1, isReverse1, 8, 9) + getVal(m2, isReverse2, 8, 9)) / 2),
-        'in-posA': Math.round((getVal(m1, isReverse1, 9, 8) + getVal(m2, isReverse2, 9, 8)) / 2),
-        'in-shoH': getVal(m1, isReverse1, 10, 11) + getVal(m2, isReverse2, 10, 11),
-        'in-shoA': getVal(m1, isReverse1, 11, 10) + getVal(m2, isReverse2, 11, 10),
-        'in-pasAttH': getVal(m1, isReverse1, 12, 13) + getVal(m2, isReverse2, 12, 13),
-        'in-pasAttA': getVal(m1, isReverse1, 13, 12) + getVal(m2, isReverse2, 13, 12),
-        'in-accH': Math.round((getVal(m1, isReverse1, 14, 15) + getVal(m2, isReverse2, 14, 15)) / 2),
-        'in-accA': Math.round((getVal(m1, isReverse1, 15, 14) + getVal(m2, isReverse2, 15, 14)) / 2),
-        'in-tacAttH': getVal(m1, isReverse1, 16, 17) + getVal(m2, isReverse2, 16, 17),
-        'in-tacAttA': getVal(m1, isReverse1, 17, 16) + getVal(m2, isReverse2, 17, 16),
-        'in-tacMadH': getVal(m1, isReverse1, 18, 19) + getVal(m2, isReverse2, 18, 19),
-        'in-tacMadA': getVal(m1, isReverse1, 19, 18) + getVal(m2, isReverse2, 19, 18),
-        'in-redH': getVal(m1, isReverse1, 20, 21) + getVal(m2, isReverse2, 20, 21),
-        'in-redA': getVal(m1, isReverse1, 21, 20) + getVal(m2, isReverse2, 21, 20)
-    };
-
-    // Remplissage du formulaire
-    for (let [id, val] of Object.entries(combinedData)) {
-        let el = document.getElementById(id);
-        if (el) el.value = val;
-    }
-
-    // Gestion des joueurs (Cumul des deux matchs)
-    fetchPlayersForTwoMatches(m1[3].trim(), m2[3].trim());
-    
-    alert("Matchs fusionnés avec succès !");
-};
-
-      // --- FONCTION DE FUSION DES MATCHS (MI-TEMPS 1 + 2) ---
-// --- FONCTION DE FUSION DES MATCHS (MI-TEMPS 1 + 2) ---
-// --- FONCTION DE FUSION DES MATCHS (MI-TEMPS 1 + 2) ---
-window.processSelectedMatches = async function() {
-    const selectedCheckboxes = document.querySelectorAll('.match-checkbox:checked');
-    
-    if (selectedCheckboxes.length !== 2) {
-        alert("Veuillez sélectionner exactement 2 matchs (les deux mi-temps).");
-        return;
-    }
-
-    // Récupération des données brutes des deux matchs sélectionnés
-    const m1 = window.tempMatchesData[selectedCheckboxes[0].value];
-    const m2 = window.tempMatchesData[selectedCheckboxes[1].value];
-    
-    // Vérification du sens du match
-    const isRev1 = (normalizeName(m1[1]) === normalizeName(awayName));
-    const isRev2 = (normalizeName(m2[1]) === normalizeName(awayName));
-
-    // Fonctions utilitaires pour le calcul (Somme et Moyenne)
-    const sum = (colH, colA, isR1, isR2) => {
-        return (parseInt(m1[isR1 ? colA : colH]) || 0) + (parseInt(m2[isR2 ? colA : colH]) || 0);
-    };
-    const avg = (colH, colA, isR1, isR2) => {
-        return Math.round(((parseInt(m1[isR1 ? colA : colH]) || 0) + (parseInt(m2[isR2 ? colA : colH]) || 0)) / 2);
-    };
-
-    // 1. Remplissage des statistiques d'équipe dans le formulaire
-    document.getElementById('in-sh').value = sum(4, 5, isRev1, isRev2); 
-    document.getElementById('in-sa').value = sum(5, 4, isRev1, isRev2); 
-    
-    document.getElementById('in-posH').value = avg(8, 9, isRev1, isRev2); 
-    document.getElementById('in-posA').value = avg(9, 8, isRev1, isRev2);
-    
-    document.getElementById('in-shoH').value = sum(10, 11, isRev1, isRev2); 
-    document.getElementById('in-shoA').value = sum(11, 10, isRev1, isRev2);
-
-    document.getElementById('in-pasAttH').value = sum(12, 13, isRev1, isRev2); 
-    document.getElementById('in-pasAttA').value = sum(13, 12, isRev1, isRev2);
-    
-    document.getElementById('in-accH').value = avg(14, 15, isRev1, isRev2); 
-    document.getElementById('in-accA').value = avg(15, 14, isRev1, isRev2);
-
-    // Statistiques des Tacles Équipe
-    document.getElementById('in-tacAttH').value = sum(16, 17, isRev1, isRev2); 
-    document.getElementById('in-tacAttA').value = sum(17, 16, isRev1, isRev2);
-    
-    document.getElementById('in-tacMadH').value = sum(18, 19, isRev1, isRev2); 
-    document.getElementById('in-tacMadA').value = sum(19, 18, isRev1, isRev2);
-
-    document.getElementById('in-redH').value = sum(20, 21, isRev1, isRev2); 
-    document.getElementById('in-redA').value = sum(21, 20, isRev1, isRev2);
-
-    // Concaténation des buteurs avec le séparateur " | "
-    const bH1 = (m1[isRev1 ? 7 : 6] || "").trim();
-    const bH2 = (m2[isRev2 ? 7 : 6] || "").trim();
-    const bA1 = (m1[isRev1 ? 6 : 7] || "").trim();
-    const bA2 = (m2[isRev2 ? 6 : 7] || "").trim();
-
-    document.getElementById('in-stH').value = [bH1, bH2].filter(x => x !== "").join(" | ");
-    document.getElementById('in-stA').value = [bA1, bA2].filter(x => x !== "").join(" | ");
-
-    // 2. Lancement de la fusion des joueurs
-    await fetchPlayersForTwoMatches(m1[3].trim(), m2[3].trim());
-    
-    alert("Les données des deux mi-temps ont été fusionnées !");
-};
-
-// --- FONCTION DE FUSION DES STATISTIQUES JOUEURS ---
-async function fetchPlayersForTwoMatches(id1, id2) {
-    try {
-        const response = await fetch(PLAYERS_DATA_URL);
-        const csvText = await response.text();
-        const rows = csvText.split('\n').map(row => row.split(','));
-        
-        const playersMap = {};
-
-        rows.forEach(r => {
-            const mId = r[0].trim();
-            if (mId === id1 || mId === id2) {
-                const pName = r[1];
-                if (!playersMap[pName]) {
-                    playersMap[pName] = [...r]; 
-                    [5,6,7,8,9,10,12,13,15,16].forEach(idx => playersMap[pName][idx] = parseFloat(r[idx]) || 0);
-                } else {
-                    [6,7,8,9,10,12,13,15,16].forEach(idx => {
-                        playersMap[pName][idx] += (parseFloat(r[idx]) || 0);
-                    });
-                    playersMap[pName][5] = ((parseFloat(playersMap[pName][5]) + (parseFloat(r[5]) || 0)) / 2).toFixed(1);
-                }
-            }
-        });
-
-        Object.values(playersMap).forEach(p => {
-            p[11] = p[9] > 0 ? Math.round((p[10] / p[9]) * 100) : 0;
-            p[14] = p[12] > 0 ? Math.round((p[13] / p[12]) * 100) : 0;
-        });
-
-        displayPlayers(Object.values(playersMap));
-        
-    } catch (err) {
-        console.error("Erreur joueurs:", err);
-    }
-}
+    init();
+</script>
 
       
     // Lancement de la recherche
