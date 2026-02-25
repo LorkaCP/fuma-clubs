@@ -414,6 +414,7 @@ window.combineSelectedMatches = async function() {
 
       // --- FONCTION DE FUSION DES MATCHS (MI-TEMPS 1 + 2) ---
 // --- FONCTION DE FUSION DES MATCHS (MI-TEMPS 1 + 2) ---
+// --- FONCTION DE FUSION DES MATCHS (MI-TEMPS 1 + 2) ---
 window.processSelectedMatches = async function() {
     const selectedCheckboxes = document.querySelectorAll('.match-checkbox:checked');
     
@@ -426,11 +427,11 @@ window.processSelectedMatches = async function() {
     const m1 = window.tempMatchesData[selectedCheckboxes[0].value];
     const m2 = window.tempMatchesData[selectedCheckboxes[1].value];
     
-    // Vérification du sens du match (si l'équipe sélectionnée est Home ou Away dans le CSV)
+    // Vérification du sens du match
     const isRev1 = (normalizeName(m1[1]) === normalizeName(awayName));
     const isRev2 = (normalizeName(m2[1]) === normalizeName(awayName));
 
-    // Fonctions utilitaires pour le calcul
+    // Fonctions utilitaires pour le calcul (Somme et Moyenne)
     const sum = (colH, colA, isR1, isR2) => {
         return (parseInt(m1[isR1 ? colA : colH]) || 0) + (parseInt(m2[isR2 ? colA : colH]) || 0);
     };
@@ -439,36 +440,39 @@ window.processSelectedMatches = async function() {
     };
 
     // 1. Remplissage des statistiques d'équipe dans le formulaire
-    document.getElementById('in-sh').value = sum(4, 5, isRev1, isRev2); // Score Final Home
-    document.getElementById('in-sa').value = sum(5, 4, isRev1, isRev2); // Score Final Away
+    document.getElementById('in-sh').value = sum(4, 5, isRev1, isRev2); 
+    document.getElementById('in-sa').value = sum(5, 4, isRev1, isRev2); 
     
-    document.getElementById('in-posH').value = avg(8, 9, isRev1, isRev2); // Possession %
+    document.getElementById('in-posH').value = avg(8, 9, isRev1, isRev2); 
     document.getElementById('in-posA').value = avg(9, 8, isRev1, isRev2);
     
-    document.getElementById('in-shoH').value = sum(10, 11, isRev1, isRev2); // Tirs Totaux
+    document.getElementById('in-shoH').value = sum(10, 11, isRev1, isRev2); 
     document.getElementById('in-shoA').value = sum(11, 10, isRev1, isRev2);
 
-    document.getElementById('in-pasAttH').value = sum(12, 13, isRev1, isRev2); // Passes Tentées
+    document.getElementById('in-pasAttH').value = sum(12, 13, isRev1, isRev2); 
     document.getElementById('in-pasAttA').value = sum(13, 12, isRev1, isRev2);
     
-    document.getElementById('in-accH').value = avg(14, 15, isRev1, isRev2); // Précision Passes %
+    document.getElementById('in-accH').value = avg(14, 15, isRev1, isRev2); 
     document.getElementById('in-accA').value = avg(15, 14, isRev1, isRev2);
 
-    // --- AJOUT DES TACLES POUR L'ÉQUIPE ---
-    document.getElementById('in-tacAttH').value = sum(16, 17, isRev1, isRev2); // Tacles Tentés Home
-    document.getElementById('in-tacAttA').value = sum(17, 16, isRev1, isRev2); // Tacles Tentés Away
+    // Statistiques des Tacles Équipe
+    document.getElementById('in-tacAttH').value = sum(16, 17, isRev1, isRev2); 
+    document.getElementById('in-tacAttA').value = sum(17, 16, isRev1, isRev2);
     
-    document.getElementById('in-tacMadH').value = sum(18, 19, isRev1, isRev2); // Tacles Réussis Home
-    document.getElementById('in-tacMadA').value = sum(19, 18, isRev1, isRev2); // Tacles Réussis Away
+    document.getElementById('in-tacMadH').value = sum(18, 19, isRev1, isRev2); 
+    document.getElementById('in-tacMadA').value = sum(19, 18, isRev1, isRev2);
 
-    document.getElementById('in-redH').value = sum(20, 21, isRev1, isRev2); // Cartons Rouges
+    document.getElementById('in-redH').value = sum(20, 21, isRev1, isRev2); 
     document.getElementById('in-redA').value = sum(21, 20, isRev1, isRev2);
 
-    // Concaténation des buteurs
-    const buteursH = (m1[isRev1 ? 7 : 6] + " / " + m2[isRev2 ? 7 : 6]).replace(/undefined|null/g, "").trim();
-    const buteursA = (m1[isRev1 ? 6 : 7] + " / " + m2[isRev2 ? 6 : 7]).replace(/undefined|null/g, "").trim();
-    document.getElementById('in-stH').value = buteursH === "/" ? "" : buteursH;
-    document.getElementById('in-stA').value = buteursA === "/" ? "" : buteursA;
+    // Concaténation des buteurs avec le séparateur " | "
+    const bH1 = (m1[isRev1 ? 7 : 6] || "").trim();
+    const bH2 = (m2[isRev2 ? 7 : 6] || "").trim();
+    const bA1 = (m1[isRev1 ? 6 : 7] || "").trim();
+    const bA2 = (m2[isRev2 ? 6 : 7] || "").trim();
+
+    document.getElementById('in-stH').value = [bH1, bH2].filter(x => x !== "").join(" | ");
+    document.getElementById('in-stA').value = [bA1, bA2].filter(x => x !== "").join(" | ");
 
     // 2. Lancement de la fusion des joueurs
     await fetchPlayersForTwoMatches(m1[3].trim(), m2[3].trim());
@@ -491,23 +495,19 @@ async function fetchPlayersForTwoMatches(id1, id2) {
                 const pName = r[1];
                 if (!playersMap[pName]) {
                     playersMap[pName] = [...r]; 
-                    // Conversion initiale en nombres pour les colonnes de stats
                     [5,6,7,8,9,10,12,13,15,16].forEach(idx => playersMap[pName][idx] = parseFloat(r[idx]) || 0);
                 } else {
-                    // Addition des stats cumulatives
                     [6,7,8,9,10,12,13,15,16].forEach(idx => {
                         playersMap[pName][idx] += (parseFloat(r[idx]) || 0);
                     });
-                    // Moyenne pour la note
                     playersMap[pName][5] = ((parseFloat(playersMap[pName][5]) + (parseFloat(r[5]) || 0)) / 2).toFixed(1);
                 }
             }
         });
 
-        // Recalcul des pourcentages de réussite
         Object.values(playersMap).forEach(p => {
-            p[11] = p[9] > 0 ? Math.round((p[10] / p[9]) * 100) : 0; // % Passes
-            p[14] = p[12] > 0 ? Math.round((p[13] / p[12]) * 100) : 0; // % Tacles
+            p[11] = p[9] > 0 ? Math.round((p[10] / p[9]) * 100) : 0;
+            p[14] = p[12] > 0 ? Math.round((p[13] / p[12]) * 100) : 0;
         });
 
         displayPlayers(Object.values(playersMap));
