@@ -233,6 +233,25 @@ function parseCSVLine(line) {
                 .trim();
     }
 
+      function parseCSVLine(line) {
+    const result = [];
+    let cur = '';
+    let inQuotes = false;
+
+    for (let char of line) {
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            result.push(cur);
+            cur = '';
+        } else {
+            cur += char;
+        }
+    }
+    result.push(cur);
+    return result;
+}
+
     // --- 3. CHARGEMENT INITIAL (Ce qui manquait) ---
     async function init() {
         const statusEl = document.getElementById('loading-status');
@@ -304,17 +323,23 @@ function parseCSVLine(line) {
         document.getElementById('in-motm').value = m[22] || "";
 
         // RÉCUPÉRATION DES STATS JOUEURS (Second Fichier)
-        try {
-            const response = await fetch(PLAYERS_DATA_URL);
-            const csvText = await response.text();
-            const rows = csvText.split('\n').map(row => row.split(','));
-            const matchPlayers = rows.filter(r => r[0].trim() === matchID);
-            displayPlayers(matchPlayers, m[1], m[2]); 
-        } catch (err) {
-            console.error("Erreur joueurs:", err);
-        }
-        alert("Données du match et des joueurs importées !");
-    };
+      try {
+    const response = await fetch(PLAYERS_DATA_URL);
+    const csvText = await response.text();
+    
+    // REMPLACEMENT ICI : On utilise parseCSVLine au lieu de split(',')
+    const lines = csvText.split('\n');
+    const rows = lines.map(line => parseCSVLine(line)); 
+    
+    const matchPlayers = rows.filter(r => r[0] && r[0].trim() === matchID);
+    
+    // On appelle la fonction d'affichage (assurez-vous d'utiliser les bons noms d'équipes)
+    displayPlayers(matchPlayers); 
+
+} catch (err) {
+    console.error("Erreur joueurs:", err);
+}
+alert("Données du match et des joueurs importées !");
 
     function displayPlayers(players) {
     const homeList = document.getElementById('home-players-list');
@@ -323,25 +348,25 @@ function parseCSVLine(line) {
     awayList.innerHTML = "";
 
     players.forEach(p => {
-        // p[5] est la note (ex: "7,4"). On enlève les guillemets résiduels.
-        const rating = p[5].replace(/"/g, '');
-        const isMotM = p[16] == 1; // La colonne 16 est le MOTM
+        // Nettoyage de la note (enlève les " et remplace la virgule par un point si besoin)
+        const rating = p[5] ? p[5].replace(/"/g, '').trim() : "N/A";
+        const isMotM = p[16] == "1"; 
 
         const playerHtml = `
-            <div class="player-stat-row">
-                <span class="player-name-header">${p[1]} ${isMotM ? '⭐' : ''}</span>
-                <div class="stats-grid">
-                    <div class="stat-item">Note: <strong>${rating}</strong></div>
-                    <div class="stat-item">Buts: ${p[6]}</div>
-                    <div class="stat-item">Assists: ${p[7]}</div>
-                    <div class="stat-item">Tirs: ${p[8]}</div>
-                    <div class="stat-item">Passes: ${p[10]}/${p[9]} (${p[11]}%)</div>
-                    <div class="stat-item">Tacles: ${p[13]}/${p[12]} (${p[14]}%)</div>
-                    <div class="stat-item">Rouge: ${p[15] == 1 ? '🔴' : '0'}</div>
+            <div style="font-size: 0.8rem; border-bottom: 1px solid #333; padding: 8px 0; color: #eee;">
+                <strong style="color: #d4af37;">${p[1]} ${isMotM ? '⭐' : ''}</strong>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 5px; color: #bbb;">
+                    <span>Note: <b style="color: #fff;">${rating}</b></span>
+                    <span>Buts: ${p[6]}</span>
+                    <span>Assists: ${p[7]}</span>
+                    <span>Tirs: ${p[8]}</span>
+                    <span>Passes: ${p[10]}/${p[9]}</span>
+                    <span>Tacles: ${p[13]}/${p[12]}</span>
                 </div>
             </div>`;
 
-        if (p[2] === homeName) {
+        // Utilisation de la variable originalHome/Away définie lors du chargement du match
+        if (p[2] === originalHome) {
             homeList.innerHTML += playerHtml;
         } else {
             awayList.innerHTML += playerHtml;
