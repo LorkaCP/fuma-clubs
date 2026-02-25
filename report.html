@@ -188,6 +188,13 @@
     const PLAYERS_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=420142588&single=true&output=csv";
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyI-SMPkKDGoGg48Bke8ELycDUbgLXGgwmn83Ydz8ipfd7NO0gWYhwAR4t-kuF2wfUB/exec";
 
+    const CLUB_ALIASES = {
+        "fuma y pasa": "f y pasa",
+        "croser fc": "croser fc",
+        "fuma clubs a": "fuma clubs a",
+        "ac titans": "ac titans"
+    };
+
     const params = new URLSearchParams(window.location.search);
     const homeName = params.get('home') || "";
     const awayName = params.get('away') || "";
@@ -196,28 +203,18 @@
     document.getElementById('name-home').innerText = homeName;
     document.getElementById('name-away').innerText = awayName;
 
-    // --- 2. OUTILS ---
-    function parseCSVLine(line) {
-        const result = [];
-        let cur = '';
-        let inQuotes = false;
-        for (let char of line) {
-            if (char === '"') inQuotes = !inQuotes;
-            else if (char === ',' && !inQuotes) { result.push(cur); cur = ''; }
-            else cur += char;
-        }
-        result.push(cur);
-        return result;
-    }
-
+    // --- 2. NORMALISATION ---
     function normalizeName(name) {
         if (!name) return "";
-        return name.toLowerCase().trim()
-            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-            .replace(/[^a-z0-9]/g, "");
+        let n = name.toLowerCase().trim();
+        if (CLUB_ALIASES[n]) n = CLUB_ALIASES[n];
+        return n.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                .replace(/\b(fc|sc|club|as|ol|de)\b/gi, "")
+                .replace(/[^a-z0-9]/g, "")
+                .trim();
     }
 
-    // --- 3. CHARGEMENT INITIAL ---
+    // --- 3. CHARGEMENT INITIAL (Ce qui manquait) ---
     async function init() {
         const statusEl = document.getElementById('loading-status');
         try {
@@ -228,43 +225,47 @@
             const normHome = normalizeName(homeName);
             const normAway = normalizeName(awayName);
 
+            // Filtre les matchs correspondant aux deux équipes (peu importe l'ordre)
             const matches = rows.filter(r => {
                 const rHome = normalizeName(r[1]);
                 const rAway = normalizeName(r[2]);
-                return (rHome === normHome && rAway === normAway) || (rHome === normAway && rAway === normHome);
+                return (rHome === normHome && rAway === normAway) || 
+                       (rHome === normAway && rAway === normHome);
             });
 
             if (matches.length > 0) {
                 statusEl.innerHTML = `<i class="fas fa-check"></i> ${matches.length} match(s) trouvé(s)`;
                 displayMatchSelector(matches);
             } else {
-                statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Aucun match trouvé.';
+                statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Aucun match trouvé dans la base.';
             }
         } catch (err) {
-            statusEl.innerHTML = "Erreur de chargement.";
+            statusEl.innerHTML = "Erreur de chargement des données.";
             console.error(err);
         }
     }
 
+    // --- 4. AFFICHAGE ET REMPLISSAGE ---
     function displayMatchSelector(matches) {
         const container = document.getElementById('match-selector-container');
         window.tempMatchesData = matches;
         let html = '<div style="display: flex; flex-direction: column; gap: 8px;">';
         matches.forEach((m, i) => {
-            html += `<button type="button" onclick="fillFormFromIndex(${i})" class="select-match-btn" style="text-align: left; background: #252525; color: #fff; border: 1px solid #444; padding: 12px; cursor: pointer; border-radius: 6px;">
-                ${m[0]} | <strong>${m[1]}</strong> ${m[4]}-${m[5]} <strong>${m[2]}</strong>
-            </button>`;
+            html += `
+                <button type="button" onclick="fillFormFromIndex(${i})" class="select-match-btn" 
+                        style="text-align: left; background: #252525; color: #fff; border: 1px solid #444; padding: 12px; cursor: pointer; border-radius: 6px;">
+                    <i class="far fa-calendar-alt"></i> ${m[0]} | <strong>${m[1]}</strong> ${m[4]}-${m[5]} <strong>${m[2]}</strong>
+                </button>`;
         });
         container.innerHTML = html + '</div>';
     }
 
-    // --- 4. REMPLISSAGE DU FORMULAIRE ET JOUEURS ---
     window.fillFormFromIndex = async function(index) {
         const m = window.tempMatchesData[index];
         const matchID = m[3].trim(); 
-        const originalHomeMatchFile = m[1]; // L'équipe domicile dans le fichier CSV
-        const isReverse = (normalizeName(originalHomeMatchFile) !== normalizeName(homeName));
+        const isReverse = (normalizeName(m[1]) === normalizeName(awayName));
 
+        // Mapping des colonnes du CSV MATCHES vers les IDs du formulaire
         const map = {
             'in-sh': isReverse ? 5 : 4, 'in-sa': isReverse ? 4 : 5,
             'in-stH': isReverse ? 7 : 6, 'in-stA': isReverse ? 6 : 7,
@@ -283,44 +284,33 @@
         }
         document.getElementById('in-motm').value = m[22] || "";
 
+        // RÉCUPÉRATION DES STATS JOUEURS (Second Fichier)
         try {
             const response = await fetch(PLAYERS_DATA_URL);
             const csvText = await response.text();
-            const rows = csvText.split('\n').map(line => parseCSVLine(line)); 
-            const matchPlayers = rows.filter(r => r[0] && r[0].trim() === matchID);
-            
-            // On passe originalHomeMatchFile pour trier correctement Home/Away
-            displayPlayers(matchPlayers, originalHomeMatchFile); 
-            alert("Données importées !");
+            const rows = csvText.split('\n').map(row => row.split(','));
+            const matchPlayers = rows.filter(r => r[0].trim() === matchID);
+            displayPlayers(matchPlayers, m[1], m[2]); 
         } catch (err) {
             console.error("Erreur joueurs:", err);
         }
+        alert("Données du match et des joueurs importées !");
     };
 
-    function displayPlayers(players, originalHomeMatchFile) {
+    function displayPlayers(players, originalHome, originalAway) {
         const homeList = document.querySelector('#home-players-list .list');
         const awayList = document.querySelector('#away-players-list .list');
-        homeList.innerHTML = ""; awayList.innerHTML = "";
+        homeList.innerHTML = "";
+        awayList.innerHTML = "";
 
         players.forEach(p => {
-            const rating = p[5] ? p[5].replace(/"/g, '').trim() : "N/A";
-            const isMotM = p[16].trim() == "1"; 
-
             const playerHtml = `
-                <div class="player-stat-row">
-                    <strong class="player-name-header">${p[1]} ${isMotM ? '⭐' : ''}</strong>
-                    <div class="stats-grid">
-                        <span class="stat-item">Note: <b>${rating}</b></span>
-                        <span class="stat-item">Buts: ${p[6]}</span>
-                        <span class="stat-item">Assists: ${p[7]}</span>
-                        <span class="stat-item">Tirs: ${p[8]}</span>
-                        <span class="stat-item">Passes: ${p[10]}/${p[9]}</span>
-                        <span class="stat-item">Tacles: ${p[13]}/${p[12]}</span>
-                    </div>
+                <div style="font-size: 0.8rem; border-bottom: 1px solid #333; padding: 5px 0; color: #eee;">
+                    <strong>${p[1]}</strong> - Note: ${p[5]} | G: ${p[6]} | A: ${p[7]}
                 </div>`;
-
-            // On compare l'équipe du joueur avec l'équipe qui était à domicile dans le CSV
-            if (p[2] === originalHomeMatchFile) {
+            
+            // On compare avec le nom de l'équipe dans la ligne du match
+            if (p[2] === originalHome) {
                 homeList.innerHTML += playerHtml;
             } else {
                 awayList.innerHTML += playerHtml;
@@ -335,21 +325,21 @@
         btn.innerText = "ENREGISTREMENT...";
         btn.disabled = true;
 
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
+        const data = Object.fromEntries(new FormData(e.target).entries());
         data.home = homeName; data.away = awayName; data.gid = currentGid;
 
         try {
             await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-            alert("Rapport enregistré !");
+            alert("Rapport enregistré avec succès !");
             window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
         } catch (e) {
-            alert("Erreur d'envoi");
+            alert("Erreur lors de l'envoi");
             btn.disabled = false;
-            btn.innerText = "Valider et enregistrer";
+            btn.innerText = "Valider et enregistrer le match";
         }
     };
 
+    // Lancement de la recherche
     init();
 </script>
 </body>
