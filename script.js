@@ -16,10 +16,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
        
     // --- 2. UTILITAIRES ---
-    const parseCSVLine = (line) => {
+  /**
+ * REMPLACE ton ancien parseCSVLine par celui-ci.
+ * Il est plus robuste et transforme chaque ligne en OBJET.
+ */
+function csvToObjects(csvText) {
+    const lines = csvText.trim().split("\n");
+    if (lines.length < 2) return [];
+
+    // On récupère les en-têtes (GAME_TAG, Buts, etc.)
+    const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
+    
+    return lines.slice(1).map(line => {
         const result = [];
         let cell = '';
         let inQuotes = false;
+        // Logique de lecture caractère par caractère pour gérer les virgules dans les noms
         for (let i = 0; i < line.length; i++) {
             let char = line[i];
             if (char === '"') inQuotes = !inQuotes;
@@ -27,8 +39,168 @@ document.addEventListener('DOMContentLoaded', () => {
             else cell += char;
         }
         result.push(cell);
-        return result.map(v => v.replace(/^"|"$/g, '').trim());
-    };
+
+        // On crée l'objet final
+        const obj = {};
+        headers.forEach((header, index) => {
+            let value = result[index] ? result[index].replace(/^"|"$/g, '').trim() : "";
+            obj[header] = value;
+        });
+        return obj;
+    });
+}
+
+/**
+ * 2. Moteur d'agrégation : Calcule les stats cumulées
+ */
+function aggregateStats(logs, profiles = {}) {
+    const stats = {};
+
+    logs.forEach(log => {
+        // On gère les deux noms de colonnes possibles (DATABASE vs LOGS MATCHS)
+        const tag = log.GAME_TAG || log.Joueur; 
+        if (!tag || tag.includes("#REF") || tag === "GAME_TAG") return;
+
+        if (!stats[tag]) {
+            const p = profiles[tag] || {};
+            stats[tag] = {
+                tag: tag,
+                avatar: p.AVATAR || 'https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png',
+                team: p.CURRENT_TEAM || log.Equipe || 'Free Agent',
+                logo: p.LOGO || '',
+                flag: p.FLAG || '🏳️',
+                pos: p.MAIN_POSITION || log.Position || 'N/A',
+                arch: p.MAIN_ARCHETYPE || 'Standard',
+                matches: 0, 
+                goals: 0, 
+                assists: 0, 
+                sumNote: 0
+            };
+        }
+
+        const s = stats[tag];
+        s.matches += 1;
+        s.goals += parseInt(log.GOALS || log.Buts || 0);
+        s.assists += parseInt(log.ASSISTS || log.Assists || 0);
+        // On remplace la virgule par un point pour le calcul mathématique
+        const note = parseFloat((log.RATING || log.Note || "0").toString().replace(',', '.'));
+        s.sumNote += note;
+    });
+
+    return Object.values(stats).map(s => ({
+        ...s,
+        rating: s.matches > 0 ? (s.sumNote / s.matches).toFixed(2) : "0.00"
+    }));
+}
+
+/**
+ * 3. Chargeur principal (Database + Saison)
+ */
+async function loadFumaData(gid) {
+    const container = document.getElementById('fuma-js-players');
+    // On affiche un spinner pendant le calcul
+    if (container) container.innerHTML = '<div class="fuma-loading-wrapper" style="grid-column:1/-1; text-align:center; padding:50px;"><div class="fuma-spinner" style="margin:0 auto;"></div><p>Calculating Stats...</p></div>';
+
+    try {
+        // A. Charger la DATABASE (pour avoir les avatars/logos fixes)
+        const dbResp = await fetch(`${PLAYERS_SHEET_BASE}1342244083&t=${Date.now()}`);
+        const dbText = await dbResp.text();
+        const dbData = csvToObjects(dbText);
+        const profiles = {};
+        dbData.forEach(row => { if(row.GAME_TAG) profiles[row.GAME_TAG] = row; });
+
+        // B. Charger la Saison (ou la Database si on veut "All Seasons")
+        const sResp = await fetch(`${PLAYERS_SHEET_BASE}${gid}&t=${Date.now()}`);
+        const sText = await sResp.text();
+        const logs = csvToObjects(sText);
+
+        // C. Lancer l'agrégation
+        allPlayers = aggregateStats(logs, profiles);
+        
+        // D. Envoyer vers l'affichage
+        if (container) {
+            // Ici, on mettra à jour ton filtre équipe
+            const teamFilter = document.getElementById('filter-team');
+            if (teamFilter) {
+                const teams = [...new Set(allPlayers.map(p => p.team))].sort();
+                const current = teamFilter.value;
+                teamFilter.innerHTML = '<option value="">All Teams</option>' + 
+                    teams.map(t => `<option value="${t}">${t}</option>`).join('');
+                teamFilter.value = current;
+            }
+            applyPlayerFilters(); 
+        } else {
+            // Pour la page player.html
+            renderSinglePlayerProfile(); 
+        }
+    } catch (e) {
+        console.error("Erreur chargement:", e);
+        if (container) container.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:red;'>Error calculating data.</p>";
+    }
+}
+
+    function renderPlayers(list) {
+    const container = document.getElementById('fuma-js-players');
+    if (!container) return;
+
+    if (list.length === 0) {
+        container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 50px; color: var(--fuma-text-dim);">No players found for this selection.</p>`;
+        return;
+    }
+
+    container.innerHTML = list.map(p => {
+        // Sécurité pour le logo d'équipe
+        const teamLogoHTML = p.logo 
+            ? `<img src="${p.logo}" alt="${p.team}" style="width: 20px; height: 20px; object-fit: contain; margin-right: 8px;">`
+            : `<i class="fas fa-shield-alt" style="margin-right: 8px; font-size: 0.8rem; color: var(--fuma-primary);"></i>`;
+
+        return `
+        <div class="fuma-club-card" onclick="window.location.href='player.html?id=${encodeURIComponent(p.tag)}'" style="cursor: pointer;">
+            <div style="position: absolute; top: 15px; right: 15px; background: var(--fuma-primary); color: #000; font-weight: 800; padding: 4px 10px; border-radius: 8px; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);">
+                ${p.rating}
+            </div>
+
+            <div style="width: 100%; height: 180px; overflow: hidden; border-radius: 12px; margin-bottom: 15px; background: #111;">
+                <img src="${p.avatar}" alt="${p.tag}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+
+            <h3 style="margin: 0 0 5px 0; font-size: 1.1rem; color: #fff; text-transform: uppercase; letter-spacing: 1px;">
+                ${p.flag} ${p.tag}
+            </h3>
+            
+            <p style="font-size: 0.75rem; color: var(--fuma-primary); margin-bottom: 12px; font-weight: 600; letter-spacing: 1px;">
+                ${p.pos} • ${p.arch}
+            </p>
+
+            <div style="display: flex; align-items: center; margin-bottom: 15px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                ${teamLogoHTML}
+                <span style="font-size: 0.8rem; color: var(--fuma-text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    ${p.team}
+                </span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; text-align: center;">
+                <div>
+                    <span style="display: block; font-size: 1rem; font-weight: 700; color: #fff;">${p.matches}</span>
+                    <span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Matches</span>
+                </div>
+                <div>
+                    <span style="display: block; font-size: 1rem; font-weight: 700; color: #fff;">${p.goals}</span>
+                    <span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Goals</span>
+                </div>
+                <div>
+                    <span style="display: block; font-size: 1rem; font-weight: 700; color: #fff;">${p.assists}</span>
+                    <span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Assists</span>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+
+
+
+    
 
     // --- 3. INJECTION DU MENU ---
     function injectNavigation() {
@@ -94,25 +266,23 @@ async function loadTeamsList() {
     try {
         const resp = await fetch(SHEET_URL);
         const text = await resp.text();
-        const lines = text.trim().split("\n");
-        const headers = lines[0].split(",");
         
-        // Identification des index de colonnes
-        const teamIdx = headers.indexOf('TEAMS');
-        const activeIdx = headers.indexOf('ACTIVE');
+        // --- UTILISATION DU NOUVEAU MOTEUR ---
+        // On transforme le CSV en tableau d'objets directement
+        const rows = csvToObjects(text);
 
-        const teams = lines.slice(1)
-            .map(line => {
-                const columns = parseCSVLine(line);
+        const teams = rows
+            .map(row => {
+                // row['TEAMS'] et row['ACTIVE'] sont récupérés par le nom des en-têtes
                 return {
-                    name: columns[teamIdx],
-                    active: columns[activeIdx] ? columns[activeIdx].trim().toUpperCase() : ""
+                    name: row['TEAMS'],
+                    active: row['ACTIVE'] ? row['ACTIVE'].trim().toUpperCase() : ""
                 };
             })
             .filter(club => {
                 // On garde si : 
                 // 1. Le nom existe
-                // 2. Ce n'est pas un "Free Agent" (déjà en dur dans le HTML)
+                // 2. Ce n'est pas un "Free Agent"
                 // 3. La colonne ACTIVE n'est pas égale à "NO"
                 return club.name && 
                        club.name.trim() !== "" && 
@@ -121,18 +291,18 @@ async function loadTeamsList() {
             })
             .sort((a, b) => a.name.localeCompare(b.name));
 
-        // Ajout des options filtrées au menu déroulant
+        // Ajout des options au menu déroulant
         teams.forEach(club => {
             const option = document.createElement('option');
             option.value = club.name;
             option.textContent = club.name;
             teamSelect.appendChild(option);
         });
+        
     } catch (e) {
         console.error("Erreur lors du chargement des équipes :", e);
     }
 }
-
     
     async function handleProfilePage() {
     // Vérifie si nous sommes bien sur la page profile.html
@@ -274,29 +444,36 @@ async function loadTeamsList() {
     });
 }
     // --- 6. LOGIQUE LISTE DES CLUBS (clubs.html) ---
-    async function fetchFumaClubs() {
-        const clubContainer = document.getElementById('fuma-js-clubs');
-        if (!clubContainer) return;
+   async function fetchFumaClubs() {
+    const clubContainer = document.getElementById('fuma-js-clubs');
+    if (!clubContainer) return;
 
-        try {
-            const resp = await fetch(SHEET_URL);
-            const text = await resp.text();
-            const lines = text.trim().split("\n");
-            const headers = lines[0].split(",");
-            const teamIdx = headers.indexOf('TEAMS');
-            const crestIdx = headers.indexOf('CREST');
+    try {
+        const resp = await fetch(SHEET_URL);
+        const text = await resp.text();
+        
+        // --- UTILISATION DU NOUVEAU MOTEUR ---
+        // On transforme le CSV en tableau d'objets
+        const rows = csvToObjects(text);
 
-            allClubs = lines.slice(1).map(line => {
-                const values = parseCSVLine(line);
-                return { name: values[teamIdx] || "", logo: values[crestIdx] || "" };
-            }).filter(c => c.name && c.logo && !c.name.toLowerCase().includes('free agent'));
+        allClubs = rows.map(row => {
+            return { 
+                // Accès direct par le nom de l'en-tête
+                name: row['TEAMS'] || "", 
+                logo: row['CREST'] || "" 
+            };
+        }).filter(c => 
+            c.name && 
+            c.logo && 
+            !c.name.toLowerCase().includes('free agent')
+        );
 
-            renderClubs(allClubs);
-        } catch (e) {
-            clubContainer.innerHTML = "Error loading clubs.";
-        }
+        renderClubs(allClubs);
+    } catch (e) {
+        console.error("Erreur lors du chargement des clubs :", e);
+        clubContainer.innerHTML = "Error loading clubs.";
     }
-
+}
     function renderClubs(clubsList) {
         const clubContainer = document.getElementById('fuma-js-clubs');
         if (!clubContainer) return;
@@ -319,38 +496,17 @@ async function loadTeamsList() {
     try {
         const resp = await fetch(SHEET_URL);
         const text = await resp.text();
-        const lines = text.trim().split("\n");
         
-        // Header extraction and normalization
-        const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
+        // --- UTILISATION DU NOUVEAU MOTEUR ---
+        const rows = csvToObjects(text);
+        
+        // Recherche du club par son nom (plus besoin d'index)
+        const club = rows.find(r => r['TEAMS'] === clubName);
 
-        const idx = {
-            team: headers.indexOf('TEAMS'),
-            crest: headers.indexOf('CREST'),
-            active: headers.indexOf('ACTIVE'),
-            history: headers.indexOf('HISTORY'),
-            stream: headers.indexOf('STREAM'),
-            media: headers.indexOf('MEDIA'),
-            gp: headers.indexOf('GAMES PLAYED'),
-            win: headers.indexOf('WIN'),
-            draw: headers.indexOf('DRAW'),
-            lost: headers.indexOf('LOST'),
-            trophies: headers.indexOf('TROPHIES'),
-            manager: headers.indexOf('MANAGER'),
-            players: headers.indexOf('PLAYERS')
-        };
-
-        const clubLine = lines.slice(1).find(line => {
-            const columns = parseCSVLine(line);
-            return columns[idx.team] === clubName;
-        });
-
-        if (clubLine) {
-            const v = parseCSVLine(clubLine);
-            
+        if (club) {
             // --- 1. TROPHIES LOGIC ---
             let trophiesHTML = '';
-            const rawTrophies = v[idx.trophies] || "";
+            const rawTrophies = club['TROPHIES'] || "";
             if (rawTrophies.trim() !== "" && rawTrophies.toLowerCase() !== "none") {
                 const trophyList = rawTrophies.split(',').map(t => t.trim());
                 trophiesHTML = `
@@ -367,12 +523,11 @@ async function loadTeamsList() {
                     </div>`;
             }
 
-            // --- 2. SOCIAL MEDIA LOGIC (MEDIA) ---
+            // --- 2. SOCIAL MEDIA LOGIC ---
             let mediaIconsHTML = '';
-            if (v[idx.media] && v[idx.media].toLowerCase() !== "none") {
-                const links = v[idx.media].split(',').map(l => l.trim());
+            if (club['MEDIA'] && club['MEDIA'].toLowerCase() !== "none") {
+                const links = club['MEDIA'].split(',').map(l => l.trim());
                 mediaIconsHTML = `<div style="display: flex; gap: 15px; justify-content: center; margin-top: 15px;">`;
-                
                 links.forEach(link => {
                     let icon = 'fas fa-link';
                     if (link.includes('twitter.com') || link.includes('x.com')) icon = 'fab fa-x-twitter';
@@ -381,7 +536,6 @@ async function loadTeamsList() {
                     if (link.includes('discord')) icon = 'fab fa-discord';
                     if (link.includes('tiktok.com')) icon = 'fab fa-tiktok';
                     if (link.includes('youtube.com') && !link.includes('watch')) icon = 'fab fa-youtube';
-                    
                     mediaIconsHTML += `
                         <a href="${link}" target="_blank" style="color: var(--fuma-text-dim); font-size: 1.2rem; transition: 0.3s;" onmouseover="this.style.color='var(--fuma-primary)'" onmouseout="this.style.color='var(--fuma-text-dim)'">
                             <i class="${icon}"></i>
@@ -390,57 +544,43 @@ async function loadTeamsList() {
                 mediaIconsHTML += `</div>`;
             }
 
-            // --- 3. STREAM & COMMUNITY SECTION ---
+            // --- 3. STREAM section ---
             let streamBlockHTML = '';
-            const hasStream = v[idx.stream] && v[idx.stream].toLowerCase() !== "none";
-            
+            const hasStream = club['STREAM'] && club['STREAM'].toLowerCase() !== "none";
             if (hasStream || mediaIconsHTML !== '') {
                 streamBlockHTML = `<div style="margin-bottom: 35px;">
                     <h3 class="sidebar-title" style="color: var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; font-size: 0.85rem; letter-spacing:1px;">COMMUNITY</h3>`;
-                
                 if (hasStream) {
-                    const isTwitch = v[idx.stream].includes('twitch.tv');
+                    const isTwitch = club['STREAM'].includes('twitch.tv');
                     streamBlockHTML += `
-                        <a href="${v[idx.stream]}" target="_blank" class="fuma-cta" style="display:block; text-align:center; background:#6441a5; font-size: 0.75rem; padding: 10px; margin-bottom: 10px;">
+                        <a href="${club['STREAM']}" target="_blank" class="fuma-cta" style="display:block; text-align:center; background:#6441a5; font-size: 0.75rem; padding: 10px; margin-bottom: 10px;">
                             <i class="${isTwitch ? 'fab fa-twitch' : 'fab fa-youtube'}"></i> WATCH LIVE
                         </a>`;
                 }
-                
                 streamBlockHTML += mediaIconsHTML + `</div>`;
             }
 
-            // --- 4. ROSTER LOGIC (2 COLUMNS) ---
-            const rawPlayers = v[idx.players] || "";
+            // --- 4. ROSTER LOGIC ---
+            const rawPlayers = club['PLAYERS'] || "";
             let playersListHTML = "<li style='grid-column: 1 / -1; color:var(--fuma-text-dim);'>No players registered.</li>";
-
             if (rawPlayers.trim() !== "" && rawPlayers.toLowerCase() !== "none") {
-                playersListHTML = rawPlayers.split(',')
-                    .map(p => p.trim())
-                    .filter(p => p.length > 0)
+                playersListHTML = rawPlayers.split(',').map(p => p.trim()).filter(p => p.length > 0)
                     .map(p => `
                         <li style="display: flex; align-items: center; min-width: 0;">
                             <i class="fas fa-user-circle" style="font-size:0.7rem; margin-right:8px; color:var(--fuma-primary); flex-shrink: 0;"></i>
-                            <a href="player.html?id=${encodeURIComponent(p)}" 
-                               style="color: var(--fuma-text-main); text-decoration: none; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: 0.2s;"
-                               onmouseover="this.style.color='var(--fuma-primary)'" 
-                               onmouseout="this.style.color='var(--fuma-text-main)'">
-                                 ${p}
-                            </a>
+                            <a href="player.html?id=${encodeURIComponent(p)}" style="color: var(--fuma-text-main); text-decoration: none; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: 0.2s;" onmouseover="this.style.color='var(--fuma-primary)'" onmouseout="this.style.color='var(--fuma-text-main)'">${p}</a>
                         </li>`).join('');
             }
 
-            // --- 5. HISTORY & STATUS FORMATTING ---
-            const formattedHistory = v[idx.history] 
-                ? v[idx.history].split('\n').map(line => `<p style="margin-bottom:15px;">${line}</p>`).join('') 
-                : "No historical information available.";
+            // --- 5. HISTORY & STATUS ---
+            const formattedHistory = club['HISTORY'] ? club['HISTORY'].split('\n').map(line => `<p style="margin-bottom:15px;">${line}</p>`).join('') : "No historical information available.";
+            const isActive = club['ACTIVE']?.toUpperCase() === 'YES';
 
-            const isActive = v[idx.active]?.toUpperCase() === 'YES';
-
-            // --- 6. FINAL HTML GENERATION ---
+            // --- 6. FINAL RENDER ---
             detailContainer.innerHTML = `
                 <div class="club-profile-header" style="text-align: center; margin-bottom: 50px;">
-                    <img src="${v[idx.crest] || ''}" style="width: 150px; height: 150px; object-fit: contain; margin-bottom: 20px;" alt="Crest">
-                    <h1 class="club-title-responsive" style="font-size: 3rem; font-weight: 800; text-transform: uppercase;">${v[idx.team]}</h1>
+                    <img src="${club['CREST'] || ''}" style="width: 150px; height: 150px; object-fit: contain; margin-bottom: 20px;" alt="Crest">
+                    <h1 class="club-title-responsive" style="font-size: 3rem; font-weight: 800; text-transform: uppercase;">${club['TEAMS']}</h1>
                     <div style="margin-top: 10px;">
                         <span style="color: ${isActive ? '#4caf50' : '#f44336'}; font-weight: 600; font-size: 0.9rem; letter-spacing: 1px;">
                             <i class="fas fa-circle" style="font-size: 8px; vertical-align: middle; margin-right: 5px;"></i>
@@ -448,192 +588,56 @@ async function loadTeamsList() {
                         </span>
                     </div>
                 </div>
-                
                 <div class="club-grid-layout">
                     <div class="club-main-info">
-                        
                         ${trophiesHTML}
-
                         <section style="margin-bottom: 40px;">
                             <h2 style="color:var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.2rem; letter-spacing:1px;">CLUB HISTORY</h2>
-                            <div style="font-style: italic; color: var(--fuma-text-dim); line-height: 1.8; font-size: 0.95rem;">
-                                ${formattedHistory}
-                            </div>
+                            <div style="font-style: italic; color: var(--fuma-text-dim); line-height: 1.8; font-size: 0.95rem;">${formattedHistory}</div>
                         </section>
-                        
-                        <div class="stats-bar" style="display: flex; justify-content: space-around; background: var(--fuma-bg-card); padding: 25px; border-radius: 15px; border: var(--fuma-border);"> 
-                            <div style="text-align: center;"><strong style="display: block; font-size: 1.8rem;">${v[idx.gp] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Played</span></div>
-                            <div style="text-align: center; color: #4caf50;"><strong style="display: block; font-size: 1.8rem;">${v[idx.win] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Wins</span></div>
-                            <div style="text-align: center; color: #ffeb3b;"><strong style="display: block; font-size: 1.8rem;">${v[idx.draw] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Draws</span></div>
-                            <div style="text-align: center; color: #f44336;"><strong style="display: block; font-size: 1.8rem;">${v[idx.lost] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Losses</span></div>
+                        <div class="stats-bar" style="display: flex; justify-content: space-around; background: var(--fuma-bg-card); padding: 25px; border-radius: 15px; border: var(--fuma-border);">
+                            <div style="text-align: center;"><strong style="display: block; font-size: 1.8rem;">${club['GAMES PLAYED'] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Played</span></div>
+                            <div style="text-align: center; color: #4caf50;"><strong style="display: block; font-size: 1.8rem;">${club['WIN'] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Wins</span></div>
+                            <div style="text-align: center; color: #ffeb3b;"><strong style="display: block; font-size: 1.8rem;">${club['DRAW'] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Draws</span></div>
+                            <div style="text-align: center; color: #f44336;"><strong style="display: block; font-size: 1.8rem;">${club['LOST'] || 0}</strong><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Losses</span></div>
                         </div>
                     </div>
-                    
                     <div class="club-sidebar">
                         <div class="sidebar-box" style="background: var(--fuma-bg-card); padding: 30px; border-radius: 15px; border: var(--fuma-border); position: sticky; top: 20px;">
-                            
                             ${streamBlockHTML}
-
                             <h3 class="sidebar-title" style="color: var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; font-size: 0.85rem; letter-spacing:1px;">MANAGER</h3>
-                            <p style="margin-bottom:35px; font-weight: 600; font-size: 1.1rem;">${v[idx.manager] || 'N/A'}</p>
-                            
+                            <p style="margin-bottom:35px; font-weight: 600; font-size: 1.1rem;">${club['MANAGER'] || 'N/A'}</p>
                             <h3 class="sidebar-title" style="color: var(--fuma-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; font-size: 0.85rem; letter-spacing:1px;">ROSTER</h3>
                             <ul class="roster-list" style="list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 15px;">
                                 ${playersListHTML}
                             </ul>
-
                         </div>
                     </div>
                 </div>`;
         } else {
             detailContainer.innerHTML = "<div style='text-align:center; padding: 50px;'><h2 style='color:var(--fuma-primary)'>Club not found</h2></div>";
         }
-    } catch (e) { 
+    } catch (e) {
         console.error("Error:", e);
         detailContainer.innerHTML = "<p style='text-align:center; color:red; padding: 50px;'>Error loading data.</p>";
     }
 }
-  async function fetchFumaPlayers(gid = "1342244083") {
-    const playerContainer = document.getElementById('fuma-js-players');
-    if (!playerContainer) return;
-
-    // 1. Ton Spinner Original
-    playerContainer.innerHTML = `
-        <div class="fuma-loading-wrapper" style="grid-column: 1/-1; text-align: center; padding: 50px;">
-            <div class="fuma-spinner" style="margin: 0 auto 15px;"></div>
-            <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">Loading season data...</p>
-        </div>`;
-
-    try {
-        // 2. Fetch avec protection anti-cache (&t=...)
-        const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}&t=${Date.now()}`);
-        if (!resp.ok) throw new Error("Network error");
-        
-        const text = await resp.text();
-        
-        // Sécurité si Google renvoie une erreur HTML au lieu du CSV
-        if (text.includes("<!DOCTYPE html>")) throw new Error("Invalid CSV format (HTML received)");
-
-        const lines = text.trim().split("\n").filter(line => line.trim() !== "");
-        const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
-
-        // 3. Tes Index originaux
-        const idx = {
-            tag: headers.indexOf('GAME_TAG'),
-            pos: headers.indexOf('MAIN_POSITION'),
-            team: headers.indexOf('CURRENT_TEAM'),
-            logo: headers.indexOf('LOGO'),
-            rating: headers.indexOf('RATING'),
-            avatar: headers.indexOf('AVATAR'),
-            arch: headers.indexOf('MAIN_ARCHETYPE'),
-            flag: headers.indexOf('FLAG')
-        };
-
-        // 4. Mapping avec tes sécurités Avatar + Sécurités anti-#REF
-        allPlayers = lines.slice(1).map(line => {
-            const v = parseCSVLine(line);
-            const rawAvatar = v[idx.avatar] ? v[idx.avatar].trim() : "";
-            const isValidAvatar = rawAvatar !== "" && rawAvatar.toLowerCase() !== "none" && rawAvatar.startsWith('http');
-            
-            return {
-                tag: v[idx.tag] || "Unknown", 
-                pos: v[idx.pos] || "N/A", 
-                team: v[idx.team] || "Free Agent",
-                logo: v[idx.logo] || "",
-                rating: v[idx.rating] || "0.0", 
-                avatar: isValidAvatar ? rawAvatar : (typeof DEFAULT_AVATAR !== 'undefined' ? DEFAULT_AVATAR : ""),
-                arch: v[idx.arch] || "Standard", 
-                flag: v[idx.flag] || ""
-            };
-        }).filter(p => 
-            p.tag && 
-            p.tag !== "Unknown" && 
-            p.tag.trim() !== "" && 
-            !p.tag.includes("#REF") // <--- PROTECTION CLÉ contre les cartes buggées
-        );
-
-        // 5. TA LOGIQUE DE FILTRE ÉQUIPE (CONSERVÉE)
-        const teamFilter = document.getElementById('filter-team');
-        if (teamFilter) {
-            const currentSelectedTeam = teamFilter.value; 
-            const teams = [...new Set(allPlayers.map(p => p.team))].sort();
-            teamFilter.innerHTML = '<option value="">All Teams</option>';
-            teams.forEach(team => {
-                const option = document.createElement('option');
-                option.value = team;
-                option.textContent = team;
-                teamFilter.appendChild(option);
-            });
-            teamFilter.value = currentSelectedTeam; 
-        }
-
-        // 6. Application des filtres
-        applyPlayerFilters(); 
-        
-    } catch (e) {
-        console.error("Fetch Error:", e);
-        playerContainer.innerHTML = `<p style='grid-column:1/-1; text-align:center; color:red;'>Error loading players: ${e.message}</p>`;
-    }
-}
-    function renderPlayers(list) {
-    const container = document.getElementById('fuma-js-players');
-    if (!container) return;
-
-    container.innerHTML = list.map(p => {
-        // --- ÉTAPE CRUCIALE : On définit l'ID à envoyer ---
-        // On cherche p.id, sinon p.GAME_ID (nom CSV), sinon le pseudo (tag)
-        const playerId = p.id || p.GAME_ID || p.tag; 
-
-        const isFreeAgent = !p.team || p.team.toLowerCase().includes("free agent") || p.team === "";
-        const teamBadge = isFreeAgent 
-            ? `<div style="position: absolute; top: 0; left: 0; font-size: 1.2rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));" title="Free Agent">🆓</div>` 
-            : `<div style="position: absolute; top: 2px; left: 2px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
-                <img src="${p.logo}" alt="${p.team}" title="${p.team}" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.7));">
-               </div>`;
-
-        return `
-            <a href="player.html?id=${encodeURIComponent(playerId)}" class="player-link-wrapper" style="text-decoration: none; color: inherit; display: block; transition: transform 0.3s ease;">
-                <div class="club-card" style="text-align:center; padding: 25px; position: relative; height: 100%;">
-                    <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 15px auto;">
-                        <img src="${p.avatar}" alt="${p.tag}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary);" onerror="this.src='${PLACEHOLDER_AVATAR}'">
-                        ${teamBadge}
-                        <div style="position: absolute; bottom: 0; right: 0; font-size: 1.1rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.7));">${p.flag}</div>
-                    </div>
-                    <h3 style="margin:0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">${p.tag}</h3>
-                    <p style="font-size: 0.75rem; color: var(--fuma-text-dim); margin: 5px 0;">${p.pos} | ${p.arch}</p>
-                    <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: black; font-weight: 800; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">${p.rating}</div>
-                </div>
-            </a>`;
-    }).join('');
-}
 
 
-    async function fetchPlayerData(playerId, gid = "1342244083") {
-    const headerContainer = document.getElementById('player-header');
-    const statsContainer = document.getElementById('player-stats-container');
-    const PLAYERS_SHEET_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=';
 
-    try {
-        const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}&t=${Date.now()}`);
-        const text = await resp.text();
-        const lines = text.trim().split("\n");
-        const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
-        
-        const rows = lines.slice(1).map(line => {
-            const v = parseCSVLine(line);
-            let obj = {};
-            headers.forEach((h, i) => obj[h] = v[i]);
-            return obj;
-        });
 
-        // Recherche du joueur par son ID ou son Tag
-        const p = rows.find(player => player.GAME_ID === playerId || player.GAME_TAG === playerId);
 
-        if (!p) {
-            headerContainer.innerHTML = `<p style="text-align:center; padding: 50px;">Data not found for this season.</p>`;
-            statsContainer.innerHTML = "";
-            return;
-        }
+
+
+
+
+
+
+
+
+
+
+    
 
         // --- EN-TÊTE DU PROFIL (HEADER) ---
         headerContainer.innerHTML = `
@@ -817,6 +821,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
