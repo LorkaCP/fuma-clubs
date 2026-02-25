@@ -155,160 +155,141 @@
             background: #303030 !important;
         }
     </style>
-   <script>
-    // 1. CONFIGURATION DES URLS
-    // URL de la feuille "Matches" du premier Google Sheet (Publié en CSV)
+  <script>
+    // --- 1. CONFIGURATION ET DICTIONNAIRE ---
     const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vREfI8S8fkz3U_S37N7U2hVf0p6S_m_A1I8Vf-v-v-v-v-v-v/pub?gid=1610453677&single=true&output=csv";
-    
-    // URL de votre déploiement Google Apps Script (doPost)
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyI-SMPkKDGoGg48Bke8ELycDUbgLXGgwmn83Ydz8ipfd7NO0gWYhwAR4t-kuF2wfUB/exec";
+    const APPS_SCRIPT_URL = "VOTRE_URL_APPS_SCRIPT";
 
-    // 2. RECUPERATION DES PARAMETRES URL
+    // AJOUTEZ VOS CORRESPONDANCES ICI : "Nom sur le site": "Nom dans le CSV/Jeu"
+    const CLUB_ALIASES = {
+        "croser fc": "croser fc",
+        "f y pasa": "f y pasa",
+        "lyon": "olympique lyonnais",
+        "marseille": "om",
+        "italonions": "italonions fc"
+    };
+
+    // --- 2. FONCTIONS DE NETTOYAGE INTELLIGENT ---
+    function normalizeName(name) {
+        if (!name) return "";
+        let n = name.toLowerCase().trim();
+        
+        // On vérifie d'abord si le nom est dans le dictionnaire
+        if (CLUB_ALIASES[n]) {
+            n = CLUB_ALIASES[n];
+        }
+
+        // Nettoyage standard (accents, caractères spéciaux, FC/SC)
+        return n.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                .replace(/\b(fc|sc|club|as|ol|de)\b/gi, "")
+                .replace(/[^a-z0-9]/g, "")
+                .trim();
+    }
+
+    // --- 3. RÉCUPÉRATION DES PARAMÈTRES URL ---
     const params = new URLSearchParams(window.location.search);
-    const homeName = params.get('home');
-    const awayName = params.get('away');
+    const homeName = params.get('home') || "";
+    const awayName = params.get('away') || "";
     const currentGid = params.get('gid');
 
     document.getElementById('name-home').innerText = homeName;
     document.getElementById('name-away').innerText = awayName;
 
-    // 3. CHARGEMENT DES MATCHS EXISTANTS POUR PRE-REMPLISSAGE
+    // --- 4. RECHERCHE DES MATCHS ---
     window.addEventListener('DOMContentLoaded', async () => {
         const statusEl = document.getElementById('loading-status');
         try {
             const response = await fetch(GLOBAL_DATA_URL);
             const csvText = await response.text();
             
-            // Parsing simple du CSV
-            const rows = csvText.split('\n').map(row => {
-                // Gestion des guillemets dans le CSV
-                return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.replace(/^"|"$/g, '').trim());
-            });
-
-            // On cherche les matchs entre ces deux équipes (Home vs Away OU Away vs Home)
-            // Selon votre structure : Col 1 = TeamHome, Col 2 = TeamAway
-            const foundMatches = rows.filter(r => 
-                (r[1] === homeName && r[2] === awayName) || (r[1] === awayName && r[2] === homeName)
+            // Parsing CSV (gestion des virgules et guillemets)
+            const rows = csvText.split('\n').map(row => 
+                row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.replace(/^"|"$/g, '').trim())
             );
 
+            // Noms cibles nettoyés
+            const targetHomeClean = normalizeName(homeName);
+            const targetAwayClean = normalizeName(normalizeName(awayName));
+
+            const foundMatches = rows.filter(r => {
+                if (!r[1] || !r[2]) return false;
+                
+                const rowHomeClean = normalizeName(r[1]);
+                const rowAwayClean = normalizeName(r[2]);
+
+                return (rowHomeClean === targetHomeClean && rowAwayClean === targetAwayClean) || 
+                       (rowHomeClean === targetAwayClean && rowAwayClean === targetHomeClean);
+            });
+
             if (foundMatches.length > 0) {
-                statusEl.innerHTML = `<span style="color: #d4af37;"><i class="fas fa-info-circle"></i> ${foundMatches.length} match(s) trouvé(s) dans la base. Choisissez celui à importer :</span>`;
+                statusEl.innerHTML = `<span style="color:var(--fuma-primary)"><i class="fas fa-check-circle"></i> ${foundMatches.length} match(s) trouvé(s).</span>`;
                 displayMatchSelector(foundMatches);
             } else {
-                statusEl.innerText = "Aucun match existant trouvé. Saisie manuelle requise.";
+                statusEl.innerHTML = `<span style="color:#ff4d4d"><i class="fas fa-exclamation-triangle"></i> Aucun match trouvé dans la base pour ces équipes.</span>`;
             }
         } catch (err) {
-            console.error("Erreur de chargement base centrale:", err);
-            statusEl.innerText = "Erreur de connexion à la base de données.";
+            statusEl.innerText = "Erreur de connexion.";
         }
     });
 
-    // 4. AFFICHAGE DU SELECTEUR DE MATCHS
+    // --- 5. AFFICHAGE ET REMPLISSAGE ---
     function displayMatchSelector(matches) {
-        const selectorContainer = document.getElementById('match-selector-container');
-        if (!selectorContainer) return;
-
-        let html = '<div style="display: flex; flex-direction: column; gap: 8px; margin-top:10px;">';
-        matches.forEach((m, index) => {
-            // Affichage : Date - Home Score - Away Team
+        const container = document.getElementById('match-selector-container');
+        let html = '<div style="display: flex; flex-direction: column; gap: 8px;">';
+        matches.forEach((m, i) => {
             html += `
-                <button type="button" onclick="fillFormFromIndex(${index})" class="select-match-btn" 
-                        style="text-align: left; background: #252525; color: #fff; border: 1px solid #444; padding: 12px; cursor: pointer; border-radius: 6px; font-size: 0.85rem;">
-                    <i class="far fa-calendar-alt"></i> ${m[0]} | <strong>${m[1]}</strong> ${m[4]}-${m[5]} <strong>${m[2]}</strong> (ID: ${m[3]})
+                <button type="button" onclick="fillFormFromIndex(${i})" class="select-match-btn" 
+                        style="text-align: left; background: #252525; color: #fff; border: 1px solid #444; padding: 12px; cursor: pointer; border-radius: 6px;">
+                    <i class="far fa-calendar-alt"></i> ${m[0]} | <strong>${m[1]}</strong> ${m[4]}-${m[5]} <strong>${m[2]}</strong>
                 </button>`;
         });
-        html += '</div>';
-        selectorContainer.innerHTML = html;
-        window.tempMatchesData = matches; // Stockage temporaire
+        container.innerHTML = html + '</div>';
+        window.tempMatchesData = matches;
     }
 
-    // 5. REMPLISSAGE AUTOMATIQUE DU FORMULAIRE
     window.fillFormFromIndex = function(index) {
-    const m = window.tempMatchesData[index];
-    
-    // On vérifie si les équipes sont dans le même sens que la page actuelle
-    // homeName et awayName sont récupérés des paramètres de l'URL
-    const isReverse = (m[1].trim() === awayName.trim()); 
+        const m = window.tempMatchesData[index];
+        // Détection de l'inversion (comparaison nettoyée)
+        const isReverse = (normalizeName(m[1]) === normalizeName(awayName));
 
-    // Mappage précis selon votre CSV
-    // Si isReverse est vrai, on prend la colonne de l'autre équipe
-    
-    // Scores
-    document.getElementById('in-sh').value = isReverse ? m[5] : m[4];
-    document.getElementById('in-sa').value = isReverse ? m[4] : m[5];
-    
-    // Buteurs
-    document.getElementById('in-stH').value = isReverse ? m[7] : m[6];
-    document.getElementById('in-stA').value = isReverse ? m[6] : m[7];
-    
-    // Possession (Index 8 et 9)
-    document.getElementById('in-posH').value = isReverse ? m[9] : m[8];
-    document.getElementById('in-posA').value = isReverse ? m[8] : m[9];
-    
-    // Tirs (Index 10 et 11)
-    document.getElementById('in-shoH').value = isReverse ? m[11] : m[10];
-    document.getElementById('in-shoA').value = isReverse ? m[10] : m[11];
-    
-    // Passes Tentées (Index 12 et 13)
-    document.getElementById('in-pasAttH').value = isReverse ? m[13] : m[12];
-    document.getElementById('in-pasAttA').value = isReverse ? m[12] : m[13];
-    
-    // Précision % (Index 14 et 15)
-    document.getElementById('in-accH').value = isReverse ? m[15] : m[14];
-    document.getElementById('in-accA').value = isReverse ? m[14] : m[15];
-    
-    // Tacles Tentés (Index 16 et 17)
-    document.getElementById('in-tacAttH').value = isReverse ? m[17] : m[16];
-    document.getElementById('in-tacAttA').value = isReverse ? m[16] : m[17];
-    
-    // Tacles Réussis (Index 18 et 19)
-    document.getElementById('in-tacMadH').value = isReverse ? m[19] : m[18];
-    document.getElementById('in-tacMadA').value = isReverse ? m[18] : m[19];
-    
-    // Cartons Rouges (Index 20 et 21)
-    document.getElementById('in-redH').value = isReverse ? m[21] : m[20];
-    document.getElementById('in-redA').value = isReverse ? m[20] : m[21];
-    
-    // Homme du Match (Index 22)
-    document.getElementById('in-motm').value = m[22];
+        // Remplissage avec inversion automatique
+        const map = {
+            'in-sh': isReverse ? 5 : 4, 'in-sa': isReverse ? 4 : 5,
+            'in-stH': isReverse ? 7 : 6, 'in-stA': isReverse ? 6 : 7,
+            'in-posH': isReverse ? 9 : 8, 'in-posA': isReverse ? 8 : 9,
+            'in-shoH': isReverse ? 11 : 10, 'in-shoA': isReverse ? 10 : 11,
+            'in-pasAttH': isReverse ? 13 : 12, 'in-pasAttA': isReverse ? 12 : 13,
+            'in-accH': isReverse ? 15 : 14, 'in-accA': isReverse ? 14 : 15,
+            'in-tacAttH': isReverse ? 17 : 16, 'in-tacAttA': isReverse ? 16 : 17,
+            'in-tacMadH': isReverse ? 19 : 18, 'in-tacMadA': isReverse ? 18 : 19,
+            'in-redH': isReverse ? 21 : 20, 'in-redA': isReverse ? 20 : 21
+        };
 
-    alert(isReverse ? "Match importé (Données inversées pour correspondre au sens Home/Away)" : "Match importé avec succès !");
-};
-    // 6. ENVOI DU FORMULAIRE VIA POST (Apps Script)
+        for (let [id, colIndex] of Object.entries(map)) {
+            let el = document.getElementById(id);
+            if(el) el.value = m[colIndex] || (id.includes('red') ? 0 : "");
+        }
+        
+        document.getElementById('in-motm').value = m[22] || "";
+        alert("Données importées !");
+    };
+
+    // --- 6. ENVOI ---
     document.getElementById('match-report-form').onsubmit = async (e) => {
         e.preventDefault();
-        
         const btn = document.getElementById('btn-submit');
-        btn.innerText = "ENVOI EN COURS...";
+        btn.innerText = "ENREGISTREMENT...";
         btn.disabled = true;
 
-        // Collecte des données
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
-        
-        // Ajout des infos de contexte
-        data.home = homeName;
-        data.away = awayName;
-        data.matchId = "M-" + Date.now(); // Génération d'un ID unique si absent
+        const data = Object.fromEntries(new FormData(e.target).entries());
+        data.home = homeName; data.away = awayName; data.gid = currentGid;
 
         try {
-            // Note: mode 'no-cors' car Google Apps Script ne renvoie pas de headers CORS standard
-            await fetch(APPS_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                cache: 'no-cache',
-                body: JSON.stringify(data)
-            });
-
-            alert("Le score a été enregistré avec succès dans le Google Sheet !");
-            // Retour à la page du match
+            await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+            alert("Score enregistré !");
             window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
-            
-        } catch (error) {
-            console.error("Erreur lors de l'envoi:", error);
-            alert("Erreur lors de l'enregistrement. Vérifiez votre connexion.");
-            btn.disabled = false;
-            btn.innerText = "RÉESSAYER L'ENREGISTREMENT";
+        } catch (e) {
+            alert("Erreur"); btn.disabled = false;
         }
     };
 </script>
