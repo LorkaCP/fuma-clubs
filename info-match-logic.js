@@ -87,7 +87,10 @@ function setupPlayerToggle(url, matchId) {
 
 function fetchPlayerStats(url, targetId) {
     const tbody = document.getElementById('player-stats-body');
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">Chargement...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">Chargement des statistiques...</td></tr>`;
+
+    // Conversion de l'ID en chaîne de caractères propre
+    const cleanTargetId = String(targetId).trim();
 
     fetch(url)
         .then(res => res.text())
@@ -95,27 +98,41 @@ function fetchPlayerStats(url, targetId) {
             const rows = parseCSV(csvText);
             const seen = new Set();
             
-            // MAPPING Stats_Joueurs (1).csv :
-            // Index 1: IDMatch | Index 2: Equipe | Index 3: Joueur | Index 4: Note
-            // Index 5: Buts | Index 6: Assists | Index 8: Passes_Tentees
-            // Index 9: Passes_Reussies | Index 10: %_Passes | Index 12: Tacles_Reussis
-            
-            const filtered = rows.filter(r => r[1] === targetId && !seen.has(r[3]) && seen.add(r[3]));
+            // On filtre les données
+            const filtered = rows.filter(r => {
+                // On nettoie l'ID trouvé dans la ligne CSV (index 1)
+                const rowMatchId = r[1] ? String(r[1]).trim() : "";
+                const playerTeam = r[2] ? String(r[2]).trim() : "";
+                const playerName = r[3] ? String(r[3]).trim() : "";
+
+                // Condition : ID correspond ET on n'a pas déjà ajouté ce joueur (doublon)
+                if (rowMatchId === cleanTargetId && playerName !== "" && !seen.has(playerName)) {
+                    seen.add(playerName);
+                    return true;
+                }
+                return false;
+            });
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">Aucune donnée individuelle (ID: ${targetId})</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#ff4d4d;">
+                    Aucune statistique individuelle trouvée pour l'ID : ${cleanTargetId}
+                </td></tr>`;
                 return;
             }
+
+            // Tri par note décroissante (optionnel mais recommandé)
+            filtered.sort((a, b) => parseFloat(b[4]) - parseFloat(a[4]));
 
             tbody.innerHTML = filtered.map(p => {
                 const note = parseFloat(p[4]) || 0;
                 const noteColor = note >= 7 ? 'var(--fuma-primary)' : (note < 5.5 ? '#ff4d4d' : '#fff');
                 
-                // Format Rapport de passes : Réussies/Tentées (%)
+                // Index selon votre fichier Stats_Joueurs (1).csv :
+                // 9: Réussies, 8: Tentées, 10: %, 5: Buts, 6: Assists, 12: Tacles Réussis
                 const passesDisp = `${p[9]}/${p[8]} <span style="font-size:0.7rem; color:#777;">(${p[10]}%)</span>`;
                 
                 return `
-                <tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <td style="padding: 12px 8px;">
                         <div style="font-weight: 600;">${p[3]}</div>
                         <div style="font-size: 0.65rem; color: #aaa; text-transform: uppercase;">${p[2]}</div>
@@ -127,6 +144,10 @@ function fetchPlayerStats(url, targetId) {
                     <td style="text-align:center; font-weight: 600; color: var(--fuma-primary);">${p[12]}</td>
                 </tr>`;
             }).join('');
+        })
+        .catch(err => {
+            console.error("Erreur de chargement des joueurs:", err);
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Erreur lors de la récupération des données.</td></tr>`;
         });
 }
 
