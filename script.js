@@ -555,7 +555,12 @@ async function fetchFumaPlayers(gid) {
     const container = document.getElementById('fuma-js-players');
     if (!container) return;
 
-    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 50px;"><div class="fuma-spinner"></div><p>Calcul des statistiques en cours...</p></div>`;
+   container.innerHTML = `
+    <div class="loader-container" style="grid-column: 1/-1; min-height: 300px;">
+        <div class="fuma-spinner"></div>
+        <p>Loading...</p>
+    </div>
+`;
 
     try {
         const playerRegistry = await getPlayerRegistry();
@@ -862,6 +867,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
