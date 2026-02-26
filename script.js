@@ -778,30 +778,30 @@ function renderDetailedProfile(info, stats) {
     const header = document.getElementById('player-header');
     const statsContainer = document.getElementById('player-stats-container');
     
-    // Calculs des moyennes et totaux réussis
+    // Calculs moyennes
     const avgRating = (stats.rating / stats.gp).toFixed(2);
     const avgPass = (stats.pass_acc / stats.gp).toFixed(1);
     const avgTackle = (stats.tackle_acc / stats.gp).toFixed(1);
 
-    // Calcul du nombre d'actions réussies (Total * % Moyen / 100)
-    const successfulPasses = Math.round((stats.passes * (stats.pass_acc / stats.gp)) / 100);
-    const successfulTackles = Math.round((stats.tackles * (stats.tackle_acc / stats.gp)) / 100);
+    // Calculs des nombres REUSSIS (Total * % Moyen / 100)
+    const successPassCount = Math.round((stats.passes * (stats.pass_acc / stats.gp)) / 100) || 0;
+    const successTackleCount = Math.round((stats.tackles * (stats.tackle_acc / stats.gp)) / 100) || 0;
 
-    // 1. MISE À JOUR DE L'EN-TÊTE (Sans la note, avec le nom d'équipe)
+    // 1. HEADER (Photo, Team & Logo)
     if (header) {
         header.innerHTML = `
             <div class="player-card-header">
                 <img src="${info.avatar}" class="player-avatar-main" onerror="this.src='https://raw.githubusercontent.com/Ashwinvalento/cartoon-avatar/master/lib/images/male/45.png'">
                 <h1 style="margin: 10px 0 5px;">${info.tag} ${info.flag}</h1>
                 <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--fuma-primary); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
-                    ${info.logo ? `<img src="${info.logo}" class="mini-club-logo">` : '<i class="fas fa-tshirt"></i>'}
+                    ${info.logo ? `<img src="${info.logo}" class="mini-club-logo" style="width:25px; height:25px; object-fit:contain;">` : '<i class="fas fa-tshirt"></i>'}
                     <span>${stats.team || info.team || "Free Agent"}</span>
                 </div>
             </div>
         `;
     }
 
-    // 2. MISE À JOUR DES STATS (Avec passes/tacles réussis)
+    // 2. STATS (Utilisation de var(--fuma-primary) pour l'or)
     if (statsContainer) {
         statsContainer.innerHTML = `
             <div class="stat-card">
@@ -815,23 +815,22 @@ function renderDetailedProfile(info, stats) {
                 <h3><i class="fas fa-bullseye"></i> Attacking</h3>
                 <div class="stat-row"><span>Goals</span> <strong>${stats.goals}</strong></div>
                 <div class="stat-row"><span>Assists</span> <strong>${stats.assists}</strong></div>
-                <div class="stat-row"><span>Total Shots</span> <strong>${stats.shots}</strong></div>
-                <div class="stat-row"><span>Goal Participation</span> <strong>${(((stats.goals + stats.assists) / (stats.gp || 1))).toFixed(1)} / match</strong></div>
+                <div class="stat-row"><span>Goal Participation</span> <strong>${((stats.goals + stats.assists) / (stats.gp || 1)).toFixed(1)} / match</strong></div>
             </div>
 
             <div class="stat-card">
                 <h3><i class="fas fa-share-alt"></i> Passing</h3>
                 <div class="stat-row"><span>Total Passes</span> <strong>${stats.passes}</strong></div>
-                <div class="stat-row"><span>Successful Passes</span> <strong style="color:#00ffcc">${successfulPasses}</strong></div>
-                <div class="stat-row"><span>Pass Accuracy</span> <strong>${avgPass}%</strong></div>
+                <div class="stat-row"><span>Successful</span> <strong style="color:var(--fuma-primary)">${successPassCount}</strong></div>
+                <div class="stat-row"><span>Accuracy</span> <strong>${avgPass}%</strong></div>
                 <div class="progress-bar"><div style="width: ${avgPass}%"></div></div>
             </div>
 
             <div class="stat-card">
                 <h3><i class="fas fa-shield-alt"></i> Defense</h3>
                 <div class="stat-row"><span>Total Tackles</span> <strong>${stats.tackles}</strong></div>
-                <div class="stat-row"><span>Successful Tackles</span> <strong style="color:#00ffcc">${successfulTackles}</strong></div>
-                <div class="stat-row"><span>Tackle Success</span> <strong>${avgTackle}%</strong></div>
+                <div class="stat-row"><span>Successful</span> <strong style="color:var(--fuma-primary)">${successTackleCount}</strong></div>
+                <div class="stat-row"><span>Success Rate</span> <strong>${avgTackle}%</strong></div>
                 <div class="progress-bar"><div style="width: ${avgTackle}%"></div></div>
             </div>
         `;
@@ -865,6 +864,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
