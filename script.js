@@ -712,6 +712,99 @@ function applyPlayerFilters() {
     renderPlayers(filtered);
 
 }
+
+
+async function loadPlayerProfile() {
+    const params = new URLSearchParams(window.location.search);
+    const playerId = params.get('id');
+    const seasonGid = document.getElementById('season-selector')?.value || "2074996595"; // Saison 1 par défaut
+
+    if (!playerId) return;
+
+    // 1. Charger le registre pour l'identité
+    const registry = await getPlayerRegistry();
+    const pInfo = registry[playerId] || { tag: playerId, avatar: PLACEHOLDER_AVATAR, flag: "🏳️", logo: "" };
+
+    // 2. Charger les stats de la saison
+    const url = `${PLAYERS_SHEET_BASE}${seasonGid}&t=${Date.now()}`;
+    const resp = await fetch(url);
+    const text = await resp.text();
+    const lines = text.trim().split("\n");
+    const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
+
+    // On récupère les index de TOUTES les colonnes de stats
+    const idx = {};
+    headers.forEach((h, i) => idx[h] = i);
+
+    let stats = {
+        gp: 0, rating: 0, goals: 0, assists: 0, 
+        shots: 0, passes: 0, pass_success: 0,
+        tackles: 0, tackle_success: 0, motm: 0
+    };
+
+    lines.slice(1).forEach(line => {
+        const v = parseCSVLine(line);
+        const idInLine = v[idx['GAME_ID']] || v[idx['GAME_TAG']];
+        
+        if (idInLine === playerId) {
+            stats.gp++;
+            stats.rating += parseFloat(v[idx['RATING']]) || 0;
+            stats.goals += parseInt(v[idx['GOALS']]) || 0;
+            stats.assists += parseInt(v[idx['ASSISTS']]) || 0;
+            stats.shots += parseInt(v[idx['SHOTS']]) || 0;
+            stats.passes += parseInt(v[idx['PASSES']]) || 0;
+            stats.pass_success += parseFloat(v[idx['%SUCCESSFUL_PASSES']]) || 0;
+            stats.tackles += parseInt(v[idx['TACKLES']]) || 0;
+            stats.tackle_success += parseFloat(v[idx['%SUCCESSFUL_TACKLES']]) || 0;
+            stats.motm += parseInt(v[idx['MOTM']]) || 0;
+        }
+    });
+
+    if (stats.gp > 0) {
+        renderDetailedProfile(pInfo, stats);
+    }
+}
+
+
+    .stats-grid-detailed {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+.stat-card {
+    background: var(--fuma-bg-card);
+    padding: 20px;
+    border-radius: 15px;
+    border: var(--fuma-border);
+}
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.progress-bar {
+    background: rgba(255,255,255,0.1);
+    height: 6px;
+    border-radius: 3px;
+    margin: 10px 0 20px;
+}
+.progress-bar div {
+    background: var(--fuma-primary);
+    height: 100%;
+    border-radius: 3px;
+}
+
+
+
+
+
+
+
+
+
+
+    
 // --- INITIALISATION FINALE ---
 // Ce bloc doit être AVANT la fermeture "});" du tout début
 injectNavigation();
@@ -737,6 +830,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
