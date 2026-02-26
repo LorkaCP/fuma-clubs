@@ -776,50 +776,60 @@ async function loadPublicPlayerProfile() {
 function renderDetailedProfile(info, stats) {
     const header = document.getElementById('player-header');
     const statsContainer = document.getElementById('player-stats-container');
-
+    
+    // Calculs de moyennes
     const avgRating = (stats.rating / stats.gp).toFixed(2);
     const avgPass = (stats.pass_acc / stats.gp).toFixed(1);
     const avgTackle = (stats.tackle_acc / stats.gp).toFixed(1);
 
-    // 1. HEADER : Affiche l'avatar (Col G), le drapeau (Col H) et le logo (Col I)
-    header.innerHTML = `
-        <div class="player-card-header">
-            <div class="rating-badge-large">${avgRating}</div>
-            <img src="${info.avatar}" class="player-avatar-main" onerror="this.src='https://raw.githubusercontent.com/Ashwinvalento/cartoon-avatar/master/lib/images/male/45.png'">
-            <h1 style="margin: 15px 0 5px;">${info.tag} ${info.flag}</h1>
-            <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--fuma-text-dim);">
-                ${info.logo ? `<img src="${info.logo}" style="width: 25px; height: 25px; object-fit: contain;">` : '<i class="fas fa-tshirt"></i>'}
-                <span>OFFICIAL PLAYER</span>
+    // 1. MISE À JOUR DE L'EN-TÊTE (Avatar, Nom, Logo)
+    if (header) {
+        header.innerHTML = `
+            <div class="player-card-header">
+                <div class="rating-badge-large">${avgRating}</div>
+                <img src="${info.avatar}" class="player-avatar-main" onerror="this.src='https://raw.githubusercontent.com/Ashwinvalento/cartoon-avatar/master/lib/images/male/45.png'">
+                <h1 style="margin: 15px 0 5px;">${info.tag} ${info.flag}</h1>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--fuma-text-dim);">
+                    ${info.logo ? `<img src="${info.logo}" style="width: 25px; height: 25px; object-fit: contain;">` : '<i class="fas fa-tshirt"></i>'}
+                    <span>FUMA OFFICIAL PLAYER</span>
+                </div>
             </div>
-        </div>
-    `;
+        `;
+    }
 
-    // 2. CORPS : Organisation par catégories
-    statsContainer.innerHTML = `
-        <div class="stat-card">
-            <h3><i class="fas fa-user"></i> Season Overview</h3>
-            <div class="stat-row"><span>Appearances</span> <strong>${stats.gp}</strong></div>
-            <div class="stat-row"><span>Man of the Match</span> <strong>${stats.motm} ⭐</strong></div>
-            <div class="stat-row"><span>Average Rating</span> <strong style="color:var(--fuma-primary)">${avgRating}</strong></div>
-        </div>
+    // 2. MISE À JOUR DES STATS (Ta mise en page)
+    if (statsContainer) {
+        statsContainer.innerHTML = `
+            <div class="stat-card">
+                <h3><i class="fas fa-info-circle"></i> General</h3>
+                <div class="stat-row"><span>Appearances</span> <strong>${stats.gp}</strong></div>
+                <div class="stat-row"><span>Man of the Match</span> <strong>${stats.motm} ⭐</strong></div>
+                <div class="stat-row"><span>Avg. Rating</span> <strong style="color:var(--fuma-primary)">${avgRating}</strong></div>
+            </div>
 
-        <div class="stat-card">
-            <h3><i class="fas fa-swords"></i> Attacking</h3>
-            <div class="stat-row"><span>Goals</span> <strong>${stats.goals}</strong></div>
-            <div class="stat-row"><span>Assists</span> <strong>${stats.assists}</strong></div>
-            <div class="stat-row"><span>Total Shots</span> <strong>${stats.shots}</strong></div>
-        </div>
+            <div class="stat-card">
+                <h3><i class="fas fa-bullseye"></i> Attacking</h3>
+                <div class="stat-row"><span>Goals</span> <strong>${stats.goals}</strong></div>
+                <div class="stat-row"><span>Assists</span> <strong>${stats.assists}</strong></div>
+                <div class="stat-row"><span>Total Shots</span> <strong>${stats.shots}</strong></div>
+                <div class="stat-row"><span>Goal Participation</span> <strong>${(((stats.goals + stats.assists) / (stats.gp || 1))).toFixed(1)} / match</strong></div>
+            </div>
 
-        <div class="stat-card">
-            <h3><i class="fas fa-bullseye"></i> Efficiency</h3>
-            <div class="stat-row"><span>Pass Accuracy</span> <strong>${avgPass}%</strong></div>
-            <div class="progress-bar"><div style="width: ${avgPass}%"></div></div>
-            <div class="stat-row"><span>Tackle Success</span> <strong>${avgTackle}%</strong></div>
-            <div class="progress-bar"><div style="width: ${avgTackle}%"></div></div>
-        </div>
-    `;
+            <div class="stat-card">
+                <h3><i class="fas fa-share-alt"></i> Passing</h3>
+                <div class="stat-row"><span>Total Passes</span> <strong>${stats.passes}</strong></div>
+                <div class="stat-row"><span>Pass Accuracy</span> <strong>${avgPass}%</strong></div>
+                <div class="progress-bar"><div style="width: ${avgPass}%"></div></div>
+            </div>
+
+            <div class="stat-card">
+                <h3><i class="fas fa-shield-alt"></i> Defense</h3>
+                <div class="stat-row"><span>Tackle Success</span> <strong>${avgTackle}%</strong></div>
+                <div class="progress-bar"><div style="width: ${avgTackle}%"></div></div>
+            </div>
+        `;
+    }
 }
-
 
 
 
@@ -849,6 +859,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
