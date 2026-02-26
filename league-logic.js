@@ -99,53 +99,57 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function fetchAndProcessStats(gid) {
-        const containers = ['top-scorers-list', 'top-assists-list', 'top-ratings-list'];
+    const containers = ['top-scorers-list', 'top-assists-list', 'top-ratings-list'];
+    
+    // 1. Afficher le spinner dans chaque conteneur de stats
+    containers.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '<div class="fuma-spinner" style="margin: 20px auto;"></div>';
+    });
+
+    try {
+        const resp = await fetch(`${BASE_CSV_URL}${gid}`);
+        const text = await resp.text();
+        const rows = text.split('\n').filter(r => r.trim() !== "").map(parseCSVLine);
+        const headers = rows[0].map(h => h.trim());
+        const players = rows.slice(1);
+
+        const c = {
+            name: headers.indexOf('GAME_TAG'), 
+            team: headers.indexOf('CURRENT_TEAM'),
+            avatar: headers.indexOf('AVATAR'),
+            goals: headers.indexOf('GOALS'),
+            assists: headers.indexOf('ASSISTS'),
+            rating: headers.indexOf('RATING')
+        };
+
+        // --- CORRECTION : Récupération des équipes Home ET Away ---
+        // On récupère tous les noms d'équipes présents dans les deux colonnes de la division
+        const teamsInDiv = [...new Set([
+            ...currentMatchesData.map(r => r[col.h] ? r[col.h].trim() : ""),
+            ...currentMatchesData.map(r => r[col.a] ? r[col.a].trim() : "")
+        ])].filter(name => name !== "");
+
+        // Filtrage des joueurs : on compare le nom nettoyé du joueur avec la liste de la division
+        const filteredPlayers = players.filter(p => {
+            const playerTeam = p[c.team] ? p[c.team].trim() : "";
+            return teamsInDiv.includes(playerTeam);
+        });
+        // ---------------------------------------------------------
+
+        // 2. Le rendu final
+        renderTopList(filteredPlayers, c.goals, 'top-scorers-list', c, 'Goals');
+        renderTopList(filteredPlayers, c.assists, 'top-assists-list', c, 'Assists');
+        renderTopList(filteredPlayers, c.rating, 'top-ratings-list', c, 'Rating', true);
         
+    } catch (e) { 
+        console.error("Erreur Stats:", e);
         containers.forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.innerHTML = '<div class="fuma-spinner" style="margin: 20px auto;"></div>';
+            if (el) el.innerHTML = "<p style='color:red; font-size:0.8rem;'>Erreur de chargement</p>";
         });
-
-        try {
-            const resp = await fetch(`${BASE_CSV_URL}${gid}`);
-            const text = await resp.text();
-            const rows = text.split('\n').filter(r => r.trim() !== "").map(parseCSVLine);
-            const headers = rows[0].map(h => h.trim());
-            const players = rows.slice(1);
-
-            const c = {
-                name: headers.indexOf('GAME_TAG'), 
-                team: headers.indexOf('CURRENT_TEAM'),
-                avatar: headers.indexOf('AVATAR'),
-                goals: headers.indexOf('GOALS'),
-                assists: headers.indexOf('ASSISTS'),
-                rating: headers.indexOf('RATING')
-            };
-
-            // --- CORRECTION : Nettoyage des noms d'équipes pour la comparaison ---
-            const teamsInDiv = [...new Set(currentMatchesData.map(r => 
-                r[col.h] ? r[col.h].trim() : ""
-            ))];
-
-            const filteredPlayers = players.filter(p => {
-                const playerTeam = p[c.team] ? p[c.team].trim() : "";
-                return teamsInDiv.includes(playerTeam);
-            });
-            // --------------------------------------------------------------------
-
-            renderTopList(filteredPlayers, c.goals, 'top-scorers-list', c, 'Goals');
-            renderTopList(filteredPlayers, c.assists, 'top-assists-list', c, 'Assists');
-            renderTopList(filteredPlayers, c.rating, 'top-ratings-list', c, 'Rating', true);
-            
-        } catch (e) { 
-            console.error("Erreur Stats:", e);
-            containers.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.innerHTML = "<p style='color:red; font-size:0.8rem;'>Erreur de chargement</p>";
-            });
-        }
     }
-
+}
     function renderTopList(players, colIdx, containerId, c, label, isFloat = false) {
     const container = document.getElementById(containerId);
     if (!container) return;
