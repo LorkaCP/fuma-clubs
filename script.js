@@ -685,11 +685,15 @@ function updateTeamFilter(players) {
 
 function applyPlayerFilters() {
     const teamValue = document.getElementById('filter-team')?.value.toLowerCase();
-    const posValue = document.getElementById('filter-position')?.value;
+    const posValue = document.getElementById('filter-position')?.value; // Ex: "MID", "DEF"
 
     const filtered = allPlayers.filter(p => {
         const matchesTeam = !teamValue || p.team.toLowerCase() === teamValue;
-        const matchesPos = !posValue || p.pos.includes(posValue);
+        
+        // CORRECTION ICI : On vérifie si la position du joueur (ex: "MIDFIELDER") 
+        // contient la valeur du filtre (ex: "MID")
+        const matchesPos = !posValue || p.pos.toUpperCase().includes(posValue.toUpperCase());
+        
         return matchesTeam && matchesPos;
     });
     renderPlayers(filtered);
@@ -718,6 +722,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 });
+
 
 
 
