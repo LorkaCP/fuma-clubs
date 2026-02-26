@@ -555,19 +555,41 @@ async function fetchFumaPlayers(gid) {
     const container = document.getElementById('fuma-js-players');
     if (!container) return;
 
-   container.innerHTML = `
-    <div class="loader-container" style="grid-column: 1/-1; min-height: 300px;">
-        <div class="fuma-spinner"></div>
-        <p>Loading...</p>
-    </div>
-`;
+    // Affichage du loader pendant le traitement
+    container.innerHTML = `
+        <div class="loader-container" style="grid-column: 1/-1; min-height: 300px;">
+            <div class="fuma-spinner"></div>
+            <p>Loading Players...</p>
+        </div>
+    `;
 
     try {
+        // 1. Récupérer TOUS les joueurs enregistrés dans la base globale
         const playerRegistry = await getPlayerRegistry();
+        const playersMap = {};
+
+        // 2. Initialiser la Map avec chaque joueur du registre (0 match par défaut)
+        Object.keys(playerRegistry).forEach(pId => {
+            const reg = playerRegistry[pId];
+            playersMap[pId] = {
+                id: pId,
+                tag: reg.tag,
+                avatar: reg.avatar,
+                flag: reg.flag,
+                team: reg.team || "Free Agent", // Équipe du registre (Col H)
+                logo: reg.logo,
+                pos: "N/A",
+                gp: 0, 
+                totalRating: 0, 
+                goals: 0, 
+                assists: 0
+            };
+        });
+
+        // 3. Récupérer les données de la saison (les matchs joués)
         const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}&t=${Date.now()}`);
         const text = await resp.text();
         
-        // Nettoyage des lignes (on ignore les lignes trop courtes)
         const lines = text.trim().split("\n").filter(l => l.split(',').length > 5);
         const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
 
@@ -581,46 +603,44 @@ async function fetchFumaPlayers(gid) {
             assists: headers.indexOf('ASSISTS')
         };
 
-        const playersMap = {};
-
+        // 4. Parcourir les lignes de match pour accumuler les stats
         lines.slice(1).forEach(line => {
             const v = parseCSVLine(line);
-            // Identifiant unique : ID en priorité, sinon TAG
             const pId = (v[idx.id] && v[idx.id] !== "") ? v[idx.id] : v[idx.tag];
             
             if (!pId || pId === "#REF!") return;
 
-            // Initialisation du joueur s'il n'existe pas encore dans la Map
+            // Si le joueur n'était pas dans le registre mais a joué, on le crée (sécurité)
             if (!playersMap[pId]) {
-                const reg = playerRegistry[pId] || { tag: v[idx.tag] || pId, avatar: PLACEHOLDER_AVATAR, flag: "🏳️" };
                 playersMap[pId] = {
                     id: pId,
-                    tag: reg.tag,
-                    avatar: reg.avatar,
-                    flag: reg.flag,
+                    tag: v[idx.tag] || pId,
+                    avatar: PLACEHOLDER_AVATAR,
+                    flag: "🏳️",
                     team: v[idx.team] || "Free Agent",
-                    logo: reg.logo, // AJOUTEZ CETTE LIGNE
+                    logo: "",
                     pos: v[idx.pos] || "N/A",
-                    gp: 0, 
-                    totalRating: 0, 
-                    goals: 0, 
-                    assists: 0
+                    gp: 0, totalRating: 0, goals: 0, assists: 0
                 };
             }
 
-            // Accumulation des données (Aggregation)
+            // Mise à jour des statistiques de performance
             playersMap[pId].gp += 1;
             playersMap[pId].totalRating += parseFloat(v[idx.rating] || 0);
             playersMap[pId].goals += parseInt(v[idx.goals] || 0);
             playersMap[pId].assists += parseInt(v[idx.assists] || 0);
+            
+            // On met à jour la position si elle est renseignée dans le match
+            if (v[idx.pos]) playersMap[pId].pos = v[idx.pos];
         });
 
-        // Conversion de l'objet Map en tableau et calcul des moyennes
+        // 5. Finalisation : Calcul des moyennes et transformation en tableau
         allPlayers = Object.values(playersMap).map(p => ({
             ...p,
-            rating: (p.totalRating / p.gp).toFixed(1)
+            rating: p.gp > 0 ? (p.totalRating / p.gp).toFixed(1) : "0.0"
         }));
 
+        // 6. Mise à jour des filtres de l'interface et rendu
         updateTeamFilter(allPlayers);
         applyPlayerFilters();
 
@@ -629,7 +649,6 @@ async function fetchFumaPlayers(gid) {
         container.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:red;">Erreur lors du traitement des données.</p>`;
     }
 }
-
 // --- ÉTAPE 3 : AFFICHAGE DES CARTES (RENDER) ---
 // --- ÉTAPE 3 : AFFICHAGE DES CARTES (RENDER) ---
 function renderPlayers(list) {
@@ -874,6 +893,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
