@@ -720,23 +720,24 @@ setupFormSubmission();
 fetchFumaClubs();
 loadClubProfile();
 
-// Initialisation spécifique à la page Players
+// 1. Initialisation spécifique à la page Players (Chargement des données)
 const playerSeasonFilter = document.getElementById('filter-season');
 if (playerSeasonFilter) {
-    // Charge la saison par défaut (Saison 1 par ex)
+    // Charge la saison par défaut au démarrage
     fetchFumaPlayers(playerSeasonFilter.value); 
     
-    // Ecouteur pour changer de saison
+    // Ecouteur pour changer de saison (recharge toutes les données)
     playerSeasonFilter.addEventListener('change', (e) => fetchFumaPlayers(e.target.value));
-    document.getElementById('search-player')?.addEventListener('input', applyPlayerFilters);
 }
 
-// Ecouteurs pour les filtres Team et Position
+// 2. Ecouteurs pour les filtres (Recherche, Team et Position)
+// On les place ici pour qu'ils soient actifs dès que la page est prête
+document.getElementById('search-player')?.addEventListener('input', applyPlayerFilters);
 document.getElementById('filter-team')?.addEventListener('change', applyPlayerFilters);
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
+}); // Fermeture correcte du DOMContentLoaded
 
-});
 
 
 
