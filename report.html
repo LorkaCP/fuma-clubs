@@ -389,9 +389,16 @@
     function displayPlayers(players) {
     const homeList = document.querySelector('#home-players-list .list');
     const awayList = document.querySelector('#away-players-list .list');
-    homeList.innerHTML = ""; awayList.innerHTML = "";
+    homeList.innerHTML = ""; 
+    awayList.innerHTML = "";
+
+    // On normalise le nom de l'équipe à domicile une seule fois pour la comparaison
+    const normalizedHomeMatchName = normalizeName(homeName);
 
     players.forEach(p => {
+        // p[2] contient le nom de l'équipe du joueur dans le CSV
+        const playerTeamName = p[2] ? p[2].trim() : "";
+        
         const playerHtml = `
             <div class="player-stat-row">
                 <span class="player-name-header">
@@ -406,8 +413,13 @@
                     <div class="stat-item">Tacles: ${p[13]}/${p[12]} (${p[14]}%)</div>
                 </div>
             </div>`;
-        if (p[2] === homeName) homeList.innerHTML += playerHtml;
-        else awayList.innerHTML += playerHtml;
+
+        // Utilisation de normalizeName pour éviter les erreurs de majuscules/espaces
+        if (normalizeName(playerTeamName) === normalizedHomeMatchName) {
+            homeList.innerHTML += playerHtml;
+        } else {
+            awayList.innerHTML += playerHtml;
+        }
     });
 }
 
