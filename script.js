@@ -684,32 +684,33 @@ function updateTeamFilter(players) {
 }
 
 function applyPlayerFilters() {
+    const searchQuery = document.getElementById('search-player')?.value.toLowerCase() || "";
     const teamValue = document.getElementById('filter-team')?.value.toLowerCase();
-    const posValue = document.getElementById('filter-position')?.value; // Ex: "GK", "ATT", "MID"
+    const posValue = document.getElementById('filter-position')?.value;
 
     const filtered = allPlayers.filter(p => {
+        // 1. Filtre par Nom (Game Tag)
+        const matchesSearch = p.tag.toLowerCase().includes(searchQuery);
+
+        // 2. Filtre par Équipe
         const matchesTeam = !teamValue || p.team.toLowerCase() === teamValue;
         
-        // --- LOGIQUE DE CORRESPONDANCE DES POSITIONS ---
-        if (!posValue) return matchesTeam; // Si "All Positions", on ne filtre que par équipe
-
-        const playerPos = p.pos.toUpperCase(); // Ex: "GOALKEEPER"
-        let matchesPos = false;
-
-        if (posValue === "GK") {
-            matchesPos = playerPos.includes("GOAL");
-        } else if (posValue === "DEF") {
-            matchesPos = playerPos.includes("DEF");
-        } else if (posValue === "MID") {
-            matchesPos = playerPos.includes("MID");
-        } else if (posValue === "ATT") {
-            matchesPos = playerPos.includes("FORW"); // "ATT" dans le filtre -> "FORWARD" dans le sheet
+        // 3. Filtre par Position (avec mapping pour GK et ATT)
+        let matchesPos = true;
+        if (posValue) {
+            const playerPos = p.pos.toUpperCase();
+            if (posValue === "GK") matchesPos = playerPos.includes("GOAL");
+            else if (posValue === "DEF") matchesPos = playerPos.includes("DEF");
+            else if (posValue === "MID") matchesPos = playerPos.includes("MID");
+            else if (posValue === "ATT") matchesPos = playerPos.includes("FORW");
         }
 
-        return matchesTeam && matchesPos;
+        // Le joueur doit respecter les 3 conditions
+        return matchesSearch && matchesTeam && matchesPos;
     });
 
     renderPlayers(filtered);
+}
 }
 // --- INITIALISATION FINALE ---
 // Ce bloc doit être AVANT la fermeture "});" du tout début
@@ -732,8 +733,10 @@ if (playerSeasonFilter) {
 // Ecouteurs pour les filtres Team et Position
 document.getElementById('filter-team')?.addEventListener('change', applyPlayerFilters);
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
+document.getElementById('search-player')?.addEventListener('input', applyPlayerFilters);
 
 });
+
 
 
 
