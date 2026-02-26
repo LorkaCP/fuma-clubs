@@ -223,7 +223,7 @@ const response = await fetch(`${APP_SCRIPT_URL}&discord_id=${discordId}&t=${Date
 
         // 2. Préparation des données
         const avatarInput = document.getElementById('avatar')?.value.trim();
-        const DEFAULT_AVATAR = "https://via.placeholder.com/150"; // Assurez-vous que cette variable est définie
+        const DEFAULT_AVATAR = "https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png"; // Assurez-vous que cette variable est définie
         const finalAvatar = (avatarInput === "" || avatarInput.toLowerCase() === "none") ? DEFAULT_AVATAR : avatarInput;
 
         const formData = new URLSearchParams();
@@ -688,6 +688,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 });
+
 
 
 
