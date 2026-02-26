@@ -159,7 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
             name: p[c.name],
             team: p[c.team],
             avatar: p[c.avatar],
-            // Utilisation du nom/discord_name comme identifiant pour le lien si l'ID unique n'est pas dispo
             id: p[c.name], 
             value: isFloat ? parseFloat(p[colIdx].replace(',', '.')) : parseInt(p[colIdx])
         }))
@@ -169,14 +168,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     container.innerHTML = top5.map((p, i) => `
         <a href="player.html?id=${encodeURIComponent(p.id)}" style="text-decoration: none; color: inherit; display: block; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
-            <div style="display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <span style="font-weight: 800; color: var(--fuma-primary); width: 20px;">${i+1}</span>
-                <img src="${p.avatar}" style="width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--fuma-primary);" onerror="this.src='https://via.placeholder.com/35'">
-                <div style="flex-grow: 1;">
-                    <div style="font-weight: 600; font-size: 0.9rem;">${p.name}</div>
-                    <div style="font-size: 0.7rem; color: var(--fuma-text-dim);">${p.team}</div>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); overflow: hidden;">
+                
+                <span style="font-weight: 800; color: var(--fuma-primary); width: 20px; flex-shrink: 0;">${i+1}</span>
+                
+                <img src="${p.avatar}" 
+                     style="width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--fuma-primary); flex-shrink: 0; object-fit: cover;" 
+                     onerror="this.src='https://via.placeholder.com/35'">
+                
+                <div style="flex-grow: 1; min-width: 0;">
+                    <div style="font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.name}">
+                        ${p.name}
+                    </div>
+                    <div style="font-size: 0.7rem; color: var(--fuma-text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        ${p.team}
+                    </div>
                 </div>
-                <div style="text-align: right;">
+                
+                <div style="text-align: right; flex-shrink: 0; margin-left: 8px;">
                     <div style="font-weight: 800; color: #fff;">${p.value}</div>
                     <div style="font-size: 0.6rem; text-transform: uppercase; color: var(--fuma-primary);">${label}</div>
                 </div>
