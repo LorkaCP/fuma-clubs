@@ -501,34 +501,52 @@ const response = await fetch(`${APP_SCRIPT_URL}&discord_id=${discordId}&t=${Date
 
 // --- 1. RÉCUPÉRER LE REGISTRE FIXE (GAME_DATABASE) ---
 // Cette fonction crée un dictionnaire pour lier les IDs aux Avatars/Drapeaux
+// --- 1. RÉCUPÉRER LE REGISTRE FIXE (GAME_DATABASE) ---
+// Cette fonction crée un dictionnaire pour lier les IDs aux Avatars, Drapeaux et Logos
 async function getPlayerRegistry() {
     const REGISTRY_GID = "1342244083"; 
     const url = `${PLAYERS_SHEET_BASE}${REGISTRY_GID}&t=${Date.now()}`;
+    
     try {
         const resp = await fetch(url);
         const text = await resp.text();
         const lines = text.trim().split("\n");
+        
+        // Normalisation des en-têtes pour trouver les colonnes
         const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
         
+        const idxGameId = headers.indexOf('GAME_ID');
+        const idxGameTag = headers.indexOf('GAME_TAG');
+        const idxAvatar = headers.indexOf('AVATAR');
+        const idxFlag = headers.indexOf('FLAG');
+        // La colonne I correspond à l'index 8 si les headers sont standards, 
+        // mais indexOf('LOGO') est plus sécurisé si l'en-tête est nommé.
+        const idxLogo = headers.indexOf('LOGO'); 
+
         const registry = {};
+
         lines.slice(1).forEach(line => {
             const v = parseCSVLine(line);
-            // On utilise GAME_TAG si GAME_ID est absent
-            const id = (v[headers.indexOf('GAME_ID')] && v[headers.indexOf('GAME_ID')] !== "") 
-                       ? v[headers.indexOf('GAME_ID')] 
-                       : v[headers.indexOf('GAME_TAG')];
+            
+            // Identification unique (ID ou TAG par défaut) 
+            const id = (v[idxGameId] && v[idxGameId] !== "") ? v[idxGameId] : v[idxGameTag];
             
             if (id) {
                 registry[id] = {
-                    tag: v[headers.indexOf('GAME_TAG')] || id,
-                    avatar: v[headers.indexOf('AVATAR')] || PLACEHOLDER_AVATAR,
-                    flag: v[headers.indexOf('FLAG')] || "🏳️"
+                    tag: v[idxGameTag] || id,
+                    // Récupère l'avatar ou utilise l'image par défaut 
+                    avatar: v[idxAvatar] || PLACEHOLDER_AVATAR,
+                    // Récupère le drapeau (Nationalité) 
+                    flag: v[idxFlag] || "🏳️",
+                    // Récupère le logo du club (Colonne I / LOGO)
+                    logo: v[idxLogo] || "" 
                 };
             }
         });
+        
         return registry;
     } catch (e) {
-        console.error("Erreur Registry:", e);
+        console.error("Erreur lors du chargement du registre des joueurs :", e);
         return {};
     }
 }
@@ -608,6 +626,7 @@ async function fetchFumaPlayers(gid) {
 }
 
 // --- ÉTAPE 3 : AFFICHAGE DES CARTES (RENDER) ---
+// --- ÉTAPE 3 : AFFICHAGE DES CARTES (RENDER) ---
 function renderPlayers(list) {
     const container = document.getElementById('fuma-js-players');
     if (!container) return;
@@ -620,30 +639,41 @@ function renderPlayers(list) {
     container.innerHTML = list.map(p => `
         <a href="player.html?id=${encodeURIComponent(p.id)}" class="player-link-wrapper" style="text-decoration: none; color: inherit;">
             <div class="club-card" style="text-align: center; padding: 20px; position: relative; min-height: 220px;">
+                
+                <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: #000; font-weight: 800; padding: 4px 8px; border-radius: 6px; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                    ${p.rating}
+                </div>
+
                 <div style="position: relative; width: 80px; height: 80px; margin: 0 auto 10px;">
                     <img src="${p.avatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary);" onerror="this.src='${PLACEHOLDER_AVATAR}'">
                     <div style="position: absolute; bottom: 0; right: -5px; font-size: 1.4rem;">${p.flag}</div>
                 </div>
 
                 <h3 style="margin: 5px 0; font-size: 1.1rem; color: var(--fuma-text-main);">${p.tag}</h3>
-                <p style="font-size: 0.8rem; color: var(--fuma-text-dim); margin-bottom: 10px;">
-                    <i class="fas fa-tshirt" style="margin-right: 5px;"></i>${p.team}
+                
+                <p style="font-size: 0.8rem; color: var(--fuma-text-dim); margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    ${p.logo ? `<img src="${p.logo}" style="width: 18px; height: 18px; object-fit: contain;" onerror="this.style.display='none'">` : '<i class="fas fa-tshirt"></i>'}
+                    <span>${p.team}</span>
                 </p>
 
-                <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: #000; font-weight: 800; padding: 4px 8px; border-radius: 6px; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
-                    ${p.rating}
-                </div>
-
                 <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
-                    <div style="text-align: center;"><span style="display: block; font-weight: bold; font-size: 0.9rem;">${p.goals}</span><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Buts</span></div>
-                    <div style="text-align: center;"><span style="display: block; font-weight: bold; font-size: 0.9rem;">${p.assists}</span><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Passes</span></div>
-                    <div style="text-align: center;"><span style="display: block; font-weight: bold; font-size: 0.9rem;">${p.gp}</span><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Matchs</span></div>
+                    <div style="text-align: center;">
+                        <span style="display: block; font-weight: bold; font-size: 0.9rem;">${p.goals}</span>
+                        <span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Buts</span>
+                    </div>
+                    <div style="text-align: center;">
+                        <span style="display: block; font-weight: bold; font-size: 0.9rem;">${p.assists}</span>
+                        <span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Passes</span>
+                    </div>
+                    <div style="text-align: center;">
+                        <span style="display: block; font-weight: bold; font-size: 0.9rem;">${p.gp}</span>
+                        <span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Matchs</span>
+                    </div>
                 </div>
             </div>
         </a>
     `).join('');
 }
-
 // --- ÉTAPE 4 : LOGIQUE DES FILTRES ---
 function updateTeamFilter(players) {
     const teamSelect = document.getElementById('filter-team');
@@ -688,6 +718,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 });
+
 
 
 
