@@ -69,53 +69,108 @@ function switchTab(tabId) {
     if (targetContent) targetContent.classList.add('active');
 }
 
+/**
+ * Met à jour l'intégralité de l'interface avec les données du match
+ * Gère l'affichage des stats équipe, des joueurs et le cas du match non joué.
+ */
 async function updateUI(m) {
-    // --- PARTIE 1 : STATS ÉQUIPE (Basé sur ton fichier FIXTURES) ---
-    // Noms et Logos
-    document.getElementById('name-home').innerText = m[6];
-    document.getElementById('name-away').innerText = m[7];
+    // 1. Détection de l'état du match
+    // On considère le match non joué si le score est vide, nul ou contient "#REF!"
+    const scoreHomeRaw = m[9];
+    const isPlayed = scoreHomeRaw !== "#REF!" && scoreHomeRaw !== "" && scoreHomeRaw !== null && scoreHomeRaw !== undefined;
+
+    // Éléments d'interface à contrôler
+    const tabsContainer = document.querySelector('.match-tabs');
+    const teamStatsSection = document.getElementById('team-stats');
+    const playerStatsSection = document.getElementById('player-stats');
+    const mainContent = document.getElementById('main-content');
+
+    // 2. Mise à jour des éléments communs (Noms et Logos)
+    document.getElementById('name-home').innerText = m[6] || "Équipe Dom.";
+    document.getElementById('name-away').innerText = m[7] || "Équipe Ext.";
     document.getElementById('logo-home').src = m[3] || 'default-logo.png';
     document.getElementById('logo-away').src = m[4] || 'default-logo.png';
 
-    // Score et Buteurs
-    document.getElementById('score-home').innerText = m[9] || '0';
-    document.getElementById('score-away').innerText = m[10] || '0';
-    document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
-    document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
+    // Nettoyage des anciens messages "Match à venir" s'ils existent
+    const oldUpcoming = document.querySelector('.match-upcoming');
+    if (oldUpcoming) oldUpcoming.remove();
 
-    // Barres de stats (Possession, Tirs, Passes, Tacles)
-    updateBar('possession', m[13], m[14], true);
-    updateBar('shots', m[15], m[16], false);
-    
-    // Pour les passes et tacles, on affiche "Réussis (Total)"
-    const passHome = `${m[19]}%`; // Précision
-    const passAway = `${m[20]}%`;
-    updateBar('passes', m[19], m[20], true);
-    document.getElementById('val-passes-home').innerText = `${m[17]} (${m[19]}%)`;
-    document.getElementById('val-passes-away').innerText = `${m[18]} (${m[20]}%)`;
+    if (!isPlayed) {
+        // --- MODE MATCH NON JOUÉ ---
+        document.getElementById('score-home').innerText = "-";
+        document.getElementById('score-away').innerText = "-";
+        document.getElementById('strikers-home').innerHTML = "";
+        document.getElementById('strikers-away').innerHTML = "";
+        
+        // Cacher les onglets et les sections de stats
+        if (tabsContainer) tabsContainer.style.display = 'none';
+        if (teamStatsSection) teamStatsSection.style.display = 'none';
+        if (playerStatsSection) playerStatsSection.style.display = 'none';
 
-    // Tacles
-    updateBar('tackles', m[23], m[24], false);
-    document.getElementById('val-tackles-home').innerText = `${m[23]}/${m[21]}`;
-    document.getElementById('val-tackles-away').innerText = `${m[24]}/${m[22]}`;
+        // Affichage du message informatif
+        const upcomingHtml = `
+            <div class="match-upcoming" style="display: block; text-align: center; padding: 50px 20px;">
+                <span class="upcoming-badge" style="background: var(--fuma-primary); color: #000; padding: 5px 15px; border-radius: 20px; font-weight: 800; text-transform: uppercase;">Match à venir</span>
+                <div class="match-date-info" style="margin-top: 20px; color: var(--fuma-text-dim);">
+                    <i class="far fa-calendar-alt"></i> Semaine du ${m[1]} au ${m[2]}<br>
+                    <strong style="color: var(--fuma-primary)">Journée ${m[0]}</strong>
+                </div>
+            </div>
+        `;
+        mainContent.insertAdjacentHTML('beforeend', upcomingHtml);
 
-    // Cartons rouges
-    document.getElementById('val-red-home').innerText = m[25] || '0';
-    document.getElementById('val-red-away').innerText = m[26] || '0';
+    } else {
+        // --- MODE MATCH JOUÉ ---
+        // Afficher les onglets
+        if (tabsContainer) tabsContainer.style.display = 'flex';
+        if (teamStatsSection) teamStatsSection.style.display = 'block';
 
-    // Homme du Match
-    const motmArea = document.getElementById('motm-container');
-    if (m[27] && m[27] !== '0') {
-        motmArea.innerHTML = `<div class="motm-badge"><i class="fas fa-star"></i> MOTM: ${m[27]}</div>`;
+        // Score et Buteurs
+        document.getElementById('score-home').innerText = m[9];
+        document.getElementById('score-away').innerText = m[10];
+        document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
+        document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
+
+        // Mise à jour des barres de statistiques (Possession, Tirs, etc.)
+        // updateBar(id, valeurDom, valeurExt, estUnPourcentage)
+        updateBar('possession', m[13], m[14], true);
+        updateBar('shots', m[15], m[16], false);
+        
+        // Passes : On affiche le nombre réussi et le % en libellé
+        updateBar('passes', m[19], m[20], true); 
+        document.getElementById('val-passes-home').innerText = `${m[17]} (${m[19]}%)`;
+        document.getElementById('val-passes-away').innerText = `${m[18]} (${m[20]}%)`;
+
+        // Tacles : On affiche Réussis/Tentés
+        updateBar('tackles', m[23], m[24], false);
+        document.getElementById('val-tackles-home').innerText = `${m[23]}/${m[21]}`;
+        document.getElementById('val-tackles-away').innerText = `${m[24]}/${m[22]}`;
+
+        // Cartons Rouges
+        const redH = document.getElementById('val-red-home');
+        const redA = document.getElementById('val-red-away');
+        if(redH) redH.innerText = m[25] || '0';
+        if(redA) redA.innerText = m[26] || '0';
+
+        // Homme du Match (MOTM)
+        const motmContainer = document.getElementById('motm-container');
+        if (motmContainer && m[27] && m[27] !== '0') {
+            motmContainer.innerHTML = `
+                <div class="motm-badge" style="background: rgba(212,175,55,0.1); border: 1px solid var(--fuma-primary); color: var(--fuma-primary); padding: 10px; border-radius: 8px; display: inline-block; margin-top: 10px;">
+                    <i class="fas fa-star"></i> MOTM : ${m[27]}
+                </div>`;
+        }
+
+        // Chargement des statistiques individuelles des joueurs
+        // On utilise l'ID du match (m[8]) pour filtrer la DATABASE des joueurs
+        document.getElementById('team-name-home-stats').innerText = m[6];
+        document.getElementById('team-name-away-stats').innerText = m[7];
+        
+        if (typeof loadPlayerStats === 'function') {
+            loadPlayerStats(m[8]);
+        }
     }
-
-    // --- PARTIE 2 : STATS JOUEURS (Basé sur DATABASE) ---
-    document.getElementById('team-name-home-stats').innerText = m[6];
-    document.getElementById('team-name-away-stats').innerText = m[7];
-
-    loadPlayerStats(m[8]); // On utilise l'IDMatch (index 8) pour filtrer
 }
-
 async function loadPlayerStats(matchId) {
     try {
         const response = await fetch(PLAYERS_DB_URL);
