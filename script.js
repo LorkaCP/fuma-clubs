@@ -685,20 +685,32 @@ function updateTeamFilter(players) {
 
 function applyPlayerFilters() {
     const teamValue = document.getElementById('filter-team')?.value.toLowerCase();
-    const posValue = document.getElementById('filter-position')?.value; // Ex: "MID", "DEF"
+    const posValue = document.getElementById('filter-position')?.value; // Ex: "GK", "ATT", "MID"
 
     const filtered = allPlayers.filter(p => {
         const matchesTeam = !teamValue || p.team.toLowerCase() === teamValue;
         
-        // CORRECTION ICI : On vérifie si la position du joueur (ex: "MIDFIELDER") 
-        // contient la valeur du filtre (ex: "MID")
-        const matchesPos = !posValue || p.pos.toUpperCase().includes(posValue.toUpperCase());
-        
+        // --- LOGIQUE DE CORRESPONDANCE DES POSITIONS ---
+        if (!posValue) return matchesTeam; // Si "All Positions", on ne filtre que par équipe
+
+        const playerPos = p.pos.toUpperCase(); // Ex: "GOALKEEPER"
+        let matchesPos = false;
+
+        if (posValue === "GK") {
+            matchesPos = playerPos.includes("GOAL");
+        } else if (posValue === "DEF") {
+            matchesPos = playerPos.includes("DEF");
+        } else if (posValue === "MID") {
+            matchesPos = playerPos.includes("MID");
+        } else if (posValue === "ATT") {
+            matchesPos = playerPos.includes("FORW"); // "ATT" dans le filtre -> "FORWARD" dans le sheet
+        }
+
         return matchesTeam && matchesPos;
     });
+
     renderPlayers(filtered);
 }
-
 // --- INITIALISATION FINALE ---
 // Ce bloc doit être AVANT la fermeture "});" du tout début
 injectNavigation();
@@ -722,6 +734,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 });
+
 
 
 
