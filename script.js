@@ -173,7 +173,8 @@ async function loadTeamsList() {
         if (form) form.style.display = 'none';
 
         try {
-            const response = await fetch(`${APP_SCRIPT_URL}?discord_id=${discordId}&t=${Date.now()}`);
+            // Correction : on utilise & pour ajouter un paramètre supplémentaire
+const response = await fetch(`${APP_SCRIPT_URL}&discord_id=${discordId}&t=${Date.now()}`);
             if (!response.ok) throw new Error('Erreur serveur');
             
             const data = await response.json();
@@ -781,6 +782,7 @@ function updateTeamFilter(players) {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
