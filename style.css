@@ -376,6 +376,22 @@ body, .fuma-wrapper {
 
 .roster-list li:last-child { border: none; }
 
+
+.player-team-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.mini-logo {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+
+
 /* --- TROPHÉES --- */
 
 .trophy-section {
@@ -706,6 +722,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
