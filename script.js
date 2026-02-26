@@ -599,6 +599,7 @@ async function fetchFumaPlayers(gid) {
                     avatar: reg.avatar,
                     flag: reg.flag,
                     team: v[idx.team] || "Free Agent",
+                    logo: reg.logo, // AJOUTEZ CETTE LIGNE
                     pos: v[idx.pos] || "N/A",
                     gp: 0, 
                     totalRating: 0, 
@@ -640,7 +641,11 @@ function renderPlayers(list) {
         return;
     }
 
-    container.innerHTML = list.map(p => `
+    container.innerHTML = list.map(p => {
+        // Vérification si le logo est valide
+        const hasLogo = p.logo && p.logo !== "" && p.logo.toLowerCase() !== "none";
+        
+        return `
         <a href="player.html?id=${encodeURIComponent(p.id)}" class="player-link-wrapper" style="text-decoration: none; color: inherit;">
             <div class="club-card" style="text-align: center; padding: 20px; position: relative; min-height: 220px;">
                 
@@ -655,8 +660,10 @@ function renderPlayers(list) {
 
                 <h3 style="margin: 5px 0; font-size: 1.1rem; color: var(--fuma-text-main);">${p.tag}</h3>
                 
-                <p style="font-size: 0.8rem; color: var(--fuma-text-dim); margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                    ${p.logo ? `<img src="${p.logo}" style="width: 18px; height: 18px; object-fit: contain;" onerror="this.style.display='none'">` : '<i class="fas fa-tshirt"></i>'}
+                <p style="font-size: 0.8rem; color: var(--fuma-text-dim); margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    ${hasLogo 
+                        ? `<img src="${p.logo}" style="width: 20px; height: 20px; object-fit: contain;" onerror="this.style.display='none'">` 
+                        : '<i class="fas fa-tshirt" style="font-size: 0.8rem; opacity: 0.5;"></i>'}
                     <span>${p.team}</span>
                 </p>
 
@@ -676,7 +683,7 @@ function renderPlayers(list) {
                 </div>
             </div>
         </a>
-    `).join('');
+    `}).join('');
 }
 // --- ÉTAPE 4 : LOGIQUE DES FILTRES ---
 function updateTeamFilter(players) {
@@ -867,6 +874,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
