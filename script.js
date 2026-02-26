@@ -493,32 +493,32 @@ async function loadTeamsList() {
         detailContainer.innerHTML = "<p style='text-align:center; color:red; padding: 50px;'>Error loading data.</p>";
     }
 }
-  async function fetchFumaPlayers(gid = "1342244083") {
+ /**
+ * AGGREGATION LOGIC : Une ligne = Une performance de match
+ * Ce script regroupe les données par Player ID (GAME_ID)
+ */
+
+async function fetchFumaPlayers(gid = "1342244083") {
     const playerContainer = document.getElementById('fuma-js-players');
     if (!playerContainer) return;
 
-    // 1. Ton Spinner Original
     playerContainer.innerHTML = `
         <div class="fuma-loading-wrapper" style="grid-column: 1/-1; text-align: center; padding: 50px;">
             <div class="fuma-spinner" style="margin: 0 auto 15px;"></div>
-            <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">Loading season data...</p>
+            <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">Aggregating match data...</p>
         </div>`;
 
     try {
-        // 2. Fetch avec protection anti-cache (&t=...)
         const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}&t=${Date.now()}`);
-        if (!resp.ok) throw new Error("Network error");
-        
         const text = await resp.text();
-        
-        // Sécurité si Google renvoie une erreur HTML au lieu du CSV
-        if (text.includes("<!DOCTYPE html>")) throw new Error("Invalid CSV format (HTML received)");
+        if (text.includes("<!DOCTYPE html>")) throw new Error("Invalid CSV");
 
         const lines = text.trim().split("\n").filter(line => line.trim() !== "");
         const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
 
-        // 3. Tes Index originaux
+        // --- INDEXATION ---
         const idx = {
+            id: headers.indexOf('GAME_ID'), 
             tag: headers.indexOf('GAME_TAG'),
             pos: headers.indexOf('MAIN_POSITION'),
             team: headers.indexOf('CURRENT_TEAM'),
@@ -526,92 +526,93 @@ async function loadTeamsList() {
             rating: headers.indexOf('RATING'),
             avatar: headers.indexOf('AVATAR'),
             arch: headers.indexOf('MAIN_ARCHETYPE'),
-            flag: headers.indexOf('FLAG')
+            flag: headers.indexOf('FLAG'),
+            goals: headers.indexOf('GOALS'),
+            assists: headers.indexOf('ASSISTS'),
+            matchId: headers.indexOf('MATCH_ID') // <-- Votre nouvelle colonne
         };
 
-        // 4. Mapping avec tes sécurités Avatar + Sécurités anti-#REF
-        allPlayers = lines.slice(1).map(line => {
+        const playersMap = {};
+
+        // --- BOUCLE D'AGRÉGATION ---
+        lines.slice(1).forEach(line => {
             const v = parseCSVLine(line);
-            const rawAvatar = v[idx.avatar] ? v[idx.avatar].trim() : "";
-            const isValidAvatar = rawAvatar !== "" && rawAvatar.toLowerCase() !== "none" && rawAvatar.startsWith('http');
-            
-            return {
-                tag: v[idx.tag] || "Unknown", 
-                pos: v[idx.pos] || "N/A", 
-                team: v[idx.team] || "Free Agent",
-                logo: v[idx.logo] || "",
-                rating: v[idx.rating] || "0.0", 
-                avatar: isValidAvatar ? rawAvatar : (typeof DEFAULT_AVATAR !== 'undefined' ? DEFAULT_AVATAR : ""),
-                arch: v[idx.arch] || "Standard", 
-                flag: v[idx.flag] || ""
-            };
-        }).filter(p => 
-            p.tag && 
-            p.tag !== "Unknown" && 
-            p.tag.trim() !== "" && 
-            !p.tag.includes("#REF") // <--- PROTECTION CLÉ contre les cartes buggées
-        );
+            const pId = v[idx.id] || v[idx.tag]; 
 
-        // 5. TA LOGIQUE DE FILTRE ÉQUIPE (CONSERVÉE)
-        const teamFilter = document.getElementById('filter-team');
-        if (teamFilter) {
-            const currentSelectedTeam = teamFilter.value; 
-            const teams = [...new Set(allPlayers.map(p => p.team))].sort();
-            teamFilter.innerHTML = '<option value="">All Teams</option>';
-            teams.forEach(team => {
-                const option = document.createElement('option');
-                option.value = team;
-                option.textContent = team;
-                teamFilter.appendChild(option);
-            });
-            teamFilter.value = currentSelectedTeam; 
-        }
+            if (!pId || pId.includes("#REF") || pId === "") return;
 
-        // 6. Application des filtres
+            if (!playersMap[pId]) {
+                playersMap[pId] = {
+                    id: pId,
+                    tag: v[idx.tag] || "Unknown",
+                    pos: v[idx.pos] || "N/A",
+                    team: v[idx.team] || "Free Agent",
+                    logo: v[idx.logo] || "",
+                    avatar: (v[idx.avatar] && v[idx.avatar].startsWith('http')) ? v[idx.avatar] : (typeof PLACEHOLDER_AVATAR !== 'undefined' ? PLACEHOLDER_AVATAR : ""),
+                    arch: v[idx.arch] || "Standard",
+                    flag: v[idx.flag] || "",
+                    matchCount: 0,
+                    totalRating: 0,
+                    totalGoals: 0,
+                    totalAssists: 0
+                };
+            }
+
+            // Accumulation des statistiques
+            playersMap[pId].matchCount += 1;
+            playersMap[pId].totalRating += parseFloat(v[idx.rating] || 0);
+            playersMap[pId].totalGoals += parseInt(v[idx.goals] || 0);
+            playersMap[pId].totalAssists += parseInt(v[idx.assists] || 0);
+        });
+
+        // --- CONVERSION EN TABLEAU POUR LE RENDU ---
+        allPlayers = Object.values(playersMap).map(p => ({
+            ...p,
+            rating: (p.totalRating / p.matchCount).toFixed(1),
+            goals: p.totalGoals,
+            assists: p.totalAssists,
+            gp: p.matchCount
+        }));
+
+        updateTeamFilter(allPlayers);
         applyPlayerFilters(); 
         
     } catch (e) {
-        console.error("Fetch Error:", e);
-        playerContainer.innerHTML = `<p style='grid-column:1/-1; text-align:center; color:red;'>Error loading players: ${e.message}</p>`;
+        console.error("Aggregation Error:", e);
+        playerContainer.innerHTML = `<p style='grid-column:1/-1; text-align:center; color:red;'>Error: ${e.message}</p>`;
     }
 }
-    function renderPlayers(list) {
+
+function renderPlayers(list) {
     const container = document.getElementById('fuma-js-players');
     if (!container) return;
 
     container.innerHTML = list.map(p => {
-        // --- ÉTAPE CRUCIALE : On définit l'ID à envoyer ---
-        // On cherche p.id, sinon p.GAME_ID (nom CSV), sinon le pseudo (tag)
-        const playerId = p.id || p.GAME_ID || p.tag; 
-
-        const isFreeAgent = !p.team || p.team.toLowerCase().includes("free agent") || p.team === "";
+        const isFreeAgent = !p.team || p.team.toLowerCase().includes("free agent");
         const teamBadge = isFreeAgent 
-            ? `<div style="position: absolute; top: 0; left: 0; font-size: 1.2rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));" title="Free Agent">🆓</div>` 
-            : `<div style="position: absolute; top: 2px; left: 2px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
-                <img src="${p.logo}" alt="${p.team}" title="${p.team}" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.7));">
-               </div>`;
+            ? `<div style="position: absolute; top: 0; left: 0; font-size: 1.2rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));">🆓</div>` 
+            : `<div style="position: absolute; top: 2px; left: 2px; width: 28px; height: 28px;"><img src="${p.logo}" style="width:100%; object-fit:contain; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.7));"></div>`;
 
         return `
-            <a href="player.html?id=${encodeURIComponent(playerId)}" class="player-link-wrapper" style="text-decoration: none; color: inherit; display: block; transition: transform 0.3s ease;">
-                <div class="club-card" style="text-align:center; padding: 25px; position: relative; height: 100%;">
+            <a href="player.html?id=${encodeURIComponent(p.id)}" class="player-link-wrapper" style="text-decoration: none; color: inherit;">
+                <div class="club-card" style="text-align:center; padding: 25px; position: relative;">
                     <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 15px auto;">
-                        <img src="${p.avatar}" alt="${p.tag}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary);" onerror="this.src='${PLACEHOLDER_AVATAR}'">
+                        <img src="${p.avatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary);">
                         ${teamBadge}
-                        <div style="position: absolute; bottom: 0; right: 0; font-size: 1.1rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.7));">${p.flag}</div>
+                        <div style="position: absolute; bottom: 0; right: 0; font-size: 1.1rem;">${p.flag}</div>
                     </div>
-                    <h3 style="margin:0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">${p.tag}</h3>
+                    <h3 style="margin:0; text-transform: uppercase;">${p.tag}</h3>
                     <p style="font-size: 0.75rem; color: var(--fuma-text-dim); margin: 5px 0;">${p.pos} | ${p.arch}</p>
+                    <p style="font-size: 0.7rem; font-weight: 600; color: var(--fuma-primary);">${p.gp} MP | ${p.goals} G | ${p.assists} A</p>
                     <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: black; font-weight: 800; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">${p.rating}</div>
                 </div>
             </a>`;
     }).join('');
 }
 
-
-    async function fetchPlayerData(playerId, gid = "1342244083") {
+async function fetchPlayerData(playerId, gid = "1342244083") {
     const headerContainer = document.getElementById('player-header');
     const statsContainer = document.getElementById('player-stats-container');
-    const PLAYERS_SHEET_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=';
 
     try {
         const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}&t=${Date.now()}`);
@@ -619,129 +620,92 @@ async function loadTeamsList() {
         const lines = text.trim().split("\n");
         const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
         
-        const rows = lines.slice(1).map(line => {
-            const v = parseCSVLine(line);
-            let obj = {};
-            headers.forEach((h, i) => obj[h] = v[i]);
-            return obj;
-        });
+        const matchPerformances = lines.slice(1)
+            .map(line => {
+                const v = parseCSVLine(line);
+                let obj = {};
+                headers.forEach((h, i) => obj[h] = v[i]);
+                return obj;
+            })
+            .filter(row => row.GAME_ID === playerId || row.GAME_TAG === playerId);
 
-        // Recherche du joueur par son ID ou son Tag
-        const p = rows.find(player => player.GAME_ID === playerId || player.GAME_TAG === playerId);
-
-        if (!p) {
-            headerContainer.innerHTML = `<p style="text-align:center; padding: 50px;">Data not found for this season.</p>`;
-            statsContainer.innerHTML = "";
+        if (matchPerformances.length === 0) {
+            headerContainer.innerHTML = `<p style="text-align:center; padding:50px;">Player stats not found for this season.</p>`;
             return;
         }
 
-        // --- EN-TÊTE DU PROFIL (HEADER) ---
+        const p = matchPerformances[0]; 
+        
+        const aggregated = matchPerformances.reduce((acc, curr) => {
+            acc.goals += parseInt(curr.GOALS || 0);
+            acc.assists += parseInt(curr.ASSISTS || 0);
+            acc.ratingSum += parseFloat(curr.RATING || 0);
+            acc.shots += parseInt(curr.SHOTS || 0);
+            acc.passes += parseInt(curr.SUCCESSFUL_PASSES || 0);
+            acc.tackles += parseInt(curr.SUCCESSFUL_TACKLES || 0);
+            acc.motm += parseInt(curr.MOTM || 0);
+            acc.red += parseInt(curr.RED_CARDS || curr.RED_CARD || 0);
+            return acc;
+        }, { goals: 0, assists: 0, ratingSum: 0, shots: 0, passes: 0, tackles: 0, motm: 0, red: 0 });
+
+        const avgRating = (aggregated.ratingSum / matchPerformances.length).toFixed(1);
+
         headerContainer.innerHTML = `
             <div class="player-card-header">
-               <img src="${p.AVATAR || 'https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png'}" 
-                     class="player-avatar-main" 
-                     onerror="this.src='https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png'">
-                <h1 style="font-size: 2.8rem; margin: 0; color: #fff; text-transform: uppercase;">
-                    ${p.GAME_TAG} ${p.FLAG || ''}
-                </h1>
-                <p style="color: var(--fuma-primary); letter-spacing: 4px; font-weight: 600; margin-top: 10px;">
-                    ${p.MAIN_POSITION || 'N/A'} | ${p.MAIN_ARCHETYPE || 'Standard'}
-                </p>
-                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 25px;">
-                    <img src="${p.LOGO || ''}" style="height: 45px; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));" onerror="this.style.display='none'">
-                    <span style="font-size: 1.3rem; font-weight: 300;">${p.CURRENT_TEAM || 'Free Agent'}</span>
+               <img src="${p.AVATAR || (typeof PLACEHOLDER_AVATAR !== 'undefined' ? PLACEHOLDER_AVATAR : '')}" class="player-avatar-main">
+                <h1 style="font-size: 2.5rem; margin: 10px 0;">${p.GAME_TAG} ${p.FLAG || ''}</h1>
+                <p style="color: var(--fuma-primary); letter-spacing: 2px;">${p.MAIN_POSITION} | ${p.MAIN_ARCHETYPE}</p>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 15px;">
+                    <img src="${p.LOGO || ''}" style="height: 40px;" onerror="this.style.display='none'">
+                    <span style="font-size: 1.2rem;">${p.CURRENT_TEAM || 'Free Agent'}</span>
                 </div>
-            </div>
-        `;
+                <div class="rating-badge-large" style="opacity: 1; position: absolute; top: 20px; right: 30px; font-size: 3rem; background: var(--fuma-primary); color: black; padding: 5px 15px; border-radius: 10px;">${avgRating}</div>
+            </div>`;
 
-        // --- GRILLE DES STATISTIQUES ---
         statsContainer.innerHTML = `
             <div class="stat-block">
                 <h3><i class="fas fa-info-circle"></i> General</h3>
-                <div class="stat-row">
-                    <span class="stat-label">Matches Played</span>
-                    <span class="stat-value">${p.GAME_PLAYED || '0'}</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Average Rating</span>
-                    <span class="stat-value highlight">${p.RATING || '0.0'}</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">MOTM</span>
-                    <span class="stat-value" style="color: #ffd700;"><i class="fas fa-star"></i> ${p.MOTM || '0'}</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Red Cards</span>
-                    <span class="stat-value" style="color: #ff4d4d;"><i class="fas fa-square"></i> ${p.RED_CARD || p['RED_CARDS'] || '0'}</span>
-                </div>
+                ${renderStatRow("Matches Played", matchPerformances.length)}
+                ${renderStatRow("Average Rating", avgRating, "highlight")}
+                ${renderStatRow("MOTM", aggregated.motm)}
+                ${renderStatRow("Red Cards", aggregated.red, aggregated.red > 0 ? "text-danger" : "")}
             </div>
-
             <div class="stat-block">
                 <h3><i class="fas fa-fire"></i> Attack</h3>
-                <div class="stat-row">
-                    <span class="stat-label">Goals</span>
-                    <span class="stat-value highlight">${p.GOALS || '0'}</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Assists</span>
-                    <span class="stat-value highlight">${p.ASSISTS || '0'}</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Shots</span>
-                    <span class="stat-value">${p.SHOTS || '0'}</span>
-                </div>
+                ${renderStatRow("Goals", aggregated.goals, "highlight")}
+                ${renderStatRow("Assists", aggregated.assists, "highlight")}
+                ${renderStatRow("Shots", aggregated.shots)}
             </div>
-
             <div class="stat-block">
                 <h3><i class="fas fa-share-alt"></i> Distribution</h3>
-                <div class="stat-row">
-                    <span class="stat-label">Successful Passes</span>
-                    <span class="stat-value">${p.SUCCESSFUL_PASSES || '0'}</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Pass Accuracy</span>
-                    <span class="stat-value">${p['%SUCCESSFUL_PASSES'] || '0%'}</span>
-                </div>
-            </div>
-
-            <div class="stat-block">
-                <h3><i class="fas fa-shield-alt"></i> Defense</h3>
-                <div class="stat-row">
-                    <span class="stat-label">Successful Tackles</span>
-                    <span class="stat-value">${p.SUCCESSFUL_TACKLES || '0'}</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Tackle Accuracy</span>
-                    <span class="stat-value">${p['%SUCCESSFUL_TACKLES'] || '0%'}</span>
-                </div>
+                ${renderStatRow("Successful Passes", aggregated.passes)}
+                ${renderStatRow("Pass Accuracy", p['%SUCCESSFUL_PASSES'] || 'N/A')}
             </div>
         `;
 
     } catch (e) {
-        console.error("Error fetching player data:", e);
-        headerContainer.innerHTML = "<p style='text-align:center; color:red; padding: 50px;'>Error while loading data.</p>";
+        console.error(e);
+        headerContainer.innerHTML = `<p style='text-align:center; color:red;'>Error loading profile.</p>`;
     }
 }
-function renderStatCard(title, stats) {
+
+function renderStatRow(label, value, extraClass = "") {
     return `
-        <div class="stat-box" style="background: var(--fuma-bg-card); border: var(--fuma-border); padding: 20px; border-radius: 12px;">
-            <h3 style="color: var(--fuma-primary); font-size: 0.9rem; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px;">${title}</h3>
-            ${stats.map(s => `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                    <span style="color: var(--fuma-text-dim);">${s.label}</span>
-                    <span style="font-weight: bold; color: ${s.color || 'white'}">${s.val || '0'}</span>
-                </div>
-            `).join('')}
-        </div>
-    `;
+        <div class="stat-row">
+            <span class="stat-label">${label}</span>
+            <span class="stat-value ${extraClass}">${value}</span>
+        </div>`;
 }
 
-// Écouteur pour le changement de saison
-document.getElementById('season-selector')?.addEventListener('change', (e) => {
-    const params = new URLSearchParams(window.location.search);
-    const playerId = params.get('id');
-    if (playerId) fetchPlayerData(playerId, e.target.value);
-});
+function updateTeamFilter(players) {
+    const teamFilter = document.getElementById('filter-team');
+    if (!teamFilter) return;
+    const current = teamFilter.value;
+    const teams = [...new Set(players.map(p => p.team))].sort();
+    teamFilter.innerHTML = '<option value="">All Teams</option>' + 
+        teams.map(t => `<option value="${t}">${t}</option>`).join('');
+    teamFilter.value = current;
+}
 
  // --- 9. INITIALISATION ---
     injectNavigation();
@@ -817,6 +781,7 @@ document.getElementById('season-selector')?.addEventListener('change', (e) => {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
