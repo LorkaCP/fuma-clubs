@@ -499,6 +499,39 @@ const response = await fetch(`${APP_SCRIPT_URL}&discord_id=${discordId}&t=${Date
  * Ce script regroupe les données par Player ID (GAME_ID)
  */
 
+// --- FONCTION UTILITAIRE POUR RÉCUPÉRER LE REGISTRE FIXE ---
+async function getPlayerRegistry() {
+    const REGISTRY_GID = "1342244083"; 
+    const url = `${PLAYERS_SHEET_BASE}${REGISTRY_GID}&t=${Date.now()}`;
+    try {
+        const resp = await fetch(url);
+        const text = await resp.text();
+        const lines = text.trim().split("\n");
+        const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
+        
+        const registry = {};
+        lines.slice(1).forEach(line => {
+            const v = parseCSVLine(line);
+            const id = v[headers.indexOf('GAME_ID')];
+            if (id) {
+                registry[id] = {
+                    tag: v[headers.indexOf('GAME_TAG')] || "Unknown",
+                    avatar: (v[headers.indexOf('AVATAR')] && v[headers.indexOf('AVATAR')].startsWith('http')) 
+                            ? v[headers.indexOf('AVATAR')] 
+                            : (typeof PLACEHOLDER_AVATAR !== 'undefined' ? PLACEHOLDER_AVATAR : ""),
+                    flag: v[headers.indexOf('FLAG')] || "🏳️",
+                    discordId: v[headers.indexOf('DISCORD_ID')] || ""
+                };
+            }
+        });
+        return registry;
+    } catch (e) {
+        console.error("Erreur Registry:", e);
+        return {};
+    }
+}
+
+// --- 1. MISE À JOUR : FETCH FUMA PLAYERS ---
 async function fetchFumaPlayers(gid = "1342244083") {
     const playerContainer = document.getElementById('fuma-js-players');
     if (!playerContainer) return;
@@ -506,52 +539,46 @@ async function fetchFumaPlayers(gid = "1342244083") {
     playerContainer.innerHTML = `
         <div class="fuma-loading-wrapper" style="grid-column: 1/-1; text-align: center; padding: 50px;">
             <div class="fuma-spinner" style="margin: 0 auto 15px;"></div>
-            <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">Aggregating match data...</p>
+            <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">Syncing Database...</p>
         </div>`;
 
     try {
+        // A. Récupérer les données fixes (Images/Drapeaux)
+        const playerRegistry = await getPlayerRegistry();
+
+        // B. Récupérer les données de la saison (Stats/Clubs/Positions)
         const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}&t=${Date.now()}`);
         const text = await resp.text();
-        if (text.includes("<!DOCTYPE html>")) throw new Error("Invalid CSV");
-
         const lines = text.trim().split("\n").filter(line => line.trim() !== "");
         const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
 
-        // --- INDEXATION ---
         const idx = {
-            id: headers.indexOf('GAME_ID'), 
-            tag: headers.indexOf('GAME_TAG'),
-            pos: headers.indexOf('MAIN_POSITION'),
+            id: headers.indexOf('GAME_ID'),
             team: headers.indexOf('CURRENT_TEAM'),
             logo: headers.indexOf('LOGO'),
-            rating: headers.indexOf('RATING'),
-            avatar: headers.indexOf('AVATAR'),
+            pos: headers.indexOf('MAIN_POSITION'),
             arch: headers.indexOf('MAIN_ARCHETYPE'),
-            flag: headers.indexOf('FLAG'),
+            rating: headers.indexOf('RATING'),
             goals: headers.indexOf('GOALS'),
-            assists: headers.indexOf('ASSISTS'),
-            matchId: headers.indexOf('MATCH_ID') // <-- Votre nouvelle colonne
+            assists: headers.indexOf('ASSISTS')
         };
 
         const playersMap = {};
 
-        // --- BOUCLE D'AGRÉGATION ---
         lines.slice(1).forEach(line => {
             const v = parseCSVLine(line);
-            const pId = v[idx.id] || v[idx.tag]; 
-
-            if (!pId || pId.includes("#REF") || pId === "") return;
+            const pId = v[idx.id];
+            if (!pId || pId === "" || pId.includes("#REF")) return;
 
             if (!playersMap[pId]) {
+                // On fusionne le fixe (Registry) et le dynamique (Saison)
                 playersMap[pId] = {
                     id: pId,
-                    tag: v[idx.tag] || "Unknown",
-                    pos: v[idx.pos] || "N/A",
+                    ...(playerRegistry[pId] || { tag: pId, avatar: PLACEHOLDER_AVATAR, flag: "" }),
                     team: v[idx.team] || "Free Agent",
                     logo: v[idx.logo] || "",
-                    avatar: (v[idx.avatar] && v[idx.avatar].startsWith('http')) ? v[idx.avatar] : (typeof PLACEHOLDER_AVATAR !== 'undefined' ? PLACEHOLDER_AVATAR : ""),
+                    pos: v[idx.pos] || "N/A",
                     arch: v[idx.arch] || "Standard",
-                    flag: v[idx.flag] || "",
                     matchCount: 0,
                     totalRating: 0,
                     totalGoals: 0,
@@ -559,14 +586,12 @@ async function fetchFumaPlayers(gid = "1342244083") {
                 };
             }
 
-            // Accumulation des statistiques
             playersMap[pId].matchCount += 1;
             playersMap[pId].totalRating += parseFloat(v[idx.rating] || 0);
             playersMap[pId].totalGoals += parseInt(v[idx.goals] || 0);
             playersMap[pId].totalAssists += parseInt(v[idx.assists] || 0);
         });
 
-        // --- CONVERSION EN TABLEAU POUR LE RENDU ---
         allPlayers = Object.values(playersMap).map(p => ({
             ...p,
             rating: (p.totalRating / p.matchCount).toFixed(1),
@@ -584,25 +609,31 @@ async function fetchFumaPlayers(gid = "1342244083") {
     }
 }
 
+// --- 2. MISE À JOUR : RENDER PLAYERS ---
 function renderPlayers(list) {
     const container = document.getElementById('fuma-js-players');
     if (!container) return;
+
+    if (list.length === 0) {
+        container.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:var(--fuma-text-dim);">No players found.</p>`;
+        return;
+    }
 
     container.innerHTML = list.map(p => {
         const isFreeAgent = !p.team || p.team.toLowerCase().includes("free agent");
         const teamBadge = isFreeAgent 
             ? `<div style="position: absolute; top: 0; left: 0; font-size: 1.2rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));">🆓</div>` 
-            : `<div style="position: absolute; top: 2px; left: 2px; width: 28px; height: 28px;"><img src="${p.logo}" style="width:100%; object-fit:contain; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.7));"></div>`;
+            : `<div style="position: absolute; top: 2px; left: 2px; width: 28px; height: 28px;"><img src="${p.logo}" style="width:100%; object-fit:contain; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.7));" onerror="this.style.display='none'"></div>`;
 
         return `
             <a href="player.html?id=${encodeURIComponent(p.id)}" class="player-link-wrapper" style="text-decoration: none; color: inherit;">
-                <div class="club-card" style="text-align:center; padding: 25px; position: relative;">
+                <div class="club-card" style="text-align:center; padding: 25px; position: relative; transition: 0.3s; height: 100%;">
                     <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 15px auto;">
-                        <img src="${p.avatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary);">
+                        <img src="${p.avatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary);" onerror="this.src='${PLACEHOLDER_AVATAR}'">
                         ${teamBadge}
                         <div style="position: absolute; bottom: 0; right: 0; font-size: 1.1rem;">${p.flag}</div>
                     </div>
-                    <h3 style="margin:0; text-transform: uppercase;">${p.tag}</h3>
+                    <h3 style="margin:0; text-transform: uppercase; font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.tag}</h3>
                     <p style="font-size: 0.75rem; color: var(--fuma-text-dim); margin: 5px 0;">${p.pos} | ${p.arch}</p>
                     <p style="font-size: 0.7rem; font-weight: 600; color: var(--fuma-primary);">${p.gp} MP | ${p.goals} G | ${p.assists} A</p>
                     <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: black; font-weight: 800; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">${p.rating}</div>
@@ -611,33 +642,36 @@ function renderPlayers(list) {
     }).join('');
 }
 
+// --- 3. MISE À JOUR : FETCH PLAYER DATA (Profil individuel) ---
 async function fetchPlayerData(playerId, gid = "1342244083") {
     const headerContainer = document.getElementById('player-header');
     const statsContainer = document.getElementById('player-stats-container');
 
     try {
+        const playerRegistry = await getPlayerRegistry();
         const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}&t=${Date.now()}`);
         const text = await resp.text();
         const lines = text.trim().split("\n");
         const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
         
-        const matchPerformances = lines.slice(1)
+        const performances = lines.slice(1)
             .map(line => {
                 const v = parseCSVLine(line);
                 let obj = {};
                 headers.forEach((h, i) => obj[h] = v[i]);
                 return obj;
             })
-            .filter(row => row.GAME_ID === playerId || row.GAME_TAG === playerId);
+            .filter(row => row.GAME_ID === playerId);
 
-        if (matchPerformances.length === 0) {
-            headerContainer.innerHTML = `<p style="text-align:center; padding:50px;">Player stats not found for this season.</p>`;
+        if (performances.length === 0) {
+            headerContainer.innerHTML = `<div style="text-align:center; padding:50px;"><h2>Player not found</h2><p>No matches recorded for this season.</p></div>`;
             return;
         }
 
-        const p = matchPerformances[0]; 
-        
-        const aggregated = matchPerformances.reduce((acc, curr) => {
+        const pData = performances[0]; 
+        const identity = playerRegistry[playerId] || { tag: pData.GAME_TAG, avatar: PLACEHOLDER_AVATAR, flag: "" };
+
+        const stats = performances.reduce((acc, curr) => {
             acc.goals += parseInt(curr.GOALS || 0);
             acc.assists += parseInt(curr.ASSISTS || 0);
             acc.ratingSum += parseFloat(curr.RATING || 0);
@@ -645,69 +679,78 @@ async function fetchPlayerData(playerId, gid = "1342244083") {
             acc.passes += parseInt(curr.SUCCESSFUL_PASSES || 0);
             acc.tackles += parseInt(curr.SUCCESSFUL_TACKLES || 0);
             acc.motm += parseInt(curr.MOTM || 0);
-            acc.red += parseInt(curr.RED_CARDS || curr.RED_CARD || 0);
             return acc;
-        }, { goals: 0, assists: 0, ratingSum: 0, shots: 0, passes: 0, tackles: 0, motm: 0, red: 0 });
+        }, { goals: 0, assists: 0, ratingSum: 0, shots: 0, passes: 0, tackles: 0, motm: 0 });
 
-        const avgRating = (aggregated.ratingSum / matchPerformances.length).toFixed(1);
+        const avgRating = (stats.ratingSum / performances.length).toFixed(1);
 
         headerContainer.innerHTML = `
-            <div class="player-card-header">
-               <img src="${p.AVATAR || (typeof PLACEHOLDER_AVATAR !== 'undefined' ? PLACEHOLDER_AVATAR : '')}" class="player-avatar-main">
-                <h1 style="font-size: 2.5rem; margin: 10px 0;">${p.GAME_TAG} ${p.FLAG || ''}</h1>
-                <p style="color: var(--fuma-primary); letter-spacing: 2px;">${p.MAIN_POSITION} | ${p.MAIN_ARCHETYPE}</p>
+            <div class="player-card-header" style="position: relative;">
+               <img src="${identity.avatar}" class="player-avatar-main" onerror="this.src='${PLACEHOLDER_AVATAR}'">
+                <h1 style="font-size: 2.5rem; margin: 10px 0;">${identity.tag} ${identity.flag}</h1>
+                <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">${pData.MAIN_POSITION} | ${pData.MAIN_ARCHETYPE}</p>
                 <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 15px;">
-                    <img src="${p.LOGO || ''}" style="height: 40px;" onerror="this.style.display='none'">
-                    <span style="font-size: 1.2rem;">${p.CURRENT_TEAM || 'Free Agent'}</span>
+                    <img src="${pData.LOGO || ''}" style="height: 40px;" onerror="this.style.display='none'">
+                    <span style="font-size: 1.2rem; font-weight: 600;">${pData.CURRENT_TEAM || 'Free Agent'}</span>
                 </div>
-                <div class="rating-badge-large" style="opacity: 1; position: absolute; top: 20px; right: 30px; font-size: 3rem; background: var(--fuma-primary); color: black; padding: 5px 15px; border-radius: 10px;">${avgRating}</div>
+                <div class="rating-badge-large" style="position: absolute; top: 20px; right: 30px; font-size: 3rem; background: var(--fuma-primary); color: black; padding: 5px 15px; border-radius: 10px; font-weight: 800;">${avgRating}</div>
             </div>`;
 
         statsContainer.innerHTML = `
             <div class="stat-block">
-                <h3><i class="fas fa-info-circle"></i> General</h3>
-                ${renderStatRow("Matches Played", matchPerformances.length)}
+                <h3><i class="fas fa-info-circle"></i> Season Summary</h3>
+                ${renderStatRow("Matches Played", performances.length)}
                 ${renderStatRow("Average Rating", avgRating, "highlight")}
-                ${renderStatRow("MOTM", aggregated.motm)}
-                ${renderStatRow("Red Cards", aggregated.red, aggregated.red > 0 ? "text-danger" : "")}
+                ${renderStatRow("MOTM", stats.motm)}
             </div>
             <div class="stat-block">
-                <h3><i class="fas fa-fire"></i> Attack</h3>
-                ${renderStatRow("Goals", aggregated.goals, "highlight")}
-                ${renderStatRow("Assists", aggregated.assists, "highlight")}
-                ${renderStatRow("Shots", aggregated.shots)}
+                <h3><i class="fas fa-fire"></i> Offensive</h3>
+                ${renderStatRow("Total Goals", stats.goals, "highlight")}
+                ${renderStatRow("Total Assists", stats.assists, "highlight")}
+                ${renderStatRow("Total Shots", stats.shots)}
             </div>
             <div class="stat-block">
-                <h3><i class="fas fa-share-alt"></i> Distribution</h3>
-                ${renderStatRow("Successful Passes", aggregated.passes)}
-                ${renderStatRow("Pass Accuracy", p['%SUCCESSFUL_PASSES'] || 'N/A')}
+                <h3><i class="fas fa-shield-alt"></i> Contribution</h3>
+                ${renderStatRow("Successful Passes", stats.passes)}
+                ${renderStatRow("Successful Tackles", stats.tackles)}
             </div>
         `;
 
     } catch (e) {
         console.error(e);
-        headerContainer.innerHTML = `<p style='text-align:center; color:red;'>Error loading profile.</p>`;
+        headerContainer.innerHTML = `<p style='text-align:center; color:red;'>Error loading player profile.</p>`;
     }
 }
 
+// --- 4. MISE À JOUR : RENDER STAT ROW ---
 function renderStatRow(label, value, extraClass = "") {
+    const isHighlight = extraClass.includes("highlight") ? "color: var(--fuma-primary); font-weight: 800; font-size: 1.2rem;" : "";
     return `
-        <div class="stat-row">
-            <span class="stat-label">${label}</span>
-            <span class="stat-value ${extraClass}">${value}</span>
+        <div class="stat-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <span class="stat-label" style="color: var(--fuma-text-dim); font-size: 0.9rem;">${label}</span>
+            <span class="stat-value ${extraClass}" style="${isHighlight}">${value}</span>
         </div>`;
 }
 
+// --- 5. MISE À JOUR : UPDATE TEAM FILTER ---
 function updateTeamFilter(players) {
     const teamFilter = document.getElementById('filter-team');
     if (!teamFilter) return;
-    const current = teamFilter.value;
-    const teams = [...new Set(players.map(p => p.team))].sort();
+    
+    const currentSelection = teamFilter.value;
+    // Récupérer les noms uniques des équipes présentes dans la saison
+    const teams = [...new Set(players.map(p => p.team))]
+        .filter(t => t && t.trim() !== "")
+        .sort();
+
     teamFilter.innerHTML = '<option value="">All Teams</option>' + 
         teams.map(t => `<option value="${t}">${t}</option>`).join('');
-    teamFilter.value = current;
+    
+    // Garder la sélection si elle existe toujours
+    if (teams.includes(currentSelection)) {
+        teamFilter.value = currentSelection;
+    }
 }
-
  // --- 9. INITIALISATION ---
     injectNavigation();
     handleProfilePage();
@@ -782,6 +825,7 @@ function updateTeamFilter(players) {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
