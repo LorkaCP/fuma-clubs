@@ -512,16 +512,15 @@ async function getPlayerRegistry() {
         const text = await resp.text();
         const lines = text.trim().split("\n");
         
-        // Normalisation des en-têtes pour trouver les colonnes
+        // Normalisation des en-têtes
         const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
         
         const idxGameId = headers.indexOf('GAME_ID');
         const idxGameTag = headers.indexOf('GAME_TAG');
         const idxAvatar = headers.indexOf('AVATAR');
         const idxFlag = headers.indexOf('FLAG');
-        // La colonne I correspond à l'index 8 si les headers sont standards, 
-        // mais indexOf('LOGO') est plus sécurisé si l'en-tête est nommé.
-        const idxLogo = headers.indexOf('LOGO'); 
+        const idxTeam = headers.indexOf('CURRENT_TEAM'); // Ajout pour l'équipe (Col H)
+        const idxLogo = headers.indexOf('LOGO'); // Ajout pour le logo (Col I)
 
         const registry = {};
 
@@ -534,11 +533,13 @@ async function getPlayerRegistry() {
             if (id) {
                 registry[id] = {
                     tag: v[idxGameTag] || id,
-                    // Récupère l'avatar ou utilise l'image par défaut 
-                    avatar: v[idxAvatar] || PLACEHOLDER_AVATAR,
-                    // Récupère le drapeau (Nationalité) 
+                    // Récupère l'avatar (Col G)
+                    avatar: v[idxAvatar] || 'https://raw.githubusercontent.com/Ashwinvalento/cartoon-avatar/master/lib/images/male/45.png',
+                    // Récupère le drapeau (Col F)
                     flag: v[idxFlag] || "🏳️",
-                    // Récupère le logo du club (Colonne I / LOGO)
+                    // Récupère l'équipe actuelle (Col H) - C'est ici que "Innocent XI" est récupéré
+                    team: v[idxTeam] || "Free Agent",
+                    // Récupère le logo du club (Col I)
                     logo: v[idxLogo] || "" 
                 };
             }
@@ -864,6 +865,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
