@@ -11,7 +11,6 @@
         :root {
             --fuma-primary: #d4af37;
             --fuma-bg-card: #1a1a1a;
-            --fuma-bg-dark: #0f0f0f;
             --fuma-border: 1px solid rgba(255,255,255,0.1);
             --fuma-text-dim: #aaa;
         }
@@ -27,184 +26,68 @@
         /* --- LOADER --- */
         #loader-container {
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; display: flex; align-items: center; justify-content: center; z-index: 9999;
         }
 
-        /* --- SCORE HEADER (SOFASCORE STYLE) --- */
+        /* --- HEADER --- */
         .match-header {
             background: linear-gradient(to bottom, #1a1a1a, #000);
-            padding: 30px 15px;
-            text-align: center;
-            border-bottom: var(--fuma-border);
+            padding: 30px 15px; text-align: center; border-bottom: var(--fuma-border);
         }
+        .score-row { display: flex; align-items: center; justify-content: center; gap: 20px; }
+        .team-box { flex: 1; display: flex; flex-direction: column; align-items: center; }
+        .team-logo { width: 70px; height: 70px; object-fit: contain; margin-bottom: 10px; }
+        .team-name { font-weight: 800; font-size: 0.9rem; text-transform: uppercase; }
+        .score-display { font-size: 3rem; font-weight: 800; letter-spacing: -2px; min-width: 80px; }
 
-        .score-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-        }
-
-        .team-box {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .team-logo {
-            width: 70px;
-            height: 70px;
-            object-fit: contain;
-            margin-bottom: 10px;
-        }
-
-        .team-name {
-            font-weight: 800;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-        }
-
-        .score-display {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -2px;
-            min-width: 100px;
-        }
-
-        .strikers-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 15px;
-            font-size: 0.75rem;
-            color: var(--fuma-text-dim);
-        }
-
-        /* --- TABS --- */
+        /* --- NAVIGATION TABS --- */
         .match-tabs {
-            display: flex;
-            justify-content: center;
-            background: #000;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: var(--fuma-border);
+            display: none; /* Masqué si non joué */
+            justify-content: center; background: #000; border-bottom: var(--fuma-border);
         }
-
         .tab-btn {
-            background: none;
-            border: none;
-            color: var(--fuma-text-dim);
-            padding: 15px 25px;
-            font-weight: 600;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: 0.3s;
+            background: none; border: none; color: var(--fuma-text-dim);
+            padding: 15px 20px; font-weight: 600; font-size: 0.8rem; cursor: pointer;
+        }
+        .tab-btn.active { color: var(--fuma-primary); border-bottom: 3px solid var(--fuma-primary); }
+
+        /* --- MESSAGE MATCH NON PUBLIÉ --- */
+        .upcoming-container {
+            display: none; /* Affiché via JS */
+            text-align: center; padding: 40px 20px;
+        }
+        .info-card {
+            background: var(--fuma-bg-card); border-radius: 12px; padding: 30px;
+            border: 1px solid rgba(212, 175, 55, 0.1);
+        }
+        .status-badge {
+            background: #333; color: var(--fuma-primary); padding: 5px 15px;
+            border-radius: 20px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+        }
+        .btn-report {
+            display: inline-block; margin-top: 25px; background: var(--fuma-primary);
+            color: #000; padding: 12px 25px; border-radius: 6px; font-weight: 800;
+            text-decoration: none; text-transform: uppercase; font-size: 0.85rem;
         }
 
-        .tab-btn.active {
-            color: var(--fuma-primary);
-            border-bottom: 3px solid var(--fuma-primary);
-        }
-
-        /* --- SECTIONS STATS --- */
-        .fuma-container {
-            max-width: 600px;
-            margin: auto;
-            padding: 20px;
-        }
-
+        /* --- STATS SECTIONS --- */
+        .fuma-container { max-width: 600px; margin: auto; padding: 20px; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-
-        .stat-card {
-            background: var(--fuma-bg-card);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .stat-row { margin-bottom: 20px; }
-        .stat-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .progress-container {
-            height: 8px;
-            background: #333;
-            border-radius: 4px;
-            display: flex;
-            overflow: hidden;
-        }
-
-        .bar-home { background: var(--fuma-primary); transition: width 1s ease-out; }
-        .bar-away { background: #555; transition: width 1s ease-out; }
-
-        /* --- PLAYERS LIST --- */
+        
+        /* Player Stats Table Style */
         .player-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-            padding: 12px 10px;
-            border-bottom: var(--fuma-border);
-            font-size: 0.8rem;
-            align-items: center;
+            display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            padding: 12px 10px; border-bottom: var(--fuma-border); font-size: 0.8rem; align-items: center;
         }
-
-        .p-note {
-            width: 32px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            color: #000;
-            font-weight: 800;
-            margin: auto;
-        }
-
-        .team-group-title {
-            padding: 10px;
-            background: rgba(212,175,55,0.1);
-            color: var(--fuma-primary);
-            font-weight: 800;
-            font-size: 0.8rem;
-            border-radius: 6px;
-            margin: 20px 0 10px 0;
-        }
-
-        /* --- AVANT MATCH --- */
-        .match-upcoming {
-            text-align: center;
-            padding: 50px 20px;
-        }
-        .upcoming-badge {
-            background: var(--fuma-primary);
-            color: #000;
-            padding: 6px 18px;
-            border-radius: 20px;
-            font-weight: 800;
-            font-size: 0.8rem;
-        }
+        .p-note { width: 30px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: #000; font-weight: 800; margin: auto; }
     </style>
 </head>
 <body>
 
     <div id="loader-container">
         <div class="fuma-loader"></div>
-        <p style="margin-top: 15px; font-size: 0.8rem; opacity: 0.6;">CHARGEMENT DU MATCH...</p>
     </div>
 
     <div id="main-content" style="display:none;">
@@ -215,7 +98,7 @@
                     <img id="logo-home" class="team-logo" src="" alt="">
                     <span id="name-home" class="team-name">-</span>
                 </div>
-                <div id="score-display" class="score-display">
+                <div class="score-display">
                     <span id="score-home">-</span> : <span id="score-away">-</span>
                 </div>
                 <div class="team-box">
@@ -223,99 +106,42 @@
                     <span id="name-away" class="team-name">-</span>
                 </div>
             </div>
-
-            <div class="strikers-container">
+            <div id="strikers-container" class="strikers-container" style="display:none; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px; font-size: 0.75rem; color: var(--fuma-text-dim);">
                 <div id="strikers-home" style="text-align: right;"></div>
                 <div id="strikers-away" style="text-align: left;"></div>
             </div>
-
-            <div id="motm-container" style="margin-top: 15px;"></div>
         </header>
 
-        <nav class="match-tabs">
+        <div id="upcoming-section" class="fuma-container upcoming-container">
+            <div class="info-card">
+                <span class="status-badge">En attente</span>
+                <h3 style="margin: 15px 0 10px 0; font-weight: 800;">Résultats non publiés</h3>
+                <p style="color: var(--fuma-text-dim); font-size: 0.85rem; line-height: 1.5;">
+                    Les statistiques de ce match n'ont pas encore été enregistrées par les capitaines.
+                </p>
+                <a id="btn-report-link" href="#" class="btn-report">
+                    <i class="fas fa-file-signature"></i> Report Match Data
+                </a>
+            </div>
+        </div>
+
+        <nav class="match-tabs" id="match-nav">
             <button class="tab-btn active" onclick="switchTab('team-stats')">Résumé</button>
             <button class="tab-btn" onclick="switchTab('player-stats')">Joueurs</button>
         </nav>
 
-        <div class="fuma-container">
-            
+        <div id="played-content" class="fuma-container" style="display:none;">
             <div id="team-stats" class="tab-content active">
-                <div class="stat-card">
-                    <div class="stat-row">
-                        <div class="stat-label">
-                            <span id="val-possession-home">50%</span>
-                            <span>Possession</span>
-                            <span id="val-possession-away">50%</span>
-                        </div>
-                        <div class="progress-container">
-                            <div id="bar-possession-home" class="progress-bar bar-home" style="width: 50%"></div>
-                            <div id="bar-possession-away" class="progress-bar bar-away" style="width: 50%"></div>
-                        </div>
-                    </div>
-
-                    <div class="stat-row">
-                        <div class="stat-label">
-                            <span id="val-shots-home">0</span>
-                            <span>Tirs</span>
-                            <span id="val-shots-away">0</span>
-                        </div>
-                        <div class="progress-container">
-                            <div id="bar-shots-home" class="progress-bar bar-home" style="width: 50%"></div>
-                            <div id="bar-shots-away" class="progress-bar bar-away" style="width: 50%"></div>
-                        </div>
-                    </div>
-
-                    <div class="stat-row">
-                        <div class="stat-label">
-                            <span id="val-passes-home">0</span>
-                            <span>Passes (Précision)</span>
-                            <span id="val-passes-away">0</span>
-                        </div>
-                        <div class="progress-container">
-                            <div id="bar-passes-home" class="progress-bar bar-home" style="width: 50%"></div>
-                            <div id="bar-passes-away" class="progress-bar bar-away" style="width: 50%"></div>
-                        </div>
-                    </div>
-
-                    <div class="stat-row">
-                        <div class="stat-label">
-                            <span id="val-tackles-home">0</span>
-                            <span>Tacles réussis</span>
-                            <span id="val-tackles-away">0</span>
-                        </div>
-                        <div class="progress-container">
-                            <div id="bar-tackles-home" class="progress-bar bar-home" style="width: 50%"></div>
-                            <div id="bar-tackles-away" class="progress-bar bar-away" style="width: 50%"></div>
-                        </div>
-                    </div>
-
-                    <div class="stat-row" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
-                        <div class="stat-label" style="margin-bottom: 0;">
-                            <span id="val-red-home" style="color: #ff4d4d; font-size: 1.2rem; font-weight: 800;">0</span>
-                            <span style="color: #ff4d4d; font-size: 0.7rem; text-transform: uppercase;">Cartons Rouges</span>
-                            <span id="val-red-away" style="color: #ff4d4d; font-size: 1.2rem; font-weight: 800;">0</span>
-                        </div>
-                    </div>
                 </div>
-            </div>
 
             <div id="player-stats" class="tab-content">
-                
-                <div class="team-group-title" id="team-name-home-stats">DOMICILE</div>
-                <div class="player-row" style="font-weight: 800; color: var(--fuma-text-dim); border: none;">
-                    <div>Joueur</div><div>Note</div><div>But</div><div>Pass</div><div>Tac.</div>
-                </div>
+                <div style="color: var(--fuma-primary); font-weight: 800; margin-bottom: 10px;" id="title-home"></div>
                 <div id="list-players-home"></div>
-
-                <div class="team-group-title" id="team-name-away-stats">EXTÉRIEUR</div>
-                <div class="player-row" style="font-weight: 800; color: var(--fuma-text-dim); border: none;">
-                    <div>Joueur</div><div>Note</div><div>But</div><div>Pass</div><div>Tac.</div>
-                </div>
+                <div style="color: var(--fuma-primary); font-weight: 800; margin-top: 20px; margin-bottom: 10px;" id="title-away"></div>
                 <div id="list-players-away"></div>
-                
             </div>
-
         </div>
+
     </div>
 
     <script src="info-match-logic.js"></script>
