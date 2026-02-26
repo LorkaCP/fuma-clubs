@@ -494,12 +494,13 @@ const response = await fetch(`${APP_SCRIPT_URL}&discord_id=${discordId}&t=${Date
         detailContainer.innerHTML = "<p style='text-align:center; color:red; padding: 50px;'>Error loading data.</p>";
     }
 }
- /**
+/**
  * AGGREGATION LOGIC : Une ligne = Une performance de match
- * Ce script regroupe les données par Player ID (GAME_ID)
+ * Ce script regroupe les données par Player ID ou GAME_TAG
  */
 
-// --- FONCTION UTILITAIRE POUR RÉCUPÉRER LE REGISTRE FIXE ---
+// --- 1. RÉCUPÉRER LE REGISTRE FIXE (GAME_DATABASE) ---
+// Cette fonction crée un dictionnaire pour lier les IDs aux Avatars/Drapeaux
 async function getPlayerRegistry() {
     const REGISTRY_GID = "1342244083"; 
     const url = `${PLAYERS_SHEET_BASE}${REGISTRY_GID}&t=${Date.now()}`;
@@ -512,15 +513,16 @@ async function getPlayerRegistry() {
         const registry = {};
         lines.slice(1).forEach(line => {
             const v = parseCSVLine(line);
-            const id = v[headers.indexOf('GAME_ID')];
+            // On utilise GAME_TAG si GAME_ID est absent
+            const id = (v[headers.indexOf('GAME_ID')] && v[headers.indexOf('GAME_ID')] !== "") 
+                       ? v[headers.indexOf('GAME_ID')] 
+                       : v[headers.indexOf('GAME_TAG')];
+            
             if (id) {
                 registry[id] = {
-                    tag: v[headers.indexOf('GAME_TAG')] || "Unknown",
-                    avatar: (v[headers.indexOf('AVATAR')] && v[headers.indexOf('AVATAR')].startsWith('http')) 
-                            ? v[headers.indexOf('AVATAR')] 
-                            : (typeof PLACEHOLDER_AVATAR !== 'undefined' ? PLACEHOLDER_AVATAR : ""),
-                    flag: v[headers.indexOf('FLAG')] || "🏳️",
-                    discordId: v[headers.indexOf('DISCORD_ID')] || ""
+                    tag: v[headers.indexOf('GAME_TAG')] || id,
+                    avatar: v[headers.indexOf('AVATAR')] || PLACEHOLDER_AVATAR,
+                    flag: v[headers.indexOf('FLAG')] || "🏳️"
                 };
             }
         });
@@ -531,68 +533,19 @@ async function getPlayerRegistry() {
     }
 }
 
-// --- 1. MISE À JOUR : FETCH FUMA PLAYERS ---
-// --- HELPER : Parsing CSV robuste ---
-function parseCSVLine(line) {
-    const values = [];
-    let current = "";
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        if (char === '"') inQuotes = !inQuotes;
-        else if (char === ',' && !inQuotes) {
-            values.push(current.trim());
-            current = "";
-        } else current += char;
-    }
-    values.push(current.trim());
-    return values;
-}
-
-// --- ÉTAPE 1 : RÉCUPÉRER LE REGISTRE FIXE (GAME_DATABASE) ---
-async function getPlayerRegistry() {
-    try {
-        const url = `${PLAYERS_SHEET_BASE}${REGISTRY_GID}&t=${Date.now()}`;
-        const resp = await fetch(url);
-        const text = await resp.text();
-        const lines = text.trim().split("\n");
-        const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
-        
-        const registry = {};
-        lines.slice(1).forEach(line => {
-            const v = parseCSVLine(line);
-            // On utilise GAME_TAG si GAME_ID est vide (cas de vos CSV actuels)
-            const id = (v[headers.indexOf('GAME_ID')] && v[headers.indexOf('GAME_ID')] !== "") 
-                       ? v[headers.indexOf('GAME_ID')] 
-                       : v[headers.indexOf('GAME_TAG')];
-            
-            if (id) {
-                registry[id] = {
-                    tag: v[headers.indexOf('GAME_TAG')],
-                    avatar: v[headers.indexOf('AVATAR')] || PLACEHOLDER_AVATAR,
-                    flag: v[headers.indexOf('FLAG')] || "🏳️",
-                    discord: v[headers.indexOf('DISCORD_ID')] || ""
-                };
-            }
-        });
-        return registry;
-    } catch (e) {
-        console.error("Registry Error:", e);
-        return {};
-    }
-}
-
-// --- ÉTAPE 2 : RÉCUPÉRER LES STATS ET FUSIONNER ---
+// --- 2. RÉCUPÉRER LES STATS ET AGRÉGER LES MATCHS ---
 async function fetchFumaPlayers(gid) {
     const container = document.getElementById('fuma-js-players');
     if (!container) return;
 
-    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 50px;"><div class="fuma-spinner"></div><p>Synchronisation des données...</p></div>`;
+    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 50px;"><div class="fuma-spinner"></div><p>Calcul des statistiques en cours...</p></div>`;
 
     try {
         const playerRegistry = await getPlayerRegistry();
         const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}&t=${Date.now()}`);
         const text = await resp.text();
+        
+        // Nettoyage des lignes (on ignore les lignes trop courtes)
         const lines = text.trim().split("\n").filter(l => l.split(',').length > 5);
         const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
 
@@ -600,9 +553,7 @@ async function fetchFumaPlayers(gid) {
             id: headers.indexOf('GAME_ID'),
             tag: headers.indexOf('GAME_TAG'),
             team: headers.indexOf('CURRENT_TEAM'),
-            logo: headers.indexOf('LOGO'),
             pos: headers.indexOf('MAIN_POSITION'),
-            arch: headers.indexOf('MAIN_ARCHETYPE'),
             rating: headers.indexOf('RATING'),
             goals: headers.indexOf('GOALS'),
             assists: headers.indexOf('ASSISTS')
@@ -612,31 +563,36 @@ async function fetchFumaPlayers(gid) {
 
         lines.slice(1).forEach(line => {
             const v = parseCSVLine(line);
+            // Identifiant unique : ID en priorité, sinon TAG
             const pId = (v[idx.id] && v[idx.id] !== "") ? v[idx.id] : v[idx.tag];
             
             if (!pId || pId === "#REF!") return;
 
+            // Initialisation du joueur s'il n'existe pas encore dans la Map
             if (!playersMap[pId]) {
-                const reg = playerRegistry[pId] || { tag: pId, avatar: PLACEHOLDER_AVATAR, flag: "" };
+                const reg = playerRegistry[pId] || { tag: v[idx.tag] || pId, avatar: PLACEHOLDER_AVATAR, flag: "🏳️" };
                 playersMap[pId] = {
                     id: pId,
                     tag: reg.tag,
                     avatar: reg.avatar,
                     flag: reg.flag,
                     team: v[idx.team] || "Free Agent",
-                    logo: v[idx.logo] || "",
                     pos: v[idx.pos] || "N/A",
-                    arch: v[idx.arch] || "Standard",
-                    gp: 0, totalRating: 0, goals: 0, assists: 0
+                    gp: 0, 
+                    totalRating: 0, 
+                    goals: 0, 
+                    assists: 0
                 };
             }
 
+            // Accumulation des données (Aggregation)
             playersMap[pId].gp += 1;
             playersMap[pId].totalRating += parseFloat(v[idx.rating] || 0);
             playersMap[pId].goals += parseInt(v[idx.goals] || 0);
             playersMap[pId].assists += parseInt(v[idx.assists] || 0);
         });
 
+        // Conversion de l'objet Map en tableau et calcul des moyennes
         allPlayers = Object.values(playersMap).map(p => ({
             ...p,
             rating: (p.totalRating / p.gp).toFixed(1)
@@ -647,64 +603,84 @@ async function fetchFumaPlayers(gid) {
 
     } catch (e) {
         console.error("Fetch Error:", e);
-        container.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:red;">Erreur de chargement.</p>`;
+        container.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:red;">Erreur lors du traitement des données.</p>`;
     }
 }
 
-// --- ÉTAPE 3 : AFFICHAGE DES CARTES ---
+// --- ÉTAPE 3 : AFFICHAGE DES CARTES (RENDER) ---
 function renderPlayers(list) {
     const container = document.getElementById('fuma-js-players');
     if (!container) return;
 
     if (list.length === 0) {
-        container.innerHTML = `<p style="grid-column:1/-1; text-align:center;">Aucun joueur trouvé.</p>`;
+        container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 50px;">Aucun joueur ne correspond à ces critères.</p>`;
         return;
     }
 
     container.innerHTML = list.map(p => `
-        <a href="player.html?id=${encodeURIComponent(p.id)}" class="player-link-wrapper" style="text-decoration:none; color:inherit;">
-            <div class="club-card" style="text-align:center; padding:20px; position:relative;">
-                <div style="position:relative; width:80px; height:80px; margin:0 auto 10px;">
-                    <img src="${p.avatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:2px solid var(--fuma-primary);" onerror="this.src='${PLACEHOLDER_AVATAR}'">
-                    <div style="position:absolute; bottom:0; right:0; font-size:1.2rem;">${p.flag}</div>
-                    ${p.logo ? `<img src="${p.logo}" style="position:absolute; top:0; left:0; width:25px; height:25px; object-fit:contain;">` : ''}
+        <a href="player.html?id=${encodeURIComponent(p.id)}" class="player-link-wrapper" style="text-decoration: none; color: inherit;">
+            <div class="club-card" style="text-align: center; padding: 20px; position: relative; min-height: 220px;">
+                <div style="position: relative; width: 80px; height: 80px; margin: 0 auto 10px;">
+                    <img src="${p.avatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary);" onerror="this.src='${PLACEHOLDER_AVATAR}'">
+                    <div style="position: absolute; bottom: 0; right: -5px; font-size: 1.4rem;">${p.flag}</div>
                 </div>
-                <h3 style="margin:5px 0; font-size:1rem;">${p.tag}</h3>
-                <p style="font-size:0.75rem; color:var(--fuma-text-dim);">${p.team}</p>
-                <p style="font-size:0.7rem; color:var(--fuma-primary); font-weight:bold; margin-top:5px;">
-                    ${p.gp} MP | ${p.goals} G | ${p.assists} A
+
+                <h3 style="margin: 5px 0; font-size: 1.1rem; color: var(--fuma-text-main);">${p.tag}</h3>
+                <p style="font-size: 0.8rem; color: var(--fuma-text-dim); margin-bottom: 10px;">
+                    <i class="fas fa-tshirt" style="margin-right: 5px;"></i>${p.team}
                 </p>
-                <div style="position:absolute; top:10px; right:10px; background:var(--fuma-primary); color:black; font-weight:bold; padding:2px 6px; border-radius:4px; font-size:0.8rem;">
+
+                <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: #000; font-weight: 800; padding: 4px 8px; border-radius: 6px; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
                     ${p.rating}
+                </div>
+
+                <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
+                    <div style="text-align: center;"><span style="display: block; font-weight: bold; font-size: 0.9rem;">${p.goals}</span><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Buts</span></div>
+                    <div style="text-align: center;"><span style="display: block; font-weight: bold; font-size: 0.9rem;">${p.assists}</span><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Passes</span></div>
+                    <div style="text-align: center;"><span style="display: block; font-weight: bold; font-size: 0.9rem;">${p.gp}</span><span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Matchs</span></div>
                 </div>
             </div>
         </a>
     `).join('');
 }
 
-// --- ÉTAPE 4 : FILTRES ---
+// --- ÉTAPE 4 : LOGIQUE DES FILTRES (TEAM & POSITION) ---
+
+// Met à jour dynamiquement la liste des clubs dans le filtre
+function updateTeamFilter(players) {
+    const teamSelect = document.getElementById('filter-team');
+    if (!teamSelect) return;
+
+    // Récupérer tous les noms de clubs uniques
+    const uniqueTeams = [...new Set(players.map(p => p.team))].sort();
+
+    // Garder l'option "All Teams" et ajouter les autres
+    teamSelect.innerHTML = '<option value="">All Teams</option>' + 
+        uniqueTeams.map(team => `<option value="${team}">${team}</option>`).join('');
+}
+
+// Applique les filtres sélectionnés
 function applyPlayerFilters() {
-    const teamVal = document.getElementById('filter-team').value.toLowerCase();
-    const posVal = document.getElementById('filter-position').value;
+    const teamValue = document.getElementById('filter-team')?.value.toLowerCase();
+    const posValue = document.getElementById('filter-position')?.value; // Ex: "DEF", "MID"
 
     const filtered = allPlayers.filter(p => {
-        const matchTeam = !teamVal || p.team.toLowerCase() === teamVal;
-        const matchPos = !posVal || p.pos.includes(posVal);
-        return matchTeam && matchPos;
+        const matchesTeam = !teamValue || p.team.toLowerCase() === teamValue;
+        const matchesPos = !posValue || p.pos.includes(posValue);
+        return matchesTeam && matchesPos;
     });
 
     renderPlayers(filtered);
 }
 
-function updateTeamFilter(players) {
-    const teamFilter = document.getElementById('filter-team');
-    if (!teamFilter) return;
-    const current = teamFilter.value;
-    const teams = [...new Set(players.map(p => p.team))].sort();
-    teamFilter.innerHTML = '<option value="">All Teams</option>' + 
-        teams.map(t => `<option value="${t}">${t}</option>`).join('');
-    teamFilter.value = teams.includes(current) ? current : "";
-}
+// Initialisation des écouteurs d'événements pour les filtres
+const filterTeam = document.getElementById('filter-team');
+const filterPos = document.getElementById('filter-position');
+
+if (filterTeam) filterTeam.addEventListener('change', applyPlayerFilters);
+if (filterPos) filterPos.addEventListener('change', applyPlayerFilters);
+
+    
  // --- 9. INITIALISATION ---
     injectNavigation();
     handleProfilePage();
@@ -779,6 +755,7 @@ function updateTeamFilter(players) {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
