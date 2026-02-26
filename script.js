@@ -714,57 +714,63 @@ function applyPlayerFilters() {
 }
 
 
-async function loadPlayerProfile() {
+async function loadPublicPlayerProfile() {
+    const container = document.getElementById('player-header');
+    if (!container) return; // Sécurité : on ne s'exécute que sur player.html
+
     const params = new URLSearchParams(window.location.search);
     const playerId = params.get('id');
-    const seasonGid = document.getElementById('season-selector')?.value || "2074996595"; // Saison 1 par défaut
+    const seasonSelector = document.getElementById('season-selector');
 
-    if (!playerId) return;
-
-    // 1. Charger le registre pour l'identité
-    const registry = await getPlayerRegistry();
-    const pInfo = registry[playerId] || { tag: playerId, avatar: PLACEHOLDER_AVATAR, flag: "🏳️", logo: "" };
-
-    // 2. Charger les stats de la saison
-    const url = `${PLAYERS_SHEET_BASE}${seasonGid}&t=${Date.now()}`;
-    const resp = await fetch(url);
-    const text = await resp.text();
-    const lines = text.trim().split("\n");
-    const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
-
-    // On récupère les index de TOUTES les colonnes de stats
-    const idx = {};
-    headers.forEach((h, i) => idx[h] = i);
-
-    let stats = {
-        gp: 0, rating: 0, goals: 0, assists: 0, 
-        shots: 0, passes: 0, pass_success: 0,
-        tackles: 0, tackle_success: 0, motm: 0
-    };
-
-    lines.slice(1).forEach(line => {
-        const v = parseCSVLine(line);
-        const idInLine = v[idx['GAME_ID']] || v[idx['GAME_TAG']];
-        
-        if (idInLine === playerId) {
-            stats.gp++;
-            stats.rating += parseFloat(v[idx['RATING']]) || 0;
-            stats.goals += parseInt(v[idx['GOALS']]) || 0;
-            stats.assists += parseInt(v[idx['ASSISTS']]) || 0;
-            stats.shots += parseInt(v[idx['SHOTS']]) || 0;
-            stats.passes += parseInt(v[idx['PASSES']]) || 0;
-            stats.pass_success += parseFloat(v[idx['%SUCCESSFUL_PASSES']]) || 0;
-            stats.tackles += parseInt(v[idx['TACKLES']]) || 0;
-            stats.tackle_success += parseFloat(v[idx['%SUCCESSFUL_TACKLES']]) || 0;
-            stats.motm += parseInt(v[idx['MOTM']]) || 0;
-        }
-    });
-
-    if (stats.gp > 0) {
-        renderDetailedProfile(pInfo, stats);
+    if (!playerId) {
+        container.innerHTML = "<p>Aucun ID de joueur spécifié.</p>";
+        return;
     }
-}
 
+    async function runUpdate() {
+        const gid = seasonSelector ? seasonSelector.value : "2074996595";
+        
+        // On récupère le registre pour l'avatar/drapeau/logo
+        const registry = await getPlayerRegistry();
+        const pInfo = registry[playerId] || { tag: playerId, avatar: '', flag: '🏳️', logo: '' };
+
+        // On charge les stats depuis la feuille de saison
+        const url = `${PLAYERS_SHEET_BASE}${gid}&t=${Date.now()}`;
+        try {
+            const resp = await fetch(url);
+            const text = await resp.text();
+            const lines = text.trim().split("\n");
+            const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
+            const idx = {};
+            headers.forEach((h, i) => idx[h] = i);
+
+            let stats = { gp: 0, rating: 0, goals: 0, assists: 0, shots: 0, passes: 0, pass_acc: 0, tackles: 0, tackle_acc: 0, motm: 0 };
+
+            lines.slice(1).forEach(line => {
+                const v = parseCSVLine(line);
+                const rowId = v[idx['GAME_ID']] || v[idx['GAME_TAG']];
+                if (rowId === playerId) {
+                    stats.gp++;
+                    stats.rating += parseFloat(v[idx['RATING']]) || 0;
+                    stats.goals += parseInt(v[idx['GOALS']]) || 0;
+                    stats.assists += parseInt(v[idx['ASSISTS']]) || 0;
+                    stats.shots += parseInt(v[idx['SHOTS']]) || 0;
+                    stats.passes += parseInt(v[idx['PASSES']]) || 0;
+                    stats.pass_acc += parseFloat(v[idx['%SUCCESSFUL_PASSES']]) || 0;
+                    stats.tackles += parseInt(v[idx['TACKLES']]) || 0;
+                    stats.tackle_acc += parseFloat(v[idx['%SUCCESSFUL_TACKLES']]) || 0;
+                    stats.motm += parseInt(v[idx['MOTM']]) || 0;
+                }
+            });
+
+            renderDetailedProfile(pInfo, stats);
+        } catch (e) { console.error(e); }
+    }
+
+    await runUpdate();
+    seasonSelector?.addEventListener('change', runUpdate);
+}
+    
 
  
 
@@ -774,9 +780,9 @@ async function loadPlayerProfile() {
 
     
 // --- INITIALISATION FINALE ---
-// Ce bloc doit être AVANT la fermeture "});" du tout début
 injectNavigation();
-handleProfilePage();
+handleProfilePage(); // Garde celle-ci pour le profil utilisateur
+loadPublicPlayerProfile(); // AJOUTE CELLE-CI pour la fiche détaillée player.html
 setupFormSubmission();
 fetchFumaClubs();
 loadClubProfile();
@@ -798,6 +804,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
