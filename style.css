@@ -487,6 +487,7 @@ body, .fuma-wrapper {
 }
 
 .selector-wrapper {
+    display: flex;
     flex: 1;             /* Chaque menu prend une part égale de l'espace */
     min-width: 120px;    /* Empêche les menus de devenir trop minuscules */
 }
@@ -706,6 +707,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
