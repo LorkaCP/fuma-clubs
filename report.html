@@ -189,7 +189,12 @@
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxSfK2yON42X5YSlOgk3BsP8_BPJ5oOnMpfPN68IH3sfon1idlCE9ELWYYy1uoP7rUV3Q/exec?action=match";
       let currentPlayersData = []; // Pour stocker les données fusionnées
 
-    
+    const CLUB_ALIASES = {
+        "fuma y pasa": "f y pasa",
+        "croser fc": "croser fc",
+        "fuma clubs a": "fuma clubs a",
+        "fc titans": "ac titans"
+    };
 
     const params = new URLSearchParams(window.location.search);
     const homeName = params.get('home') || "";
