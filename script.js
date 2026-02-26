@@ -728,14 +728,16 @@ if (playerSeasonFilter) {
     
     // Ecouteur pour changer de saison
     playerSeasonFilter.addEventListener('change', (e) => fetchFumaPlayers(e.target.value));
+    document.getElementById('search-player')?.addEventListener('input', applyPlayerFilters);
 }
 
 // Ecouteurs pour les filtres Team et Position
 document.getElementById('filter-team')?.addEventListener('change', applyPlayerFilters);
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
-document.getElementById('search-player')?.addEventListener('input', applyPlayerFilters);
+
 
 });
+
 
 
 
