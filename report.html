@@ -455,6 +455,15 @@
         btn.innerText = "Valider et enregistrer le match";
     }
 };
+
+document.getElementById('name-home').innerHTML = `
+    <img src="images/logos/${normalizeName(homeName)}.png" onerror="this.style.display='none'" style="height: 60px; vertical-align: middle; margin-bottom: 10px;"><br>
+    ${homeName.toUpperCase()}`;
+
+document.getElementById('name-away').innerHTML = `
+    <img src="images/logos/${normalizeName(awayName)}.png" onerror="this.style.display='none'" style="height: 60px; vertical-align: middle; margin-bottom: 10px;"><br>
+    ${awayName.toUpperCase()}`;
+      
     init();
 </script>
 
