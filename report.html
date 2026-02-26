@@ -389,14 +389,17 @@
     function displayPlayers(players) {
     const homeList = document.querySelector('#home-players-list .list');
     const awayList = document.querySelector('#away-players-list .list');
+    
+    // Modification des titres H3 pour afficher les vrais noms d'équipes
+    document.querySelector('#home-players-list h3').innerText = `Joueurs (${homeName})`;
+    document.querySelector('#away-players-list h3').innerText = `Joueurs (${awayName})`;
+
     homeList.innerHTML = ""; 
     awayList.innerHTML = "";
 
-    // On normalise le nom de l'équipe à domicile une seule fois pour la comparaison
     const normalizedHomeMatchName = normalizeName(homeName);
 
     players.forEach(p => {
-        // p[2] contient le nom de l'équipe du joueur dans le CSV
         const playerTeamName = p[2] ? p[2].trim() : "";
         
         const playerHtml = `
@@ -414,7 +417,6 @@
                 </div>
             </div>`;
 
-        // Utilisation de normalizeName pour éviter les erreurs de majuscules/espaces
         if (normalizeName(playerTeamName) === normalizedHomeMatchName) {
             homeList.innerHTML += playerHtml;
         } else {
