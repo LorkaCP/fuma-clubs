@@ -500,8 +500,6 @@ const response = await fetch(`${APP_SCRIPT_URL}&discord_id=${discordId}&t=${Date
  */
 
 // --- 1. RÉCUPÉRER LE REGISTRE FIXE (GAME_DATABASE) ---
-// Cette fonction crée un dictionnaire pour lier les IDs aux Avatars/Drapeaux
-// --- 1. RÉCUPÉRER LE REGISTRE FIXE (GAME_DATABASE) ---
 // Cette fonction crée un dictionnaire pour lier les IDs aux Avatars, Drapeaux et Logos
 async function getPlayerRegistry() {
     const REGISTRY_GID = "1342244083"; 
@@ -864,6 +862,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
