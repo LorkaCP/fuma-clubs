@@ -11,14 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=";
     const FINAL_URL = BASE_URL + gid;
-    const PLAYERS_DB_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=420142588&single=true&output=csv";
 
     fetch(FINAL_URL)
         .then(response => response.text())
         .then(csvText => {
             const rows = parseCSV(csvText);
-            
-            // On cherche maintenant l'équipe domicile en colonne 6 et extérieur en colonne 7
+            // Recherche du match : Colonne 6 (Home) et Colonne 7 (Away)
             const match = rows.find(r => r[6] === homeName && r[7] === awayName);
 
             const loader = document.getElementById('loader-container');
@@ -33,14 +31,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Match non trouvé dans le CSV");
             }
         })
-        .catch(err => {
-            console.error("Erreur lors du fetch :", err);
-        });
+        .catch(err => console.error("Erreur lors du fetch :", err));
 });
 
-/**
- * Parse le CSV en gérant les guillemets
- */
+// URL de la base de données des joueurs (déclarée en global pour être accessible partout)
+const PLAYERS_DB_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=420142588&single=true&output=csv";
+
 function parseCSV(text) {
     const lines = text.split('\n');
     return lines.map(line => {
@@ -62,38 +58,62 @@ function parseCSV(text) {
     });
 }
 
-/**
- * Met à jour l'interface avec les données du match (Structure 2026)
- */
-/**
- * Met à jour l'interface avec les données du match (Structure 2026)
- */
-/**
- * Met à jour l'intégralité de l'interface avec les données du match
- * @param {Array} m - La ligne du CSV correspondant au match
- */
-/**
- * Met à jour l'intégralité de l'interface avec les données du match (Structure 2026)
- */
-
-
 function switchTab(tabId) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
-    document.getElementById(tabId).classList.add('active');
+    
+    const clickedBtn = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
+    if (clickedBtn) clickedBtn.classList.add('active');
+    
+    const targetContent = document.getElementById(tabId);
+    if (targetContent) targetContent.classList.add('active');
 }
 
-// Modifier la fonction updateUI pour inclure le chargement des joueurs
 async function updateUI(m) {
-    // ... (Gardez votre logique existante pour le score et les stats équipe)
+    // --- PARTIE 1 : STATS ÉQUIPE (Basé sur ton fichier FIXTURES) ---
+    // Noms et Logos
+    document.getElementById('name-home').innerText = m[6];
+    document.getElementById('name-away').innerText = m[7];
+    document.getElementById('logo-home').src = m[3] || 'default-logo.png';
+    document.getElementById('logo-away').src = m[4] || 'default-logo.png';
 
-    // Mise à jour des noms dans l'onglet Joueurs
+    // Score et Buteurs
+    document.getElementById('score-home').innerText = m[9] || '0';
+    document.getElementById('score-away').innerText = m[10] || '0';
+    document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
+    document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
+
+    // Barres de stats (Possession, Tirs, Passes, Tacles)
+    updateBar('possession', m[13], m[14], true);
+    updateBar('shots', m[15], m[16], false);
+    
+    // Pour les passes et tacles, on affiche "Réussis (Total)"
+    const passHome = `${m[19]}%`; // Précision
+    const passAway = `${m[20]}%`;
+    updateBar('passes', m[19], m[20], true);
+    document.getElementById('val-passes-home').innerText = `${m[17]} (${m[19]}%)`;
+    document.getElementById('val-passes-away').innerText = `${m[18]} (${m[20]}%)`;
+
+    // Tacles
+    updateBar('tackles', m[23], m[24], false);
+    document.getElementById('val-tackles-home').innerText = `${m[23]}/${m[21]}`;
+    document.getElementById('val-tackles-away').innerText = `${m[24]}/${m[22]}`;
+
+    // Cartons rouges
+    document.getElementById('val-red-home').innerText = m[25] || '0';
+    document.getElementById('val-red-away').innerText = m[26] || '0';
+
+    // Homme du Match
+    const motmArea = document.getElementById('motm-container');
+    if (m[27] && m[27] !== '0') {
+        motmArea.innerHTML = `<div class="motm-badge"><i class="fas fa-star"></i> MOTM: ${m[27]}</div>`;
+    }
+
+    // --- PARTIE 2 : STATS JOUEURS (Basé sur DATABASE) ---
     document.getElementById('team-name-home-stats').innerText = m[6];
     document.getElementById('team-name-away-stats').innerText = m[7];
 
-    // Chargement des statistiques joueurs
-    loadPlayerStats(m[2]); // m[2] est le MATCH_ID si présent dans votre CSV principal
+    loadPlayerStats(m[8]); // On utilise l'IDMatch (index 8) pour filtrer
 }
 
 async function loadPlayerStats(matchId) {
@@ -102,9 +122,8 @@ async function loadPlayerStats(matchId) {
         const csvText = await response.text();
         const players = parseCSV(csvText);
         
-        // Filtrer les joueurs de ce match 
+        // Filtrer par MATCH_ID (index 5 dans DATABASE.csv)
         const matchPlayers = players.filter(p => p[5] === matchId); 
-        
         renderPlayers(matchPlayers);
     } catch (err) {
         console.error("Erreur stats joueurs:", err);
@@ -114,52 +133,53 @@ async function loadPlayerStats(matchId) {
 function renderPlayers(players) {
     const homeList = document.getElementById('list-players-home');
     const awayList = document.getElementById('list-players-away');
-    
-    // Trier par note décroissante 
+    const homeName = document.getElementById('name-home').innerText;
+
+    // Trier par note décroissante
     players.sort((a, b) => parseFloat(b[6]) - parseFloat(a[6]));
 
     let homeHtml = '';
     let awayHtml = '';
 
     players.forEach(p => {
-        // Structure de la ligne : Nom | Note | Buts | Pass% | Tacles
+        // p[1]: Nom, p[6]: Note, p[7]: Buts, p[12]: %Passes, p[15]: %Tacles
         const row = `
             <div class="player-row">
                 <div class="p-name">${p[1]}</div>
-                <div class="p-note">${p[6]}</div>
-                <div style="text-align:center">${p[7] > 0 ? p[7]+'⚽' : '-'}</div>
+                <div class="p-note" style="background:${getNoteColor(p[6])}">${p[6]}</div>
+                <div style="text-align:center">${p[7] > 0 ? p[7]+' ⚽' : '-'}</div>
                 <div style="text-align:center">${p[12]}%</div>
-                <div style="text-align:center">${p[14]}%</div>
+                <div style="text-align:center">${p[15]}%</div>
             </div>
         `;
         
-        // Séparer selon l'équipe (p[3] est CURRENT_TEAM) 
-        if (p[3] === document.getElementById('name-home').innerText) {
-            homeHtml += row;
-        } else {
-            awayHtml += row;
-        }
+        if (p[3] === homeName) homeHtml += row;
+        else awayHtml += row;
     });
 
-    homeList.innerHTML = homeHtml;
-    awayList.innerHTML = awayHtml;
+    homeList.innerHTML = homeHtml || '<div class="player-row">Aucune donnée</div>';
+    awayList.innerHTML = awayHtml || '<div class="player-row">Aucune donnée</div>';
 }
-/**
- * Anime les barres de statistiques et met à jour les labels textuels
- */
-function updateBar(id, valH, valA, isPercent, onlyBar = false) {
+
+// Petite fonction bonus pour colorer les notes comme sur Sofascore
+function getNoteColor(note) {
+    const n = parseFloat(note);
+    if (n >= 8) return '#11a85d'; // Vert foncé
+    if (n >= 7) return '#91ba33'; // Vert clair
+    if (n >= 6) return '#e2b01b'; // Jaune/Orange
+    return '#f85757'; // Rouge
+}
+
+function updateBar(id, valH, valA, isPercent) {
     const h = parseFloat(String(valH).replace('%', '').replace(',', '.')) || 0;
     const a = parseFloat(String(valA).replace('%', '').replace(',', '.')) || 0;
-    
     const total = h + a;
     const percH = total === 0 ? 50 : (h / total) * 100;
 
-    if (!onlyBar) {
-        const labelH = document.getElementById(`val-${id}-home`);
-        const labelA = document.getElementById(`val-${id}-away`);
-        if(labelH) labelH.innerText = isPercent ? (Math.round(h) + '%') : h;
-        if(labelA) labelA.innerText = isPercent ? (Math.round(a) + '%') : a;
-    }
+    const labelH = document.getElementById(`val-${id}-home`);
+    const labelA = document.getElementById(`val-${id}-away`);
+    if(labelH) labelH.innerText = isPercent ? (Math.round(h) + '%') : h;
+    if(labelA) labelA.innerText = isPercent ? (Math.round(a) + '%') : a;
 
     const barH = document.getElementById(`bar-${id}-home`);
     const barA = document.getElementById(`bar-${id}-away`);
@@ -167,18 +187,11 @@ function updateBar(id, valH, valA, isPercent, onlyBar = false) {
     if(barA) barA.style.width = (100 - percH) + '%';
 }
 
-/**
- * Formate la liste des buteurs
- */
-
 function formatStrikers(str) {
-    // On vérifie si la chaîne est vide ou nulle
-    if (!str || str === '0' || str.trim() === '') return '';
-    
-    // On divise par "|" au lieu de ","
+    if (!str || str === '0' || str.trim() === '' || str === '#REF!') return '';
     return str.split('|').map(s => {
         const name = s.trim();
-        if (!name) return ''; // Évite les divs vides si on a des barres en trop
+        if (!name) return '';
         return `<div>${name} <i class="fas fa-futbol" style="font-size: 0.7rem; opacity: 0.6;"></i></div>`;
     }).join('');
 }
