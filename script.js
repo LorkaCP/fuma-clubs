@@ -532,28 +532,73 @@ async function getPlayerRegistry() {
 }
 
 // --- 1. MISE À JOUR : FETCH FUMA PLAYERS ---
-async function fetchFumaPlayers(gid = "1342244083") {
-    const playerContainer = document.getElementById('fuma-js-players');
-    if (!playerContainer) return;
+// --- HELPER : Parsing CSV robuste ---
+function parseCSVLine(line) {
+    const values = [];
+    let current = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') inQuotes = !inQuotes;
+        else if (char === ',' && !inQuotes) {
+            values.push(current.trim());
+            current = "";
+        } else current += char;
+    }
+    values.push(current.trim());
+    return values;
+}
 
-    playerContainer.innerHTML = `
-        <div class="fuma-loading-wrapper" style="grid-column: 1/-1; text-align: center; padding: 50px;">
-            <div class="fuma-spinner" style="margin: 0 auto 15px;"></div>
-            <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">Syncing Database...</p>
-        </div>`;
+// --- ÉTAPE 1 : RÉCUPÉRER LE REGISTRE FIXE (GAME_DATABASE) ---
+async function getPlayerRegistry() {
+    try {
+        const url = `${PLAYERS_SHEET_BASE}${REGISTRY_GID}&t=${Date.now()}`;
+        const resp = await fetch(url);
+        const text = await resp.text();
+        const lines = text.trim().split("\n");
+        const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
+        
+        const registry = {};
+        lines.slice(1).forEach(line => {
+            const v = parseCSVLine(line);
+            // On utilise GAME_TAG si GAME_ID est vide (cas de vos CSV actuels)
+            const id = (v[headers.indexOf('GAME_ID')] && v[headers.indexOf('GAME_ID')] !== "") 
+                       ? v[headers.indexOf('GAME_ID')] 
+                       : v[headers.indexOf('GAME_TAG')];
+            
+            if (id) {
+                registry[id] = {
+                    tag: v[headers.indexOf('GAME_TAG')],
+                    avatar: v[headers.indexOf('AVATAR')] || PLACEHOLDER_AVATAR,
+                    flag: v[headers.indexOf('FLAG')] || "🏳️",
+                    discord: v[headers.indexOf('DISCORD_ID')] || ""
+                };
+            }
+        });
+        return registry;
+    } catch (e) {
+        console.error("Registry Error:", e);
+        return {};
+    }
+}
+
+// --- ÉTAPE 2 : RÉCUPÉRER LES STATS ET FUSIONNER ---
+async function fetchFumaPlayers(gid) {
+    const container = document.getElementById('fuma-js-players');
+    if (!container) return;
+
+    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 50px;"><div class="fuma-spinner"></div><p>Synchronisation des données...</p></div>`;
 
     try {
-        // A. Récupérer les données fixes (Images/Drapeaux)
         const playerRegistry = await getPlayerRegistry();
-
-        // B. Récupérer les données de la saison (Stats/Clubs/Positions)
         const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}&t=${Date.now()}`);
         const text = await resp.text();
-        const lines = text.trim().split("\n").filter(line => line.trim() !== "");
+        const lines = text.trim().split("\n").filter(l => l.split(',').length > 5);
         const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
 
         const idx = {
             id: headers.indexOf('GAME_ID'),
+            tag: headers.indexOf('GAME_TAG'),
             team: headers.indexOf('CURRENT_TEAM'),
             logo: headers.indexOf('LOGO'),
             pos: headers.indexOf('MAIN_POSITION'),
@@ -567,189 +612,98 @@ async function fetchFumaPlayers(gid = "1342244083") {
 
         lines.slice(1).forEach(line => {
             const v = parseCSVLine(line);
-            const pId = v[idx.id];
-            if (!pId || pId === "" || pId.includes("#REF")) return;
+            const pId = (v[idx.id] && v[idx.id] !== "") ? v[idx.id] : v[idx.tag];
+            
+            if (!pId || pId === "#REF!") return;
 
             if (!playersMap[pId]) {
-                // On fusionne le fixe (Registry) et le dynamique (Saison)
+                const reg = playerRegistry[pId] || { tag: pId, avatar: PLACEHOLDER_AVATAR, flag: "" };
                 playersMap[pId] = {
                     id: pId,
-                    ...(playerRegistry[pId] || { tag: pId, avatar: PLACEHOLDER_AVATAR, flag: "" }),
+                    tag: reg.tag,
+                    avatar: reg.avatar,
+                    flag: reg.flag,
                     team: v[idx.team] || "Free Agent",
                     logo: v[idx.logo] || "",
                     pos: v[idx.pos] || "N/A",
                     arch: v[idx.arch] || "Standard",
-                    matchCount: 0,
-                    totalRating: 0,
-                    totalGoals: 0,
-                    totalAssists: 0
+                    gp: 0, totalRating: 0, goals: 0, assists: 0
                 };
             }
 
-            playersMap[pId].matchCount += 1;
+            playersMap[pId].gp += 1;
             playersMap[pId].totalRating += parseFloat(v[idx.rating] || 0);
-            playersMap[pId].totalGoals += parseInt(v[idx.goals] || 0);
-            playersMap[pId].totalAssists += parseInt(v[idx.assists] || 0);
+            playersMap[pId].goals += parseInt(v[idx.goals] || 0);
+            playersMap[pId].assists += parseInt(v[idx.assists] || 0);
         });
 
         allPlayers = Object.values(playersMap).map(p => ({
             ...p,
-            rating: (p.totalRating / p.matchCount).toFixed(1),
-            goals: p.totalGoals,
-            assists: p.totalAssists,
-            gp: p.matchCount
+            rating: (p.totalRating / p.gp).toFixed(1)
         }));
 
         updateTeamFilter(allPlayers);
-        applyPlayerFilters(); 
-        
+        applyPlayerFilters();
+
     } catch (e) {
-        console.error("Aggregation Error:", e);
-        playerContainer.innerHTML = `<p style='grid-column:1/-1; text-align:center; color:red;'>Error: ${e.message}</p>`;
+        console.error("Fetch Error:", e);
+        container.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:red;">Erreur de chargement.</p>`;
     }
 }
 
-// --- 2. MISE À JOUR : RENDER PLAYERS ---
+// --- ÉTAPE 3 : AFFICHAGE DES CARTES ---
 function renderPlayers(list) {
     const container = document.getElementById('fuma-js-players');
     if (!container) return;
 
     if (list.length === 0) {
-        container.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:var(--fuma-text-dim);">No players found.</p>`;
+        container.innerHTML = `<p style="grid-column:1/-1; text-align:center;">Aucun joueur trouvé.</p>`;
         return;
     }
 
-    container.innerHTML = list.map(p => {
-        const isFreeAgent = !p.team || p.team.toLowerCase().includes("free agent");
-        const teamBadge = isFreeAgent 
-            ? `<div style="position: absolute; top: 0; left: 0; font-size: 1.2rem; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));">🆓</div>` 
-            : `<div style="position: absolute; top: 2px; left: 2px; width: 28px; height: 28px;"><img src="${p.logo}" style="width:100%; object-fit:contain; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.7));" onerror="this.style.display='none'"></div>`;
-
-        return `
-            <a href="player.html?id=${encodeURIComponent(p.id)}" class="player-link-wrapper" style="text-decoration: none; color: inherit;">
-                <div class="club-card" style="text-align:center; padding: 25px; position: relative; transition: 0.3s; height: 100%;">
-                    <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 15px auto;">
-                        <img src="${p.avatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--fuma-primary);" onerror="this.src='${PLACEHOLDER_AVATAR}'">
-                        ${teamBadge}
-                        <div style="position: absolute; bottom: 0; right: 0; font-size: 1.1rem;">${p.flag}</div>
-                    </div>
-                    <h3 style="margin:0; text-transform: uppercase; font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.tag}</h3>
-                    <p style="font-size: 0.75rem; color: var(--fuma-text-dim); margin: 5px 0;">${p.pos} | ${p.arch}</p>
-                    <p style="font-size: 0.7rem; font-weight: 600; color: var(--fuma-primary);">${p.gp} MP | ${p.goals} G | ${p.assists} A</p>
-                    <div style="position: absolute; top: 10px; right: 10px; background: var(--fuma-primary); color: black; font-weight: 800; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">${p.rating}</div>
+    container.innerHTML = list.map(p => `
+        <a href="player.html?id=${encodeURIComponent(p.id)}" class="player-link-wrapper" style="text-decoration:none; color:inherit;">
+            <div class="club-card" style="text-align:center; padding:20px; position:relative;">
+                <div style="position:relative; width:80px; height:80px; margin:0 auto 10px;">
+                    <img src="${p.avatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:2px solid var(--fuma-primary);" onerror="this.src='${PLACEHOLDER_AVATAR}'">
+                    <div style="position:absolute; bottom:0; right:0; font-size:1.2rem;">${p.flag}</div>
+                    ${p.logo ? `<img src="${p.logo}" style="position:absolute; top:0; left:0; width:25px; height:25px; object-fit:contain;">` : ''}
                 </div>
-            </a>`;
-    }).join('');
-}
-
-// --- 3. MISE À JOUR : FETCH PLAYER DATA (Profil individuel) ---
-async function fetchPlayerData(playerId, gid = "1342244083") {
-    const headerContainer = document.getElementById('player-header');
-    const statsContainer = document.getElementById('player-stats-container');
-
-    try {
-        const playerRegistry = await getPlayerRegistry();
-        const resp = await fetch(`${PLAYERS_SHEET_BASE}${gid}&t=${Date.now()}`);
-        const text = await resp.text();
-        const lines = text.trim().split("\n");
-        const headers = lines[0].split(",").map(h => h.trim().toUpperCase());
-        
-        const performances = lines.slice(1)
-            .map(line => {
-                const v = parseCSVLine(line);
-                let obj = {};
-                headers.forEach((h, i) => obj[h] = v[i]);
-                return obj;
-            })
-            .filter(row => row.GAME_ID === playerId);
-
-        if (performances.length === 0) {
-            headerContainer.innerHTML = `<div style="text-align:center; padding:50px;"><h2>Player not found</h2><p>No matches recorded for this season.</p></div>`;
-            return;
-        }
-
-        const pData = performances[0]; 
-        const identity = playerRegistry[playerId] || { tag: pData.GAME_TAG, avatar: PLACEHOLDER_AVATAR, flag: "" };
-
-        const stats = performances.reduce((acc, curr) => {
-            acc.goals += parseInt(curr.GOALS || 0);
-            acc.assists += parseInt(curr.ASSISTS || 0);
-            acc.ratingSum += parseFloat(curr.RATING || 0);
-            acc.shots += parseInt(curr.SHOTS || 0);
-            acc.passes += parseInt(curr.SUCCESSFUL_PASSES || 0);
-            acc.tackles += parseInt(curr.SUCCESSFUL_TACKLES || 0);
-            acc.motm += parseInt(curr.MOTM || 0);
-            return acc;
-        }, { goals: 0, assists: 0, ratingSum: 0, shots: 0, passes: 0, tackles: 0, motm: 0 });
-
-        const avgRating = (stats.ratingSum / performances.length).toFixed(1);
-
-        headerContainer.innerHTML = `
-            <div class="player-card-header" style="position: relative;">
-               <img src="${identity.avatar}" class="player-avatar-main" onerror="this.src='${PLACEHOLDER_AVATAR}'">
-                <h1 style="font-size: 2.5rem; margin: 10px 0;">${identity.tag} ${identity.flag}</h1>
-                <p style="color: var(--fuma-primary); letter-spacing: 2px; text-transform: uppercase;">${pData.MAIN_POSITION} | ${pData.MAIN_ARCHETYPE}</p>
-                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 15px;">
-                    <img src="${pData.LOGO || ''}" style="height: 40px;" onerror="this.style.display='none'">
-                    <span style="font-size: 1.2rem; font-weight: 600;">${pData.CURRENT_TEAM || 'Free Agent'}</span>
+                <h3 style="margin:5px 0; font-size:1rem;">${p.tag}</h3>
+                <p style="font-size:0.75rem; color:var(--fuma-text-dim);">${p.team}</p>
+                <p style="font-size:0.7rem; color:var(--fuma-primary); font-weight:bold; margin-top:5px;">
+                    ${p.gp} MP | ${p.goals} G | ${p.assists} A
+                </p>
+                <div style="position:absolute; top:10px; right:10px; background:var(--fuma-primary); color:black; font-weight:bold; padding:2px 6px; border-radius:4px; font-size:0.8rem;">
+                    ${p.rating}
                 </div>
-                <div class="rating-badge-large" style="position: absolute; top: 20px; right: 30px; font-size: 3rem; background: var(--fuma-primary); color: black; padding: 5px 15px; border-radius: 10px; font-weight: 800;">${avgRating}</div>
-            </div>`;
-
-        statsContainer.innerHTML = `
-            <div class="stat-block">
-                <h3><i class="fas fa-info-circle"></i> Season Summary</h3>
-                ${renderStatRow("Matches Played", performances.length)}
-                ${renderStatRow("Average Rating", avgRating, "highlight")}
-                ${renderStatRow("MOTM", stats.motm)}
             </div>
-            <div class="stat-block">
-                <h3><i class="fas fa-fire"></i> Offensive</h3>
-                ${renderStatRow("Total Goals", stats.goals, "highlight")}
-                ${renderStatRow("Total Assists", stats.assists, "highlight")}
-                ${renderStatRow("Total Shots", stats.shots)}
-            </div>
-            <div class="stat-block">
-                <h3><i class="fas fa-shield-alt"></i> Contribution</h3>
-                ${renderStatRow("Successful Passes", stats.passes)}
-                ${renderStatRow("Successful Tackles", stats.tackles)}
-            </div>
-        `;
-
-    } catch (e) {
-        console.error(e);
-        headerContainer.innerHTML = `<p style='text-align:center; color:red;'>Error loading player profile.</p>`;
-    }
+        </a>
+    `).join('');
 }
 
-// --- 4. MISE À JOUR : RENDER STAT ROW ---
-function renderStatRow(label, value, extraClass = "") {
-    const isHighlight = extraClass.includes("highlight") ? "color: var(--fuma-primary); font-weight: 800; font-size: 1.2rem;" : "";
-    return `
-        <div class="stat-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
-            <span class="stat-label" style="color: var(--fuma-text-dim); font-size: 0.9rem;">${label}</span>
-            <span class="stat-value ${extraClass}" style="${isHighlight}">${value}</span>
-        </div>`;
+// --- ÉTAPE 4 : FILTRES ---
+function applyPlayerFilters() {
+    const teamVal = document.getElementById('filter-team').value.toLowerCase();
+    const posVal = document.getElementById('filter-position').value;
+
+    const filtered = allPlayers.filter(p => {
+        const matchTeam = !teamVal || p.team.toLowerCase() === teamVal;
+        const matchPos = !posVal || p.pos.includes(posVal);
+        return matchTeam && matchPos;
+    });
+
+    renderPlayers(filtered);
 }
 
-// --- 5. MISE À JOUR : UPDATE TEAM FILTER ---
 function updateTeamFilter(players) {
     const teamFilter = document.getElementById('filter-team');
     if (!teamFilter) return;
-    
-    const currentSelection = teamFilter.value;
-    // Récupérer les noms uniques des équipes présentes dans la saison
-    const teams = [...new Set(players.map(p => p.team))]
-        .filter(t => t && t.trim() !== "")
-        .sort();
-
+    const current = teamFilter.value;
+    const teams = [...new Set(players.map(p => p.team))].sort();
     teamFilter.innerHTML = '<option value="">All Teams</option>' + 
         teams.map(t => `<option value="${t}">${t}</option>`).join('');
-    
-    // Garder la sélection si elle existe toujours
-    if (teams.includes(currentSelection)) {
-        teamFilter.value = currentSelection;
-    }
+    teamFilter.value = teams.includes(current) ? current : "";
 }
  // --- 9. INITIALISATION ---
     injectNavigation();
@@ -825,6 +779,7 @@ function updateTeamFilter(players) {
     }
 
 }); // FIN DU DOMContentLoaded
+
 
 
 
