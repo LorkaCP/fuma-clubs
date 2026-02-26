@@ -766,39 +766,7 @@ async function loadPlayerProfile() {
 }
 
 
-    .stats-grid-detailed {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-}
-.stat-card {
-    background: var(--fuma-bg-card);
-    padding: 20px;
-    border-radius: 15px;
-    border: var(--fuma-border);
-}
-.stat-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.progress-bar {
-    background: rgba(255,255,255,0.1);
-    height: 6px;
-    border-radius: 3px;
-    margin: 10px 0 20px;
-}
-.progress-bar div {
-    background: var(--fuma-primary);
-    height: 100%;
-    border-radius: 3px;
-}
-
-
-
-
-
+ 
 
 
 
@@ -830,6 +798,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
