@@ -644,117 +644,50 @@ function renderPlayers(list) {
     `).join('');
 }
 
-// --- ÉTAPE 4 : LOGIQUE DES FILTRES (TEAM & POSITION) ---
-
-// Met à jour dynamiquement la liste des clubs dans le filtre
+// --- ÉTAPE 4 : LOGIQUE DES FILTRES ---
 function updateTeamFilter(players) {
     const teamSelect = document.getElementById('filter-team');
     if (!teamSelect) return;
-
-    // Récupérer tous les noms de clubs uniques
     const uniqueTeams = [...new Set(players.map(p => p.team))].sort();
-
-    // Garder l'option "All Teams" et ajouter les autres
     teamSelect.innerHTML = '<option value="">All Teams</option>' + 
         uniqueTeams.map(team => `<option value="${team}">${team}</option>`).join('');
 }
 
-// Applique les filtres sélectionnés
 function applyPlayerFilters() {
     const teamValue = document.getElementById('filter-team')?.value.toLowerCase();
-    const posValue = document.getElementById('filter-position')?.value; // Ex: "DEF", "MID"
+    const posValue = document.getElementById('filter-position')?.value;
 
     const filtered = allPlayers.filter(p => {
         const matchesTeam = !teamValue || p.team.toLowerCase() === teamValue;
         const matchesPos = !posValue || p.pos.includes(posValue);
         return matchesTeam && matchesPos;
     });
-
     renderPlayers(filtered);
 }
 
-// Initialisation des écouteurs d'événements pour les filtres
-const filterTeam = document.getElementById('filter-team');
-const filterPos = document.getElementById('filter-position');
+// --- INITIALISATION FINALE ---
+// Ce bloc doit être AVANT la fermeture "});" du tout début
+injectNavigation();
+handleProfilePage();
+setupFormSubmission();
+fetchFumaClubs();
+loadClubProfile();
 
-if (filterTeam) filterTeam.addEventListener('change', applyPlayerFilters);
-if (filterPos) filterPos.addEventListener('change', applyPlayerFilters);
-
+// Initialisation spécifique à la page Players
+const playerSeasonFilter = document.getElementById('filter-season');
+if (playerSeasonFilter) {
+    // Charge la saison par défaut (Saison 1 par ex)
+    fetchFumaPlayers(playerSeasonFilter.value); 
     
- // --- 9. INITIALISATION ---
-    injectNavigation();
-    handleProfilePage();
-    setupFormSubmission();
+    // Ecouteur pour changer de saison
+    playerSeasonFilter.addEventListener('change', (e) => fetchFumaPlayers(e.target.value));
+}
 
-    // --- LOGIQUE DES FILTRES JOUEURS ---
-    const applyPlayerFilters = () => {
-        const searchTerm = document.getElementById('player-search')?.value.toLowerCase() || "";
-        const posFilter = document.getElementById('filter-position')?.value || "";
-        const teamFilterVal = document.getElementById('filter-team')?.value || "";
+// Ecouteurs pour les filtres Team et Position
+document.getElementById('filter-team')?.addEventListener('change', applyPlayerFilters);
+document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
-        const filtered = allPlayers.filter(p => {
-            const matchName = p.tag.toLowerCase().includes(searchTerm);
-            const matchPos = posFilter === "" || p.pos === posFilter;
-            const matchTeam = teamFilterVal === "" || p.team === teamFilterVal;
-            return matchName && matchPos && matchTeam;
-        });
-        renderPlayers(filtered);
-    };
-
-    document.getElementById('player-search')?.addEventListener('input', applyPlayerFilters);
-    document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
-    document.getElementById('filter-team')?.addEventListener('change', applyPlayerFilters);
-    document.getElementById('filter-season')?.addEventListener('change', (e) => fetchFumaPlayers(e.target.value));
-
-    document.getElementById('fuma-search')?.addEventListener('input', (e) => {
-        const term = e.target.value.toLowerCase();
-        renderClubs(allClubs.filter(c => c.name.toLowerCase().includes(term)));
-    });
-
-    const backBtn = document.getElementById('backTop');
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 400) backBtn?.classList.add('visible');
-        else backBtn?.classList.remove('visible');
-    });
-    backBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-
-    // --- DÉCLENCHEMENT DES CHARGEMENTS ---
-    if (document.getElementById('fuma-js-clubs')) fetchFumaClubs();
-    if (document.getElementById('fuma-js-players')) fetchFumaPlayers();
-    if (document.getElementById('club-details')) loadClubProfile();
-
-    // --- LOGIQUE PROFIL JOUEUR (VOTRE SOLUTION OPTIMISÉE) ---
-    const playerHeader = document.getElementById('player-header');
-    if (playerHeader) {
-        const params = new URLSearchParams(window.location.search);
-        const playerId = params.get('id') || params.get('tag');
-        
-        if (playerId) {
-            // On remplace le contenu par la structure de la carte + la roue
-            playerHeader.innerHTML = `
-                <div class="player-card-header" style="min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                    <div class="fuma-spinner"></div>
-                    <p style="color: var(--fuma-primary); margin-top: 20px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600;">
-                        Loading Profile...
-                    </p>
-                </div>`;
-            
-            // Délai pour laisser la roue tourner
-            setTimeout(() => {
-                fetchPlayerData(playerId);
-            }, 1500);
-
-        } else {
-            // Si vraiment pas d'ID, on affiche le message d'erreur proprement
-            playerHeader.innerHTML = `
-                <div class="player-card-header">
-                    <h2 style="color: var(--fuma-primary);">No Player Specified</h2>
-                    <p>Please return to the database.</p>
-                </div>`;
-        }
-    }
-
-}); // FIN DU DOMContentLoaded
+});
 
 
 
