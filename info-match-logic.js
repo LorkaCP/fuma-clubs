@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=";
     const FINAL_URL = BASE_URL + gid;
+    const PLAYERS_DB_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=420142588&single=true&output=csv";
 
     fetch(FINAL_URL)
         .then(response => response.text())
@@ -74,102 +75,74 @@ function parseCSV(text) {
 /**
  * Met à jour l'intégralité de l'interface avec les données du match (Structure 2026)
  */
-function updateUI(m) {
-    // 1. ÉLÉMENTS DU DOM
-    const statsContainer = document.querySelector('.stats-container');
-    const scoreDisplay = document.getElementById('score-display');
-    const replayLink = document.getElementById('link-replay');
 
-    // 2. DÉTECTION : Le match est-il déjà joué ?
-    // On vérifie si la colonne ScoreHome (index 9) est vide ou nulle
-    const isPlayed = m[9] !== "" && m[9] !== undefined && m[9] !== null;
 
-    // 3. INFOS GÉNÉRALES (Toujours affichées)
-    document.getElementById('matchday-label').innerText = `Matchday ${m[0]}`;
-    document.getElementById('match-date').innerText = m[1];
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+}
 
-    // Logos et Noms (index 3 et 4 pour les logos, 6 et 7 pour les noms)
-    const logoHomeImg = document.getElementById('logo-home');
-    const logoAwayImg = document.getElementById('logo-away');
-    logoHomeImg.src = m[3];
-    logoAwayImg.src = m[4];
+// Modifier la fonction updateUI pour inclure le chargement des joueurs
+async function updateUI(m) {
+    // ... (Gardez votre logique existante pour le score et les stats équipe)
+
+    // Mise à jour des noms dans l'onglet Joueurs
+    document.getElementById('team-name-home-stats').innerText = m[6];
+    document.getElementById('team-name-away-stats').innerText = m[7];
+
+    // Chargement des statistiques joueurs
+    loadPlayerStats(m[2]); // m[2] est le MATCH_ID si présent dans votre CSV principal
+}
+
+async function loadPlayerStats(matchId) {
+    try {
+        const response = await fetch(PLAYERS_DB_URL);
+        const csvText = await response.text();
+        const players = parseCSV(csvText);
+        
+        // Filtrer les joueurs de ce match 
+        const matchPlayers = players.filter(p => p[5] === matchId); 
+        
+        renderPlayers(matchPlayers);
+    } catch (err) {
+        console.error("Erreur stats joueurs:", err);
+    }
+}
+
+function renderPlayers(players) {
+    const homeList = document.getElementById('list-players-home');
+    const awayList = document.getElementById('list-players-away');
     
-    const styleLink = "color: inherit; text-decoration: none; transition: 0.2s;";
-    document.getElementById('name-home').innerHTML = `<a href="club.html?name=${encodeURIComponent(m[6])}" style="${styleLink}">${m[6]}</a>`;
-    document.getElementById('name-away').innerHTML = `<a href="club.html?name=${encodeURIComponent(m[7])}" style="${styleLink}">${m[7]}</a>`;
+    // Trier par note décroissante 
+    players.sort((a, b) => parseFloat(b[6]) - parseFloat(a[6]));
 
-    // 4. LOGIQUE D'AFFICHAGE CONDITIONNELLE
-    if (!isPlayed) {
-        // --- CAS : MATCH NON JOUÉ ---
-        scoreDisplay.innerText = "VS";
-        if (replayLink) replayLink.style.display = 'none';
+    let homeHtml = '';
+    let awayHtml = '';
 
-        const hName = encodeURIComponent(m[6]);
-        const aName = encodeURIComponent(m[7]);
-        const currentGid = new URLSearchParams(window.location.search).get('gid');
-
-        // On injecte le bouton d'encodage
-        statsContainer.innerHTML = `
-            <div style="text-align: center; padding: 50px 20px; background: rgba(212, 175, 55, 0.05); border-radius: 15px; border: 1px dashed var(--fuma-primary); margin: 20px;">
-                <i class="fas fa-file-signature" style="font-size: 3rem; color: var(--fuma-primary); margin-bottom: 20px;"></i>
-                <h3 style="margin-bottom: 10px; font-weight: 800; letter-spacing: 1px;">MATCH NON ENCODÉ</h3>
-                <p style="color: var(--fuma-text-dim); margin-bottom: 25px; font-size: 0.9rem;">Les statistiques de cette rencontre ne sont pas encore disponibles.</p>
-                
-                <a href="report.html?home=${hName}&away=${aName}&gid=${currentGid}" 
-                   style="display: inline-block; padding: 15px 35px; background: var(--fuma-primary); color: #000; text-decoration: none; border-radius: 50px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">
-                   <i class="fas fa-plus-circle"></i> Encoder le score
-                </a>
+    players.forEach(p => {
+        // Structure de la ligne : Nom | Note | Buts | Pass% | Tacles
+        const row = `
+            <div class="player-row">
+                <div class="p-name">${p[1]}</div>
+                <div class="p-note">${p[6]}</div>
+                <div style="text-align:center">${p[7] > 0 ? p[7]+'⚽' : '-'}</div>
+                <div style="text-align:center">${p[12]}%</div>
+                <div style="text-align:center">${p[14]}%</div>
             </div>
         `;
-        return; // On arrête là
-    }
-
-    // --- CAS : MATCH JOUÉ ---
-    // Score (index 9 et 10)
-    scoreDisplay.innerText = `${m[9]} : ${m[10]}`;
-
-    // Lien Replay (index 5)
-    if (replayLink) {
-        if (m[5] && m[5] !== "" && m[5] !== "#") {
-            replayLink.href = m[5];
-            replayLink.style.display = 'inline-flex';
+        
+        // Séparer selon l'équipe (p[3] est CURRENT_TEAM) 
+        if (p[3] === document.getElementById('name-home').innerText) {
+            homeHtml += row;
         } else {
-            replayLink.style.display = 'none';
+            awayHtml += row;
         }
-    }
+    });
 
-    // Statistiques Barres
-    // Possession (13, 14), Tirs (15, 16)
-    updateBar('poss', m[13], m[14], true);
-    updateBar('shots', m[15], m[16], false);
-
-    // Passes (17, 18) et Précision (19, 20)
-    document.getElementById('val-passes-home').innerText = `${m[17]} (${m[19]}%)`;
-    document.getElementById('val-passes-away').innerText = `${m[18]} (${m[20]}%)`;
-    updateBar('passes', m[17], m[18], false, true);
-
-    // Tacles Tentés (21, 22) et Réussis (23, 24)
-    document.getElementById('val-tackles-home').innerText = `${m[23]}/${m[21]}`;
-    document.getElementById('val-tackles-away').innerText = `${m[24]}/${m[22]}`;
-    updateBar('tackles', m[23], m[24], false, true);
-
-    // Cartons Rouges (25, 26)
-    document.getElementById('val-red-home').innerText = m[25] || '0';
-    document.getElementById('val-red-away').innerText = m[26] || '0';
-
-    // Buteurs (11, 12)
-    document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
-    document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
-    
-    // Homme du match (27)
-    const motmContainer = document.getElementById('motm-name');
-    const motmName = m[27] || 'N/A';
-    if (motmName !== 'N/A') {
-        motmContainer.innerHTML = `
-            <a href="player.html?id=${encodeURIComponent(motmName)}" style="color: var(--fuma-primary); text-decoration: none; font-weight: bold;">
-                <i class="fas fa-user-check"></i> ${motmName}
-            </a>`;
-    }
+    homeList.innerHTML = homeHtml;
+    awayList.innerHTML = awayHtml;
 }
 /**
  * Anime les barres de statistiques et met à jour les labels textuels
