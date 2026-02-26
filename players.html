@@ -4,11 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FUMA CLUBS - PLAYERS DATABASE</title>
-    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
     <link rel="stylesheet" href="style.css">
+    <style>
+
+.fuma-filters {
+    display: flex;
+    flex-direction: row; /* Aligne les éléments horizontalement */
+    flex-wrap: wrap;     /* Permet de passer à la ligne seulement si l'écran est trop petit */
+    gap: 15px;           /* Espace entre les menus */
+    justify-content: center; /* Centre les menus horizontalement */
+    margin-bottom: 30px;
+}
+
+/* Ajustement des wrappers de sélection */
+.selector-wrapper {
+    flex: 1;             /* Permet aux menus de se partager l'espace équitablement */
+    min-width: 150px;    /* Empêche les menus de devenir trop étroits */
+    max-width: 250px;    /* Évite que les menus ne deviennent trop larges sur grand écran */
+}
+
+/* Force le select à prendre toute la largeur de son wrapper */
+.selector-wrapper .fuma-search-input {
+    width: 100%;
+    margin-top: 5px;     /* Espace entre le label "Season/Team" et le menu */
+}
+ </style>
+   
 </head>
 <body>
 
