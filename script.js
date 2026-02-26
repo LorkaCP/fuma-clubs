@@ -532,7 +532,7 @@ async function getPlayerRegistry() {
                 registry[id] = {
                     tag: v[idxGameTag] || id,
                     // Récupère l'avatar (Col G)
-                    avatar: v[idxAvatar] || 'https://raw.githubusercontent.com/Ashwinvalento/cartoon-avatar/master/lib/images/male/45.png',
+                    avatar: v[idxAvatar] || 'https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png',
                     // Récupère le drapeau (Col F)
                     flag: v[idxFlag] || "🏳️",
                     // Récupère l'équipe actuelle (Col H) - C'est ici que "Innocent XI" est récupéré
@@ -874,6 +874,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
