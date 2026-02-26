@@ -710,7 +710,7 @@ function applyPlayerFilters() {
     });
 
     renderPlayers(filtered);
-}
+
 }
 // --- INITIALISATION FINALE ---
 // Ce bloc doit être AVANT la fermeture "});" du tout début
@@ -737,6 +737,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
