@@ -773,7 +773,54 @@ async function loadPublicPlayerProfile() {
     
 
  
+function renderDetailedProfile(info, stats) {
+    const header = document.getElementById('player-header');
+    const statsContainer = document.getElementById('player-stats-container');
 
+    if (stats.gp === 0) {
+        header.innerHTML = `<div class="player-card-header"><h1>${info.tag}</h1><p>Aucune donnée pour cette saison.</p></div>`;
+        if (statsContainer) statsContainer.innerHTML = "";
+        return;
+    }
+
+    const avgRating = (stats.rating / stats.gp).toFixed(1);
+    const avgPass = (stats.pass_acc / stats.gp).toFixed(1);
+    const avgTackle = (stats.tackle_acc / stats.gp).toFixed(1);
+
+    // Injection du Header (Avatar, Nom, Rating)
+    header.innerHTML = `
+        <div class="player-card-header">
+            <div class="rating-badge-large">${avgRating}</div>
+            <img src="${info.avatar || 'https://raw.githubusercontent.com/Ashwinvalento/cartoon-avatar/master/lib/images/male/45.png'}" class="player-avatar-main" onerror="this.src='https://raw.githubusercontent.com/Ashwinvalento/cartoon-avatar/master/lib/images/male/45.png'">
+            <h1 style="margin: 15px 0 5px;">${info.tag} ${info.flag}</h1>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--fuma-text-dim);">
+                ${info.logo ? `<img src="${info.logo}" style="width: 25px; height: 25px; object-fit: contain;">` : '<i class="fas fa-tshirt"></i>'}
+                <span>PRO PLAYER</span>
+            </div>
+        </div>
+    `;
+
+    // Injection des Stats (Attaque, Précision, etc.)
+    if (statsContainer) {
+        statsContainer.innerHTML = `
+            <div class="stat-card">
+                <h3 style="color:var(--fuma-primary); margin-bottom:15px;">ATTACKING</h3>
+                <div class="stat-row"><span>Appearances</span> <span>${stats.gp}</span></div>
+                <div class="stat-row"><span>Goals</span> <span>${stats.goals}</span></div>
+                <div class="stat-row"><span>Assists</span> <span>${stats.assists}</span></div>
+                <div class="stat-row"><span>Shots</span> <span>${stats.shots}</span></div>
+            </div>
+            <div class="stat-card">
+                <h3 style="color:var(--fuma-primary); margin-bottom:15px;">TECHNIQUE</h3>
+                <div class="stat-row"><span>Pass Accuracy</span> <span>${avgPass}%</span></div>
+                <div class="progress-bar"><div style="width: ${avgPass}%"></div></div>
+                <div class="stat-row"><span>Tackle Success</span> <span>${avgTackle}%</span></div>
+                <div class="progress-bar"><div style="width: ${avgTackle}%"></div></div>
+                <div class="stat-row"><span>MOTM Awards</span> <span>${stats.motm} ⭐</span></div>
+            </div>
+        `;
+    }
+}
 
 
 
@@ -804,6 +851,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
