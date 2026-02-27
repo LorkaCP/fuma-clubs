@@ -566,6 +566,7 @@ select option {
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 15px;
+    align-items: center;
 }
 
 @keyframes spin {
@@ -753,6 +754,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
