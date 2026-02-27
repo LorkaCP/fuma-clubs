@@ -43,7 +43,7 @@ function updateUI(m) {
     const isPlayed = scoreHome !== "" && scoreHome !== "#REF!" && scoreHome !== undefined;
 
     const upcoming = document.getElementById('upcoming-section');
-    const played = document.getElementById('played-content');
+    const played = document.getElementById('played-content'); // Note: Assurez-vous que cette ID englobe le résumé et le nav dans votre HTML
     const nav = document.getElementById('match-nav');
 
     // Noms et Logos
@@ -53,10 +53,26 @@ function updateUI(m) {
     document.getElementById('logo-away').src = m[4] || '';
 
     if (!isPlayed) {
+        // --- LOGIQUE MATCH NON JOUÉ ---
         if(upcoming) upcoming.style.display = 'block';
         if(played) played.style.display = 'none';
         if(nav) nav.style.display = 'none';
+
+        // Gestion du bouton de redirection vers report.html
+        const btnReport = document.getElementById('btn-send-report');
+        if (btnReport) {
+            btnReport.onclick = () => {
+                const params = new URLSearchParams(window.location.search);
+                const gid = params.get('gid');
+                const home = params.get('home');
+                const away = params.get('away');
+                
+                // Redirection avec les paramètres URL pour pré-remplir le rapport
+                window.location.href = `report.html?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}&gid=${gid}`;
+            };
+        }
     } else {
+        // --- LOGIQUE MATCH JOUÉ ---
         if(upcoming) upcoming.style.display = 'none';
         if(played) played.style.display = 'block';
         if(nav) nav.style.display = 'flex';
