@@ -172,26 +172,39 @@
             padding-bottom: 10px;
         }
 
-   .player-header, .player-row {
+  /* --- TABLEAU DES JOUEURS OPTIMISÉ --- */
+.player-header, .player-row {
     display: grid;
-    /* On augmente le ratio du nom à 3.5fr */
-    /* Structure : Nom (3.5) | Note (0.8) | But (0.6) | Ast (0.6) | Pas (0.7) | Tac (0.6) */
+    /* On garde le ratio large pour le nom */
     grid-template-columns: 3.5fr 0.8fr 0.6fr 0.6fr 0.7fr 0.6fr; 
     align-items: center;
-    gap: 2px; /* Réduction de l'espace entre colonnes */
-    padding: 10px 4px;
-    font-size: 0.75rem;
+    gap: 2px;
+    padding: 12px 5px;
     border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-/* On force le nom à ne pas s'étaler sur deux lignes pour garder de la hauteur */
+/* On aligne à gauche uniquement la première colonne (Nom) */
+.player-header span:first-child, 
+.player-row div:first-child {
+    text-align: left;
+    padding-left: 5px;
+}
+
+/* On centre toutes les autres colonnes (de la 2ème à la 6ème) */
+.player-header span:not(:first-child),
+.player-row div:not(:first-child) {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Sécurité pour le nom s'il est trop long */
 .player-row div:first-child {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    padding-right: 5px;
 }
-
 .p-note {
     width: 28px;
     height: 20px;
