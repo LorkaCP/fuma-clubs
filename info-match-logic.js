@@ -134,43 +134,62 @@ function switchTab(tabId) {
     if(btn) btn.classList.add('active');
 }
 
+/**
+ * Charge les statistiques des joueurs depuis la DATABASE
+ */
 function loadPlayerStats(matchId, homeTeam, awayTeam) {
-    // GID de la base de données globale (DATABASE)
     const DB_URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=1114945484`;
     
     fetch(DB_URL)
         .then(res => res.text())
         .then(csv => {
             const rows = parseCSV(csv);
-            // Filtrer par matchId (index 5 dans DATABASE) et par équipe
-            const homePlayers = rows.filter(r => r[5] === matchId && r[1] === homeTeam);
-            const awayPlayers = rows.filter(r => r[5] === matchId && r[1] === awayTeam);
+            
+            // FILTRAGE CORRIGÉ :
+            // r[5] = MATCH_ID
+            // r[3] = CURRENT_TEAM (L'index était r[1] dans votre ancien code)
+            const homePlayers = rows.filter(r => r[5] === matchId && r[3] === homeTeam);
+            const awayPlayers = rows.filter(r => r[5] === matchId && r[3] === awayTeam);
 
             renderPlayers('list-players-home', homePlayers);
             renderPlayers('list-players-away', awayPlayers);
             
             if(document.getElementById('title-home')) document.getElementById('title-home').innerText = homeTeam;
             if(document.getElementById('title-away')) document.getElementById('title-away').innerText = awayTeam;
-        });
+        })
+        .catch(err => console.error("Erreur database joueurs:", err));
 }
 
+/**
+ * Affiche la liste des joueurs avec les bonnes colonnes
+ */
 function renderPlayers(containerId, players) {
     const container = document.getElementById(containerId);
     if (!container) return;
     
+    if (players.length === 0) {
+        container.innerHTML = '<div class="no-data">Aucune donnée joueur disponible</div>';
+        return;
+    }
+
     container.innerHTML = players.map(p => {
-        // p[6] = RATING, p[1] = GAME_TAG, p[7] = GOALS
-        // p[12] = % SUCCESSFUL PASSES, p[15] = % SUCCESSFUL TACKLES
+        // Index basés sur votre fichier CSV :
+        // p[1] = GAME_TAG (Nom)
+        // p[6] = RATING (Note)
+        // p[7] = GOALS (Buts)
+        // p[12] = % SUCCESSFUL PASSES
+        // p[15] = % SUCCESSFUL TACKLES
+        
         const note = parseFloat(p[6]) || 0;
         const color = getNoteColor(note);
         
         return `
             <div class="player-row">
-                <span class="p-name">${p[1]}</span> 
+                <span class="p-name">${p[1]}</span>
                 <span class="p-note" style="background:${color}">${note.toFixed(1)}</span>
-                <span class="p-stat">${p[7]} G.</span>
-                <span class="p-stat">${p[12]}% P.</span>
-                <span class="p-stat">${p[15]}% T.</span>
+                <span class="p-stat">${p[7]} <i class="fas fa-futbol" style="font-size:10px"></i></span>
+                <span class="p-stat">${p[12]}% <small>P.</small></span>
+                <span class="p-stat">${p[15]}% <small>T.</small></span>
             </div>
         `;
     }).join('');
