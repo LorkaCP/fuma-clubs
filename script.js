@@ -260,70 +260,94 @@ async function checkExistingProfile(discordId) {
     // --- 5. ENVOI DU FORMULAIRE ---
     function setupFormSubmission() {
     const profileForm = document.getElementById('profile-form');
+    const deleteBtn = document.getElementById('delete-profile-btn');
+
     if (!profileForm) return;
 
+    // --- 1. GESTION DE LA SOUMISSION (CRÉATION / MISE À JOUR) ---
     profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const submitBtn = profileForm.querySelector('button[type="submit"]');
         const originalBtnText = submitBtn.innerText;
         
-        // 1. État visuel de chargement
         submitBtn.disabled = true;
-        submitBtn.innerText = "Updating...";
+        submitBtn.innerText = "Processing...";
 
-        // 2. Préparation des données
-        const avatarInput = document.getElementById('avatar')?.value.trim();
-        const DEFAULT_AVATAR = "https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png"; // Assurez-vous que cette variable est définie
-        const finalAvatar = (avatarInput === "" || avatarInput.toLowerCase() === "none") ? DEFAULT_AVATAR : avatarInput;
-
+        // Collecte des données du formulaire
+        // On s'assure que les noms correspondent exactement aux attendus du script GS
         const formData = new URLSearchParams();
-        formData.append('game_tag', document.getElementById('id-game')?.value || "");
-        formData.append('discord_id', document.getElementById('id-discord')?.value || "");
-        formData.append('discord_name', document.getElementById('discord-name')?.value || "");
-        formData.append('country', document.getElementById('country')?.value || "");
-        formData.append('avatar', finalAvatar);
-        formData.append('current_team', document.getElementById('team')?.value || "Free Agent");
-        formData.append('main_archetype', document.getElementById('main-archetype')?.value || "");
-        formData.append('main_position', document.getElementById('main-position')?.value || "");
+        formData.append('action', 'profile'); // Action par défaut
+        formData.append('game_tag', document.getElementById('game-tag').value);
+        formData.append('discord_id', document.getElementById('id-discord').value);
+        formData.append('discord_name', document.getElementById('name-discord').value);
+        formData.append('country', document.getElementById('country').value);
+        formData.append('current_team', document.getElementById('current-team').value);
+        formData.append('main_position', document.getElementById('main-position').value);
+        formData.append('main_archetype', document.getElementById('main-archetype').value);
+        formData.append('avatar', document.getElementById('avatar').value);
 
         try {
-            // 3. Envoi à Google Apps Script
-            await fetch(APP_SCRIPT_URL, {
+            // Envoi vers Google Apps Script
+            const response = await fetch(APP_SCRIPT_URL, {
                 method: 'POST',
                 body: formData,
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                mode: 'no-cors'
+                mode: 'no-cors' // Important pour éviter les erreurs de redirection CORS
             });
 
-            // 4. Succès : Mise à jour de l'interface
-            const statusBox = document.getElementById('status-message');
-            const statusText = document.getElementById('status-text');
-
-            if (statusBox && statusText) {
-                // On affiche le message et on cache le formulaire
-                statusText.innerText = "Profile updated! Redirecting to players list in 3 seconds...";
-                statusBox.style.display = 'block';
-                profileForm.style.display = 'none'; 
-                
-                // Remonte en haut de page pour que le message soit visible
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                // 5. Redirection automatique après 3 secondes
-                setTimeout(() => {
-                    window.location.href = 'players.html';
-                }, 3000);
-            }
+            // Avec no-cors, on ne peut pas lire la réponse JSON, 
+            // mais si on arrive ici sans erreur, c'est que c'est envoyé.
+            alert("✅ Profile updated successfully!");
+            
+            // Petit délai pour laisser le temps à Google Sheet de processer
+            setTimeout(() => {
+                window.location.reload(); 
+            }, 1000);
 
         } catch (error) {
             console.error("Submission error:", error);
-            
-            // En cas d'erreur, on avertit l'utilisateur et on réactive le bouton
-            alert("An error occurred during update. Please try again.");
+            alert("❌ An error occurred during saving.");
             submitBtn.disabled = false;
             submitBtn.innerText = originalBtnText;
         }
     });
+
+    // --- 2. GESTION DE LA SUPPRESSION ---
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', async () => {
+            const discordId = document.getElementById('id-discord').value;
+            
+            if (!discordId) {
+                alert("Discord ID not found.");
+                return;
+            }
+
+            if (confirm("⚠️ WARNING: Are you sure you want to delete your profile? This action is permanent.")) {
+                deleteBtn.disabled = true;
+                deleteBtn.innerText = "Deleting...";
+
+                try {
+                    // Pour la suppression, on passe l'action dans l'URL
+                    const deleteUrl = `${APP_SCRIPT_URL}&action=delete&discord_id=${discordId}`;
+                    
+                    await fetch(deleteUrl, {
+                        method: 'POST',
+                        mode: 'no-cors'
+                    });
+
+                    alert("🗑️ Profile deleted successfully.");
+                    // Redirection vers l'accueil après suppression
+                    window.location.href = 'index.html'; 
+
+                } catch (error) {
+                    console.error("Delete error:", error);
+                    alert("❌ Error during deletion.");
+                    deleteBtn.disabled = false;
+                    deleteBtn.innerText = "Delete My Profile";
+                }
+            }
+        });
+    }
 }
     // --- 6. LOGIQUE LISTE DES CLUBS (clubs.html) ---
     async function fetchFumaClubs() {
@@ -944,6 +968,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
