@@ -172,7 +172,7 @@ async function loadPlayerStats(matchId, homeName, awayName) {
             const assists = parseInt(p[8]) || 0; 
             const passReussies = parseInt(p[11]) || 0;
             const passTentees = parseInt(p[10]) || 0;
-            const taclesReussis = parseInt(p[13]) || 0; // Tacles réussis uniquement
+            const taclesReussis = parseInt(p[14]) || 0; // INDEX 14 = COLONNE O (Successful Tackles)
 
             const row = `
                 <div class="player-row">
@@ -183,7 +183,7 @@ async function loadPlayerStats(matchId, homeName, awayName) {
                     <div style="text-align:center;">${goals > 0 ? goals+'⚽' : '-'}</div>
                     <div style="text-align:center;">${assists > 0 ? assists+'🅰️' : '-'}</div>
                     <div style="text-align:center; font-size: 0.8rem;">${passReussies}/${passTentees}</div>
-                    <div style="text-align:center; font-weight: 600;">${taclesReussis > 0 ? taclesReussis : '-'}</div>
+                    <div style="text-align:center; font-weight: 600; color: #4caf50;">${taclesReussis > 0 ? taclesReussis : '-'}</div>
                 </div>`;
             
             if (p[3] === homeName) hHtml += row; 
