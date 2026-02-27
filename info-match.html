@@ -290,7 +290,7 @@
     </style>
 </head>
 <body>
-<div style="padding: 20px 20px 0 20px;">
+    <div style="padding: 20px 20px 0 20px;">
         <button id="btn-back-fixtures" style="background: none; border: 1px solid var(--fuma-text-dim); color: var(--fuma-text-dim); padding: 8px 15px; border-radius: 5px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 0.8rem; transition: 0.3s;">
             <i class="fas fa-arrow-left"></i> BACK TO FIXTURES
         </button>
@@ -298,7 +298,7 @@
     
     <div id="loader-container">
         <div class="loader"></div>
-        <p style="color: var(--fuma-gold); font-weight: 600;">CHARGEMENT DES DONNÉES...</p>
+        <p style="color: var(--fuma-gold); font-weight: 600;">LOADING DATA...</p>
     </div>
 
     <div id="main-content" style="display:none;">
@@ -306,7 +306,7 @@
         <div class="match-header">
             <div class="team-block">
                 <img id="logo-home" src="" alt="">
-                <h1 id="name-home">DOMICILE</h1>
+                <h1 id="name-home">HOME</h1>
                 <div id="strikers-home" class="strikers"></div>
             </div>
             
@@ -321,14 +321,14 @@
 
             <div class="team-block">
                 <img id="logo-away" src="" alt="">
-                <h1 id="name-away">EXTÉRIEUR</h1>
+                <h1 id="name-away">AWAY</h1>
                 <div id="strikers-away" class="strikers"></div>
             </div>
         </div>
 
         <div class="match-nav" id="match-nav">
-            <button class="tab-btn active" onclick="switchTab('resume')">RÉSUMÉ</button>
-            <button class="tab-btn" onclick="switchTab('joueurs')">JOUEURS</button>
+            <button class="tab-btn active" onclick="switchTab('resume')">SUMMARY</button>
+            <button class="tab-btn" onclick="switchTab('joueurs')">PLAYERS</button>
         </div>
 
         <div id="resume" class="tab-content active">
@@ -348,7 +348,7 @@
                 <div class="stat-row">
                     <div class="stat-label">
                         <span id="val-shots-home">0</span>
-                        <span class="stat-title">TIRS</span>
+                        <span class="stat-title">SHOTS</span>
                         <span id="val-shots-away">0</span>
                     </div>
                     <div class="progress-container">
@@ -372,7 +372,7 @@
                 <div class="stat-row">
                     <div class="stat-label">
                         <span id="val-tackles-home">0/0</span>
-                        <span class="stat-title">TACLES RÉUSSIS</span>
+                        <span class="stat-title">SUCCESSFUL TACKLES</span>
                         <span id="val-tackles-away">0/0</span>
                     </div>
                     <div class="progress-container">
@@ -383,43 +383,43 @@
             </div>
         </div>
 
-<div id="joueurs" class="tab-content">
-    <div class="players-grid">
-        <div class="team-players">
-            <h3 id="title-home" class="team-title-stats">-</h3>
-            <div class="player-header">
-    <span>NOM (POS)</span>
-    <span>NOTE</span>
-    <span>BUT</span>
-    <span>AST.</span>
-    <span>PAS.</span>
-    <span>TAC.</span>
-</div>
-            <div id="list-players-home"></div>
+        <div id="joueurs" class="tab-content">
+            <div class="players-grid">
+                <div class="team-players">
+                    <h3 id="title-home" class="team-title-stats">-</h3>
+                    <div class="player-header">
+                        <span>NAME (POS)</span>
+                        <span>RTG</span>
+                        <span>GLS</span>
+                        <span>AST</span>
+                        <span>PAS</span>
+                        <span>TKL</span>
+                    </div>
+                    <div id="list-players-home"></div>
+                </div>
+                <div class="team-players">
+                    <h3 id="title-away" class="team-title-stats">-</h3>
+                    <div class="player-header">
+                        <span>NAME (POS)</span>
+                        <span>RTG</span>
+                        <span>GLS</span>
+                        <span>AST</span>
+                        <span>PAS</span>
+                        <span>TKL</span>
+                    </div>
+                    <div id="list-players-away"></div>
+                </div>
+            </div>
         </div>
-        <div class="team-players">
-            <h3 id="title-away" class="team-title-stats">-</h3>
-            <div class="player-header">
-    <span>NOM (POS)</span>
-    <span>NOTE</span>
-    <span>BUT</span>
-    <span>AST.</span>
-    <span>PAS.</span>
-    <span>TAC.</span>
-</div>
-            <div id="list-players-away"></div>
-        </div>
-    </div>
-</div>
 
         <div id="upcoming-section" style="display:none; text-align:center; padding: 60px 20px;">
-    <i class="fa-regular fa-calendar-check" style="font-size: 3rem; color: var(--fuma-gold); margin-bottom: 20px;"></i>
-    <p style="margin-bottom: 30px;">CE MATCH N'A PAS ENCORE ÉTÉ DISPUTÉ.</p>
-    
-    <button id="btn-send-report" class="tab-btn active" style="padding: 15px 40px; font-size: 1rem;">
-        <i class="fas fa-plus-circle"></i> SEND REPORT
-    </button>
-</div>
+            <i class="fa-regular fa-calendar-check" style="font-size: 3rem; color: var(--fuma-gold); margin-bottom: 20px;"></i>
+            <p style="margin-bottom: 30px;">THIS MATCH HAS NOT BEEN PLAYED YET.</p>
+            
+            <button id="btn-send-report" class="tab-btn active" style="padding: 15px 40px; font-size: 1rem;">
+                <i class="fas fa-plus-circle"></i> SEND REPORT
+            </button>
+        </div>
     </div>
 
     <script src="info-match-logic.js"></script>
