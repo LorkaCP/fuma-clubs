@@ -147,21 +147,19 @@ async function loadPlayerStats(matchId, homeName, awayName) {
         const res = await fetch(URL);
         const csv = await res.text();
         const rows = parseCSV(csv);
-
         const players = rows.filter(p => p[5] === matchId);
 
         let hHtml = '', aHtml = '';
         
-        // Fonction pour abréger et colorer les positions
         const getPosMarkup = (pos) => {
             if (!pos) return "";
-            let short = "N/A";
-            let color = "#aaaaaa"; // Par défaut gris
+            let p = pos.toLowerCase();
+            let short = "N/A", color = "#aaaaaa";
 
-            if (pos.includes("Goalkeeper")) { short = "GK"; color = "#ff9800"; } // Orange
-            else if (pos.includes("Defender")) { short = "DEF"; color = "#ffeb3b"; } // Jaune
-            else if (pos.includes("Midfielder")) { short = "MID"; color = "#4caf50"; } // Vert
-            else if (pos.includes("Forward")) { short = "FWD"; color = "#2196f3"; } // Bleu
+            if (p.includes("goalkeeper")) { short = "GK"; color = "#ff9800"; }
+            else if (p.includes("defender")) { short = "DEF"; color = "#ffeb3b"; }
+            else if (p.includes("midfielder")) { short = "MID"; color = "#4caf50"; }
+            else if (p.includes("forward")) { short = "FWD"; color = "#2196f3"; }
 
             return `<span style="color:${color}; font-size:0.7rem; font-weight:bold; margin-left:4px;">${short}</span>`;
         };
@@ -172,19 +170,18 @@ async function loadPlayerStats(matchId, homeName, awayName) {
             const note = p[6] || '6.0';
             const goals = parseInt(p[7]) || 0;
             const assists = parseInt(p[8]) || 0; 
-            const passReussies = p[11] || 0;
-            const passPct = p[12] || 0;
-            const tacles = p[13] || 0;
+            const passReussies = parseInt(p[11]) || 0;
+            const passTentees = parseInt(p[10]) || 0; // Index 10 pour les tentatives
 
             const row = `
                 <div class="player-row">
-                    <div style="font-weight:600; font-size: 0.85rem; display: flex; align-items: center;">
+                    <div style="font-weight:600; font-size: 0.8rem; display: flex; align-items: center; overflow: hidden;">
                         ${name} ${posBadge}
                     </div>
                     <div class="p-note" style="background:${getNoteColor(note)}">${note}</div>
-                    <div style="text-align:center; font-weight:bold;">${goals}/${assists}</div>
-                    <div style="text-align:center; font-size: 0.75rem;">${passReussies} <span style="color:var(--fuma-text-dim)">(${passPct}%)</span></div>
-                    <div style="text-align:center">${tacles}</div>
+                    <div style="text-align:center;">${goals > 0 ? goals+'⚽' : '-'}</div>
+                    <div style="text-align:center;">${assists > 0 ? assists+'🅰️' : '-'}</div>
+                    <div style="text-align:center; font-size: 0.8rem; font-weight: 500;">${passReussies}/${passTentees}</div>
                 </div>`;
             
             if (p[3] === homeName) hHtml += row; 
@@ -197,6 +194,7 @@ async function loadPlayerStats(matchId, homeName, awayName) {
         document.getElementById('title-away').innerText = awayName;
 
     } catch (e) { console.error("Erreur Stats Joueurs:", e); }
+}
 }
 // --- UTILITAIRES ---
 
