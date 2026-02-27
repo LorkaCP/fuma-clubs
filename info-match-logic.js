@@ -9,16 +9,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const homeName = params.get('home');
     const awayName = params.get('away');
 
-    if (!gid || !homeName || !awayName) return;
+    if (!gid || !homeName || !awayName) {
+        console.error("Paramètres URL manquants");
+        return;
+    }
 
-    // 1. CHARGEMENT INITIAL (FEUILLE EQUIPE / FIXTURES)
+    // URL de l'onglet Fixtures (Performance Équipe)
     const TEAM_URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=${gid}`;
 
     fetch(TEAM_URL)
         .then(res => res.text())
         .then(csv => {
             const rows = parseCSV(csv);
-            // On cherche le match (Home index 6, Away index 7)
+            // Recherche du match : Domicile (index 6), Extérieur (index 7)
             const match = rows.find(r => r[6] === homeName && r[7] === awayName);
 
             if (document.getElementById('loader-container')) 
@@ -26,14 +29,17 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('main-content').style.display = 'block';
 
             if (match) {
-                console.log("Match trouvé dans Fixtures ! ID (Col I):", match[8]);
+                console.log("Match trouvé ! ID Match (Col I):", match[8]);
                 updateUI(match);
+            } else {
+                console.error("Impossible de trouver le match dans le CSV");
             }
-        }).catch(err => console.error("Erreur Fetch Equipe:", err));
+        }).catch(err => console.error("Erreur de chargement Fixtures:", err));
 });
 
 function updateUI(m) {
     const scoreHome = m[9];
+    // Un match est joué si le score n'est pas vide et pas #REF!
     const isPlayed = scoreHome !== "" && scoreHome !== "#REF!" && scoreHome !== undefined;
 
     const upcoming = document.getElementById('upcoming-section');
@@ -61,7 +67,7 @@ function updateUI(m) {
         document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
         document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
 
-        // --- STATS RÉSUMÉ (Index basés sur FIXTURES) ---
+        // --- SECTION RÉSUMÉ (STATS ÉQUIPE) ---
         updateBar('possession', m[13], m[14], true);
         updateBar('shots', m[15], m[16], false);
         
@@ -79,13 +85,19 @@ function updateUI(m) {
         if(tA) tA.innerText = `${m[24] || 0}/${m[22] || 0}`;
         updateBar('tackles', m[23], m[24], false, true);
 
-        // Liaison DATABASE via match[8] (Colonne I)
+        // Homme du match (index 27)
+        const motmCont = document.getElementById('motm-container');
+        if (motmCont && m[27] && m[27] !== '0' && m[27] !== '#REF!') {
+            motmCont.innerHTML = `<div class="motm-badge"><i class="fas fa-star"></i> MOTM: ${m[27]}</div>`;
+        }
+
+        // --- SECTION JOUEURS (Liaison Col F / index 5) ---
         loadPlayerStats(m[8], m[6], m[7]);
     }
 }
 
 async function loadPlayerStats(matchId, homeName, awayName) {
-    // GID DATABASE JOUEURS
+    // GID de l'onglet DATABASE JOUEURS
     const PLAYER_GID = "2074996595";
     const URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=${PLAYER_GID}`;
 
@@ -96,11 +108,10 @@ async function loadPlayerStats(matchId, homeName, awayName) {
 
         // Filtrer : MATCH_ID est en Colonne F (index 5)
         const players = rows.filter(p => p[5] === matchId);
-        console.log("Joueurs trouvés pour l'ID " + matchId + " :", players.length);
 
         let hHtml = '', aHtml = '';
         players.forEach(p => {
-            // Index : Tag(1), Team(3), Note(6), But(7), %Pass(12), %Tac(15)
+            // Index DATABASE : Tag(1), Team(3), Note(6), But(7), %Passes(12), %Tacles(15)
             const row = `
                 <div class="player-row">
                     <div style="font-weight:600;">${p[1]}</div>
@@ -109,56 +120,47 @@ async function loadPlayerStats(matchId, homeName, awayName) {
                     <div style="text-align:center">${p[12] || 0}%</div>
                     <div style="text-align:center">${p[15] || 0}%</div>
                 </div>`;
-            if (p[3] === homeName) hHtml += row; else aHtml += row;
+            
+            if (p[3] === homeName) hHtml += row; 
+            else if (p[3] === awayName) aHtml += row;
         });
 
         document.getElementById('list-players-home').innerHTML = hHtml || "Aucun joueur trouvé";
         document.getElementById('list-players-away').innerHTML = aHtml || "Aucun joueur trouvé";
+        
+        // Mise à jour des titres des colonnes joueurs
+        document.getElementById('title-home').innerText = homeName;
+        document.getElementById('title-away').innerText = awayName;
+
     } catch (e) { console.error("Erreur Stats Joueurs:", e); }
 }
 
-// --- UTILITAIRES ---
-
-function switchTab(tabId) {
-    const tabs = document.querySelectorAll('.tab-btn');
-    const contents = document.querySelectorAll('.tab-content');
-    
-    tabs.forEach(b => b.classList.remove('active'));
-    contents.forEach(c => c.classList.remove('active'));
-    
-    // On cherche le bouton qui a le onclick vers ce tabId
-    const targetBtn = Array.from(tabs).find(btn => btn.getAttribute('onclick').includes(tabId));
-    if(targetBtn) targetBtn.classList.add('active');
-    
-    const targetContent = document.getElementById(tabId);
-    if(targetContent) targetContent.classList.add('active');
-}
+// --- UTILITAIRES DE CALCUL ET PARSING ---
 
 function updateBar(id, valH, valA, isPercent, onlyBar = false) {
-    const clean = (v) => parseFloat(String(v).replace('%','').replace(',','.')) || 0;
-    const h = clean(valH); const a = clean(valA);
+    const clean = (v) => {
+        if (!v || v === "#REF!" || v === "0") return 0;
+        let n = parseFloat(String(v).replace('%','').replace(',','.'));
+        return isNaN(n) ? 0 : n;
+    };
+    
+    const h = clean(valH);
+    const a = clean(valA);
     const total = h + a;
-    const percH = total === 0 ? 50 : (h / total) * 100;
+    let percH = 50; 
+    if (total > 0) percH = (h / total) * 100;
 
-    const bH = document.getElementById(`bar-${id}-home`);
-    const bA = document.getElementById(`bar-${id}-away`);
-    if(bH) bH.style.width = percH + '%';
-    if(bA) bA.style.width = (100 - percH) + '%';
+    const barH = document.getElementById(`bar-${id}-home`);
+    const barA = document.getElementById(`bar-${id}-away`);
+    if(barH) barH.style.width = percH + '%';
+    if(barA) barA.style.width = (100 - percH) + '%';
     
     if(!onlyBar) {
-        const lH = document.getElementById(`val-${id}-home`);
-        const lA = document.getElementById(`val-${id}-away`);
-        if(lH) lH.innerText = isPercent ? Math.round(h) + '%' : h;
-        if(lA) lA.innerText = isPercent ? Math.round(a) + '%' : a;
+        const labelH = document.getElementById(`val-${id}-home`);
+        const labelA = document.getElementById(`val-${id}-away`);
+        if(labelH) labelH.innerText = isPercent ? Math.round(h) + '%' : h;
+        if(labelA) labelA.innerText = isPercent ? Math.round(a) + '%' : a;
     }
-}
-
-function getNoteColor(n) {
-    const v = parseFloat(n) || 6.0;
-    if (v >= 8) return '#11a85d';
-    if (v >= 7) return '#91ba33';
-    if (v >= 6) return '#e2b01b';
-    return '#f85757';
 }
 
 function parseCSV(t) {
@@ -174,7 +176,26 @@ function parseCSV(t) {
     });
 }
 
+function getNoteColor(n) {
+    const v = parseFloat(n) || 6.0;
+    if (v >= 8) return '#11a85d'; // Vert
+    if (v >= 7) return '#91ba33'; // Vert clair
+    if (v >= 6) return '#e2b01b'; // Jaune/Orange
+    return '#f85757'; // Rouge
+}
+
 function formatStrikers(s) {
     if (!s || s === '0' || s === '#REF!') return '';
     return s.split('|').map(x => `<div>${x.trim()} <i class="fas fa-futbol"></i></div>`).join('');
+}
+
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
+    if(targetBtn) targetBtn.classList.add('active');
+    
+    const targetContent = document.getElementById(tabId);
+    if(targetContent) targetContent.classList.add('active');
 }
