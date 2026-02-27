@@ -170,9 +170,8 @@ async function loadPlayerStats(matchId, homeName, awayName) {
             const note = p[6] || '6.0';
             const goals = parseInt(p[7]) || 0;
             const assists = parseInt(p[8]) || 0; 
-            const passReussies = parseInt(p[11]) || 0;
-            const passTentees = parseInt(p[10]) || 0;
-            const taclesReussis = parseInt(p[14]) || 0; // INDEX 14 = COLONNE O (Successful Tackles)
+            const passReussies = parseInt(p[11]) || 0; // Colonne L (Index 11)
+            const taclesReussis = parseInt(p[14]) || 0; // Colonne O (Index 14)
 
             const row = `
                 <div class="player-row">
@@ -182,7 +181,7 @@ async function loadPlayerStats(matchId, homeName, awayName) {
                     <div class="p-note" style="background:${getNoteColor(note)}">${note}</div>
                     <div style="text-align:center;">${goals > 0 ? goals+'⚽' : '-'}</div>
                     <div style="text-align:center;">${assists > 0 ? assists+'🅰️' : '-'}</div>
-                    <div style="text-align:center; font-size: 0.8rem;">${passReussies}/${passTentees}</div>
+                    <div style="text-align:center; font-weight: 600; color: #4caf50;">${passReussies > 0 ? passReussies : '-'}</div>
                     <div style="text-align:center; font-weight: 600; color: #4caf50;">${taclesReussis > 0 ? taclesReussis : '-'}</div>
                 </div>`;
             
