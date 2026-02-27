@@ -138,35 +138,32 @@ function switchTab(tabId) {
  * Charge les statistiques des joueurs depuis la DATABASE
  */
 function loadPlayerStats(matchId, homeTeam, awayTeam) {
-    const DB_URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=1114945484`;
+    // Utilisation d'une URL propre sans template literals complexes pour éviter l'erreur 400
+    const DB_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=1114945484&single=true&output=csv";
     
     fetch(DB_URL)
-        .then(res => res.text())
+        .then(res => {
+            if (!res.ok) throw new Error("Erreur HTTP: " + res.status);
+            return res.text();
+        })
         .then(csv => {
-            const rows = parseCSV(csv); // rows est défini ICI
+            const rows = parseCSV(csv);
 
-            // --- DEBOGAGE ---
-            console.log("ID recherché:", matchId);
-            console.log("Équipe Home recherchée:", homeTeam);
-            
-            if (rows.length > 1) {
-                console.log("Exemple ligne 1 en DB - ID:", rows[1][5], "| Equipe:", rows[1][3]);
-            }
-            // ----------------
+            // Nettoyage et Filtrage 
+            const homePlayers = rows.filter(r => {
+                const rMatchId = r[5] ? r[5].trim() : "";
+                const rTeam = r[3] ? r[3].trim() : "";
+                return rMatchId === matchId.trim() && rTeam === homeTeam.trim();
+            });
 
-            // Filtrage avec nettoyage des espaces (trim)
-            // r[5] = MATCH_ID, r[3] = CURRENT_TEAM
-            const homePlayers = rows.filter(r => 
-                r[5] && r[5].trim() === matchId.trim() && 
-                r[3] && r[3].trim() === homeTeam.trim()
-            );
-            
-            const awayPlayers = rows.filter(r => 
-                r[5] && r[5].trim() === matchId.trim() && 
-                r[3] && r[3].trim() === awayTeam.trim()
-            );
+            const awayPlayers = rows.filter(r => {
+                const rMatchId = r[5] ? r[5].trim() : "";
+                const rTeam = r[3] ? r[3].trim() : "";
+                return rMatchId === matchId.trim() && rTeam === awayTeam.trim();
+            });
 
-            console.log(`Joueurs trouvés: Home(${homePlayers.length}) Away(${awayPlayers.length})`);
+            console.log("MatchID recherché:", matchId);
+            console.log(`Résultats - Home: ${homePlayers.length}, Away: ${awayPlayers.length}`);
 
             renderPlayers('list-players-home', homePlayers);
             renderPlayers('list-players-away', awayPlayers);
@@ -174,9 +171,8 @@ function loadPlayerStats(matchId, homeTeam, awayTeam) {
             if(document.getElementById('title-home')) document.getElementById('title-home').innerText = homeTeam;
             if(document.getElementById('title-away')) document.getElementById('title-away').innerText = awayTeam;
         })
-        .catch(err => console.error("Erreur dans loadPlayerStats :", err));
+        .catch(err => console.error("Erreur de chargement des joueurs:", err));
 }
-
 /**
  * Affiche la liste des joueurs avec les bonnes colonnes
  */
@@ -185,29 +181,17 @@ function renderPlayers(containerId, players) {
     if (!container) return;
     
     if (players.length === 0) {
-        container.innerHTML = '<div class="no-data">Aucune donnée joueur disponible</div>';
+        container.innerHTML = '<div style="padding:10px; opacity:0.6;">Aucune donnée joueur</div>';
         return;
     }
 
     container.innerHTML = players.map(p => {
-        // Index basés sur votre fichier CSV :
-        // p[1] = GAME_TAG (Nom)
-        // p[6] = RATING (Note)
-        // p[7] = GOALS (Buts)
-        // p[12] = % SUCCESSFUL PASSES
-        // p[15] = % SUCCESSFUL TACKLES
-        
-        const note = parseFloat(p[6]) || 0;
+        const note = parseFloat(p[6]) || 0; // RATING est à l'index 6
         const color = getNoteColor(note);
-        
         return `
             <div class="player-row">
-                <span class="p-name">${p[1]}</span>
-                <span class="p-note" style="background:${color}">${note.toFixed(1)}</span>
-                <span class="p-stat">${p[7]} <i class="fas fa-futbol" style="font-size:10px"></i></span>
-                <span class="p-stat">${p[12]}% <small>P.</small></span>
-                <span class="p-stat">${p[15]}% <small>T.</small></span>
-            </div>
+                <span class="p-name">${p[1]}</span> <span class="p-note" style="background:${color}">${note.toFixed(1)}</span>
+                <span class="p-stat">${p[7] || 0} G.</span> <span class="p-stat">${p[12] || 0}% P.</span> <span class="p-stat">${p[15] || 0}% T.</span> </div>
         `;
     }).join('');
 }
