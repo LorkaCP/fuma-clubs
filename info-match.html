@@ -236,6 +236,64 @@
             .match-header { flex-direction: column; gap: 20px; }
             .team-block { width: 100%; }
         }
+
+/* --- OPTIMISATION DU HEADER MOBILE --- */
+@media (max-width: 600px) {
+    /* Conteneur principal du match */
+    .match-header {
+        padding: 15px 5px !important;
+    }
+
+    /* Aligne l'équipe, le score et l'autre équipe sur une ligne plus compacte */
+    .score-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        gap: 10px !important;
+    }
+
+    /* Réduction de la taille des logos */
+    .team-logo {
+        width: 50px !important;
+        height: 50px !important;
+    }
+
+    /* Ajustement des noms d'équipes */
+    .team-name {
+        font-size: 0.85rem !important;
+        max-width: 70px;
+        line-height: 1.2;
+    }
+
+    /* Le score central */
+    #score-home, #score-away {
+        font-size: 2.2rem !important;
+        font-weight: 800;
+    }
+
+    /* Séparateur ":" entre les scores */
+    .score-divider {
+        font-size: 1.5rem;
+        opacity: 0.5;
+    }
+
+    /* Repositionnement du MOTM */
+    #motm-container {
+        margin-top: 15px !important;
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .motm-badge {
+        font-size: 0.7rem !important;
+        padding: 4px 10px !important;
+        background: rgba(255, 193, 7, 0.15); /* Teinte dorée subtile */
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        border-radius: 12px;
+    }
+}
+        
     </style>
 </head>
 <body>
