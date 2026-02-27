@@ -1,6 +1,6 @@
 /**
  * FUMA CLUBS - INFO MATCH LOGIC
- * Liaison : FIXTURES (Col I / index 8) <-> DATABASE (Col F / index 5)
+ * Gestion de l'affichage, du bouton retour et du bouton rapport.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -9,19 +9,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const homeName = params.get('home');
     const awayName = params.get('away');
 
+    // 1. Logique du bouton "BACK TO FIXTURES"
+    const btnBack = document.getElementById('btn-back-fixtures');
+    if (btnBack) {
+        btnBack.onclick = () => {
+            window.location.href = `league.html?tab=fixtures`;
+        };
+    }
+
     if (!gid || !homeName || !awayName) {
         console.error("Paramètres URL manquants");
         return;
     }
 
-    // URL de l'onglet Fixtures (Performance Équipe)
+    // URL de la source CSV (Onglet Fixtures)
     const TEAM_URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=${gid}`;
 
     fetch(TEAM_URL)
         .then(res => res.text())
         .then(csv => {
             const rows = parseCSV(csv);
-            // Recherche du match : Domicile (index 6), Extérieur (index 7)
+            // Recherche du match par noms d'équipes
             const match = rows.find(r => r[6] === homeName && r[7] === awayName);
 
             if (document.getElementById('loader-container')) 
@@ -29,37 +37,53 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('main-content').style.display = 'block';
 
             if (match) {
-                console.log("Match trouvé ! ID Match (Col I):", match[8]);
                 updateUI(match);
             } else {
-                console.error("Impossible de trouver le match dans le CSV");
+                console.error("Match non trouvé");
             }
-        }).catch(err => console.error("Erreur de chargement Fixtures:", err));
+        })
+        .catch(err => console.error("Erreur de chargement :", err));
 });
 
 function updateUI(m) {
     const scoreHome = m[9];
-    // Un match est joué si le score n'est pas vide et pas #REF!
     const isPlayed = scoreHome !== "" && scoreHome !== "#REF!" && scoreHome !== undefined;
 
     const upcoming = document.getElementById('upcoming-section');
-    const played = document.getElementById('played-content');
     const nav = document.getElementById('match-nav');
+    const resume = document.getElementById('resume');
+    const joueurs = document.getElementById('joueurs');
+    const playedContent = document.getElementById('played-content'); 
 
-    // Noms et Logos
+    // Infos de base
     document.getElementById('name-home').innerText = m[6];
     document.getElementById('name-away').innerText = m[7];
     document.getElementById('logo-home').src = m[3] || '';
     document.getElementById('logo-away').src = m[4] || '';
 
     if (!isPlayed) {
+        // --- MODE MATCH NON JOUÉ ---
         if(upcoming) upcoming.style.display = 'block';
-        if(played) played.style.display = 'none';
         if(nav) nav.style.display = 'none';
+        if(resume) resume.style.display = 'none';
+        if(joueurs) joueurs.style.display = 'none';
+        if(playedContent) playedContent.style.display = 'none';
+
+        const btnReport = document.getElementById('btn-send-report');
+        if (btnReport) {
+            btnReport.onclick = () => {
+                const params = new URLSearchParams(window.location.search);
+                window.location.href = `report.html?home=${encodeURIComponent(params.get('home'))}&away=${encodeURIComponent(params.get('away'))}&gid=${params.get('gid')}`;
+            };
+        }
     } else {
+        // --- MODE MATCH JOUÉ ---
         if(upcoming) upcoming.style.display = 'none';
-        if(played) played.style.display = 'block';
         if(nav) nav.style.display = 'flex';
+        if(playedContent) playedContent.style.display = 'block';
+        
+        // On affiche l'onglet résumé par défaut
+        switchTab('resume');
 
         // Score et Buteurs
         document.getElementById('score-home').innerText = m[9];
@@ -67,92 +91,133 @@ function updateUI(m) {
         document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
         document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
 
-        // --- SECTION RÉSUMÉ (STATS ÉQUIPE) ---
+        // Stats Équipe
         updateBar('possession', m[13], m[14], true);
         updateBar('shots', m[15], m[16], false);
         
-        // Passes (17/18=Tentées, 19/20=%)
         const pH = document.getElementById('val-passes-home');
         const pA = document.getElementById('val-passes-away');
         if(pH) pH.innerText = `${m[17] || 0} (${m[19] || 0}%)`;
         if(pA) pA.innerText = `${m[18] || 0} (${m[20] || 0}%)`;
         updateBar('passes', m[19], m[20], true, true);
 
-        // Tacles (21/22=Tentés, 23/24=Réussis)
         const tH = document.getElementById('val-tackles-home');
         const tA = document.getElementById('val-tackles-away');
         if(tH) tH.innerText = `${m[23] || 0}/${m[21] || 0}`;
         if(tA) tA.innerText = `${m[24] || 0}/${m[22] || 0}`;
         updateBar('tackles', m[23], m[24], false, true);
 
-        // Homme du match (index 27)
+        // Homme du match
         const motmCont = document.getElementById('motm-container');
-        if (motmCont && m[27] && m[27] !== '0' && m[27] !== '#REF!') {
+        if (motmCont && m[27] && m[27] !== '0') {
             motmCont.innerHTML = `<div class="motm-badge"><i class="fas fa-star"></i> MOTM: ${m[27]}</div>`;
         }
 
-        // --- SECTION JOUEURS (Liaison Col F / index 5) ---
+        // CHARGEMENT DES JOUEURS (Utilise l'ID en colonne I / index 8)
         loadPlayerStats(m[8], m[6], m[7]);
     }
 }
 
-async function loadPlayerStats(matchId, homeTeam, awayTeam) {
+// GESTION DES ONGLETS (IMPORTANT POUR L'AFFICHAGE)
+function switchTab(tabId) {
+    // Cacher tous les contenus
+    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+    // Désactiver tous les boutons
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    
+    // Afficher l'onglet sélectionné
+    const activeContent = document.getElementById(tabId);
+    if(activeContent) activeContent.style.display = 'block';
+    
+    // Activer le bouton correspondant
+    const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+    if(btn) btn.classList.add('active');
+}
+
+/**
+ * Charge les statistiques des joueurs depuis la DATABASE
+ */
+sync function loadPlayerStats(matchId, homeName, awayName) {
+    // GID de l'onglet DATABASE JOUEURS
     const PLAYER_GID = "2074996595";
     const URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=${PLAYER_GID}`;
-
-    try {
-        const res = await fetch(URL);
-        const csv = await res.text();
-        const rows = parseCSV(csv);
-
-        // On filtre par MATCH_ID (index 5)
-        const players = rows.filter(p => p[5] === matchId);
-
-        let hHtml = '', aHtml = '';
-        players.forEach(p => {
-            // Création de la ligne joueur (Index : Nom=1, Team=3, Note=6, Buts=7, %P=12, %T=15)
-            const row = `
-                <div class="player-row">
-                    <span class="p-name">${p[1]}</span> 
-                    <span class="p-note" style="background:${getNoteColor(p[6])}">${parseFloat(p[6]).toFixed(1)}</span>
-                    <span class="p-stat">${p[7] || 0} G.</span> 
-                    <span class="p-stat">${p[12] || 0}% P.</span> 
-                    <span class="p-stat">${p[15] || 0}% T.</span>
-                </div>`;
-            
-            // On sépare Domicile et Extérieur selon le nom de l'équipe (index 3)
-            if (p[3] === homeTeam) hHtml += row; 
-            else if (p[3] === awayTeam) aHtml += row;
-        });
-
-        document.getElementById('list-players-home').innerHTML = hHtml || "Aucune donnée";
-        document.getElementById('list-players-away').innerHTML = aHtml || "Aucune donnée";
-        
-    } catch (err) {
-        console.error("Erreur de chargement des joueurs:", err);
-    }
-}
-// --- UTILITAIRES DE CALCUL ET PARSING ---
-
-function updateBar(id, valH, valA, isPercent, onlyBar = false) {
-    const clean = (v) => {
-        if (!v || v === "#REF!" || v === "0") return 0;
-        let n = parseFloat(String(v).replace('%','').replace(',','.'));
-        return isNaN(n) ? 0 : n;
-    };
     
-    const h = clean(valH);
-    const a = clean(valA);
+    fetch(DB_URL)
+        .then(res => {
+            if (!res.ok) throw new Error("Erreur HTTP: " + res.status);
+            return res.text();
+        })
+        .then(csv => {
+            const rows = parseCSV(csv);
+
+            // Nettoyage et Filtrage 
+            const homePlayers = rows.filter(r => {
+                const rMatchId = r[5] ? r[5].trim() : "";
+                const rTeam = r[3] ? r[3].trim() : "";
+                return rMatchId === matchId.trim() && rTeam === homeTeam.trim();
+            });
+
+            const awayPlayers = rows.filter(r => {
+                const rMatchId = r[5] ? r[5].trim() : "";
+                const rTeam = r[3] ? r[3].trim() : "";
+                return rMatchId === matchId.trim() && rTeam === awayTeam.trim();
+            });
+
+            console.log("MatchID recherché:", matchId);
+            console.log(`Résultats - Home: ${homePlayers.length}, Away: ${awayPlayers.length}`);
+
+            renderPlayers('list-players-home', homePlayers);
+            renderPlayers('list-players-away', awayPlayers);
+            
+            if(document.getElementById('title-home')) document.getElementById('title-home').innerText = homeTeam;
+            if(document.getElementById('title-away')) document.getElementById('title-away').innerText = awayTeam;
+        })
+        .catch(err => console.error("Erreur de chargement des joueurs:", err));
+}
+/**
+ * Affiche la liste des joueurs avec les bonnes colonnes
+ */
+function renderPlayers(containerId, players) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    if (players.length === 0) {
+        container.innerHTML = '<div style="padding:10px; opacity:0.6;">Aucune donnée joueur</div>';
+        return;
+    }
+
+    container.innerHTML = players.map(p => {
+        const note = parseFloat(p[6]) || 0; // RATING est à l'index 6
+        const color = getNoteColor(note);
+        return `
+            <div class="player-row">
+                <span class="p-name">${p[1]}</span> <span class="p-note" style="background:${color}">${note.toFixed(1)}</span>
+                <span class="p-stat">${p[7] || 0} G.</span> <span class="p-stat">${p[12] || 0}% P.</span> <span class="p-stat">${p[15] || 0}% T.</span> </div>
+        `;
+    }).join('');
+}
+function getNoteColor(n) {
+    if (n >= 8) return '#11a85d';
+    if (n >= 7) return '#91ba33';
+    if (n >= 6) return '#e2b01b';
+    return '#f85757';
+}
+
+function updateBar(id, valH, valA, isPercent, isAlreadyRate = false) {
+    const h = parseFloat(valH) || 0;
+    const a = parseFloat(valA) || 0;
     const total = h + a;
-    let percH = 50; 
+    let percH = 50;
     if (total > 0) percH = (h / total) * 100;
 
     const barH = document.getElementById(`bar-${id}-home`);
     const barA = document.getElementById(`bar-${id}-away`);
-    if(barH) barH.style.width = percH + '%';
-    if(barA) barA.style.width = (100 - percH) + '%';
-    
-    if(!onlyBar) {
+    if (barH && barA) {
+        barH.style.width = percH + '%';
+        barA.style.width = (100 - percH) + '%';
+    }
+
+    if (!isAlreadyRate) {
         const labelH = document.getElementById(`val-${id}-home`);
         const labelA = document.getElementById(`val-${id}-away`);
         if(labelH) labelH.innerText = isPercent ? Math.round(h) + '%' : h;
@@ -173,26 +238,7 @@ function parseCSV(t) {
     });
 }
 
-function getNoteColor(n) {
-    const v = parseFloat(n) || 6.0;
-    if (v >= 8) return '#11a85d'; // Vert
-    if (v >= 7) return '#91ba33'; // Vert clair
-    if (v >= 6) return '#e2b01b'; // Jaune/Orange
-    return '#f85757'; // Rouge
-}
-
 function formatStrikers(s) {
     if (!s || s === '0' || s === '#REF!') return '';
     return s.split('|').map(x => `<div>${x.trim()} <i class="fas fa-futbol"></i></div>`).join('');
-}
-
-function switchTab(tabId) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    
-    const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
-    if(targetBtn) targetBtn.classList.add('active');
-    
-    const targetContent = document.getElementById(tabId);
-    if(targetContent) targetContent.classList.add('active');
 }
