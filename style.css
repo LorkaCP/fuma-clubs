@@ -554,7 +554,11 @@ select option {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 50px 0;
+    
+    /* MODIFICATIONS ICI */
+    min-height: 100vh; /* Prend 100% de la hauteur de l'écran */
+    width: 100%;       /* Prend toute la largeur */
+    
     color: var(--fuma-primary);
 }
 
@@ -754,6 +758,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
