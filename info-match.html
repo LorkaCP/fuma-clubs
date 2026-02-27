@@ -295,9 +295,8 @@
 }
         
     </style>
-</head>
 <body>
-<div style="padding: 20px 20px 0 20px;">
+    <div style="padding: 20px 20px 0 20px;">
         <button id="btn-back-fixtures" style="background: none; border: 1px solid var(--fuma-text-dim); color: var(--fuma-text-dim); padding: 8px 15px; border-radius: 5px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 0.8rem; transition: 0.3s;">
             <i class="fas fa-arrow-left"></i> BACK TO FIXTURES
         </button>
@@ -311,26 +310,29 @@
     <div id="main-content" style="display:none;">
         
         <div class="match-header">
-            <div class="team-block">
-                <img id="logo-home" src="" alt="">
-                <h1 id="name-home">DOMICILE</h1>
-                <div id="strikers-home" class="strikers"></div>
-            </div>
-            
-            <div class="score-block">
-                <div class="score-display">
-                    <span id="score-home">0</span>
-                    <span style="color: var(--fuma-gold)">:</span>
-                    <span id="score-away">0</span>
+            <div class="score-container">
+                <div class="team-info">
+                    <img id="logo-home" class="team-logo" src="" alt="">
+                    <h1 id="name-home" class="team-name">DOMICILE</h1>
+                    <div id="strikers-home" class="strikers"></div>
                 </div>
-                <div id="motm-container"></div>
+                
+                <div class="score-display-block">
+                    <div class="score-numbers">
+                        <span id="score-home">0</span>
+                        <span class="score-divider">:</span>
+                        <span id="score-away">0</span>
+                    </div>
+                </div>
+
+                <div class="team-info">
+                    <img id="logo-away" class="team-logo" src="" alt="">
+                    <h1 id="name-away" class="team-name">EXTÉRIEUR</h1>
+                    <div id="strikers-away" class="strikers"></div>
+                </div>
             </div>
 
-            <div class="team-block">
-                <img id="logo-away" src="" alt="">
-                <h1 id="name-away">EXTÉRIEUR</h1>
-                <div id="strikers-away" class="strikers"></div>
-            </div>
+            <div id="motm-container"></div>
         </div>
 
         <div class="match-nav" id="match-nav">
@@ -390,44 +392,34 @@
             </div>
         </div>
 
-<div id="joueurs" class="tab-content">
-    <div class="players-grid">
-        <div class="team-players">
-            <h3 id="title-home" class="team-title-stats">-</h3>
-            <div class="player-header">
-    <span>NOM (POS)</span>
-    <span>NOTE</span>
-    <span>BUT</span>
-    <span>AST.</span>
-    <span>PAS.</span>
-    <span>TAC.</span>
-</div>
-            <div id="list-players-home"></div>
+        <div id="joueurs" class="tab-content">
+            <div class="players-grid">
+                <div class="team-players">
+                    <h3 id="title-home" class="team-title-stats">-</h3>
+                    <div class="player-header">
+                        <span>NOM (POS)</span><span>NOTE</span><span>BUT</span><span>AST.</span><span>PAS.</span><span>TAC.</span>
+                    </div>
+                    <div id="list-players-home"></div>
+                </div>
+                <div class="team-players">
+                    <h3 id="title-away" class="team-title-stats">-</h3>
+                    <div class="player-header">
+                        <span>NOM (POS)</span><span>NOTE</span><span>BUT</span><span>AST.</span><span>PAS.</span><span>TAC.</span>
+                    </div>
+                    <div id="list-players-away"></div>
+                </div>
+            </div>
         </div>
-        <div class="team-players">
-            <h3 id="title-away" class="team-title-stats">-</h3>
-            <div class="player-header">
-    <span>NOM (POS)</span>
-    <span>NOTE</span>
-    <span>BUT</span>
-    <span>AST.</span>
-    <span>PAS.</span>
-    <span>TAC.</span>
-</div>
-            <div id="list-players-away"></div>
-        </div>
-    </div>
-</div>
 
         <div id="upcoming-section" style="display:none; text-align:center; padding: 60px 20px;">
-    <i class="fa-regular fa-calendar-check" style="font-size: 3rem; color: var(--fuma-gold); margin-bottom: 20px;"></i>
-    <p style="margin-bottom: 30px;">CE MATCH N'A PAS ENCORE ÉTÉ DISPUTÉ.</p>
-    
-    <button id="btn-send-report" class="tab-btn active" style="padding: 15px 40px; font-size: 1rem;">
-        <i class="fas fa-plus-circle"></i> SEND REPORT
-    </button>
-</div>
+            <i class="fa-regular fa-calendar-check" style="font-size: 3rem; color: var(--fuma-gold); margin-bottom: 20px;"></i>
+            <p style="margin-bottom: 30px;">CE MATCH N'A PAS ENCORE ÉTÉ DISPUTÉ.</p>
+            <button id="btn-send-report" class="tab-btn active" style="padding: 15px 40px; font-size: 1rem;">
+                <i class="fas fa-plus-circle"></i> SEND REPORT
+            </button>
+        </div>
     </div>
+
 
     <script src="info-match-logic.js"></script>
 </body>
