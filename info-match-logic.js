@@ -1,3 +1,8 @@
+/**
+ * FUMA CLUBS - INFO MATCH LOGIC
+ * Liaison : FIXTURES (Col I / index 8) <-> DATABASE (Col F / index 5)
+ */
+
 document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     const gid = params.get('gid'); 
@@ -6,27 +11,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!gid || !homeName || !awayName) return;
 
-    // URL Fixtures (Stats Équipe)
+    // 1. CHARGEMENT INITIAL (FEUILLE EQUIPE / FIXTURES)
     const TEAM_URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=${gid}`;
 
     fetch(TEAM_URL)
         .then(res => res.text())
         .then(csv => {
             const rows = parseCSV(csv);
-            // On cherche le match : Home (index 6), Away (index 7)
+            // On cherche le match (Home index 6, Away index 7)
             const match = rows.find(r => r[6] === homeName && r[7] === awayName);
 
-            document.getElementById('loader-container').style.display = 'none';
+            if (document.getElementById('loader-container')) 
+                document.getElementById('loader-container').style.display = 'none';
             document.getElementById('main-content').style.display = 'block';
 
             if (match) {
-                console.log("Match trouvé, ID:", match[8]);
+                console.log("Match trouvé dans Fixtures ! ID (Col I):", match[8]);
                 updateUI(match);
             }
-        });
+        }).catch(err => console.error("Erreur Fetch Equipe:", err));
 });
 
-async function updateUI(m) {
+function updateUI(m) {
     const scoreHome = m[9];
     const isPlayed = scoreHome !== "" && scoreHome !== "#REF!" && scoreHome !== undefined;
 
@@ -34,7 +40,7 @@ async function updateUI(m) {
     const played = document.getElementById('played-content');
     const nav = document.getElementById('match-nav');
 
-    // Identité Visuelle
+    // Noms et Logos
     document.getElementById('name-home').innerText = m[6];
     document.getElementById('name-away').innerText = m[7];
     document.getElementById('logo-home').src = m[3] || '';
@@ -49,55 +55,52 @@ async function updateUI(m) {
         if(played) played.style.display = 'block';
         if(nav) nav.style.display = 'flex';
 
-        // Score
+        // Score et Buteurs
         document.getElementById('score-home').innerText = m[9];
         document.getElementById('score-away').innerText = m[10];
-        
-        // Buteurs
         document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
         document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
 
-        // --- STATS RÉSUMÉ (Index basés sur ton CSV Fixtures) ---
+        // --- STATS RÉSUMÉ (Index basés sur FIXTURES) ---
         updateBar('possession', m[13], m[14], true);
         updateBar('shots', m[15], m[16], false);
         
-        // Passes : Attempted (17/18), Accuracy (19/20)
-        updateBar('passes', m[19], m[20], true);
-        document.getElementById('val-passes-home').innerText = `${m[17] || 0} (${m[19] || 0}%)`;
-        document.getElementById('val-passes-away').innerText = `${m[18] || 0} (${m[20] || 0}%)`;
+        // Passes (17/18=Tentées, 19/20=%)
+        const pH = document.getElementById('val-passes-home');
+        const pA = document.getElementById('val-passes-away');
+        if(pH) pH.innerText = `${m[17] || 0} (${m[19] || 0}%)`;
+        if(pA) pA.innerText = `${m[18] || 0} (${m[20] || 0}%)`;
+        updateBar('passes', m[19], m[20], true, true);
 
-        // Tacles : Attempted (21/22), Made (23/24)
-        updateBar('tackles', m[23], m[24], false);
-        document.getElementById('val-tackles-home').innerText = `${m[23] || 0}/${m[21] || 0}`;
-        document.getElementById('val-tackles-away').innerText = `${m[24] || 0}/${m[22] || 0}`;
+        // Tacles (21/22=Tentés, 23/24=Réussis)
+        const tH = document.getElementById('val-tackles-home');
+        const tA = document.getElementById('val-tackles-away');
+        if(tH) tH.innerText = `${m[23] || 0}/${m[21] || 0}`;
+        if(tA) tA.innerText = `${m[24] || 0}/${m[22] || 0}`;
+        updateBar('tackles', m[23], m[24], false, true);
 
-        // MOTM
-        if (m[27] && m[27] !== '0' && m[27] !== '#REF!') {
-            document.getElementById('motm-container').innerHTML = `
-                <div style="color:var(--fuma-primary); font-weight:800; margin-top:10px;">
-                    <i class="fas fa-star"></i> MOTM: ${m[27]}
-                </div>`;
-        }
-
-        // CHARGEMENT JOUEURS (GID DATABASE 2074996595)
+        // Liaison DATABASE via match[8] (Colonne I)
         loadPlayerStats(m[8], m[6], m[7]);
     }
 }
 
 async function loadPlayerStats(matchId, homeName, awayName) {
-    const DB_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=2074996595&single=true&output=csv";
-    
-    try {
-        const res = await fetch(DB_URL);
-        const csv = await res.text();
-        const players = parseCSV(csv);
+    // GID DATABASE JOUEURS
+    const PLAYER_GID = "2074996595";
+    const URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=${PLAYER_GID}`;
 
-        // Filtrer par MATCH_ID (index 5 dans DATABASE)
-        const matchPlayers = players.filter(p => p[5] === matchId);
-        
+    try {
+        const res = await fetch(URL);
+        const csv = await res.text();
+        const rows = parseCSV(csv);
+
+        // Filtrer : MATCH_ID est en Colonne F (index 5)
+        const players = rows.filter(p => p[5] === matchId);
+        console.log("Joueurs trouvés pour l'ID " + matchId + " :", players.length);
+
         let hHtml = '', aHtml = '';
-        matchPlayers.forEach(p => {
-            // Index DATABASE : Tag(1), Team(3), Note(6), Buts(7), %Passes(12), %Tacles(15)
+        players.forEach(p => {
+            // Index : Tag(1), Team(3), Note(6), But(7), %Pass(12), %Tac(15)
             const row = `
                 <div class="player-row">
                     <div style="font-weight:600;">${p[1]}</div>
@@ -109,17 +112,31 @@ async function loadPlayerStats(matchId, homeName, awayName) {
             if (p[3] === homeName) hHtml += row; else aHtml += row;
         });
 
-        document.getElementById('list-players-home').innerHTML = hHtml || "Aucune donnée";
-        document.getElementById('list-players-away').innerHTML = aHtml || "Aucune donnée";
-    } catch (e) { console.error("Erreur DB:", e); }
+        document.getElementById('list-players-home').innerHTML = hHtml || "Aucun joueur trouvé";
+        document.getElementById('list-players-away').innerHTML = aHtml || "Aucun joueur trouvé";
+    } catch (e) { console.error("Erreur Stats Joueurs:", e); }
 }
 
-// --- Fonctions Utilitaires ---
+// --- UTILITAIRES ---
 
-function updateBar(id, valH, valA, isPercent) {
+function switchTab(tabId) {
+    const tabs = document.querySelectorAll('.tab-btn');
+    const contents = document.querySelectorAll('.tab-content');
+    
+    tabs.forEach(b => b.classList.remove('active'));
+    contents.forEach(c => c.classList.remove('active'));
+    
+    // On cherche le bouton qui a le onclick vers ce tabId
+    const targetBtn = Array.from(tabs).find(btn => btn.getAttribute('onclick').includes(tabId));
+    if(targetBtn) targetBtn.classList.add('active');
+    
+    const targetContent = document.getElementById(tabId);
+    if(targetContent) targetContent.classList.add('active');
+}
+
+function updateBar(id, valH, valA, isPercent, onlyBar = false) {
     const clean = (v) => parseFloat(String(v).replace('%','').replace(',','.')) || 0;
-    const h = clean(valH);
-    const a = clean(valA);
+    const h = clean(valH); const a = clean(valA);
     const total = h + a;
     const percH = total === 0 ? 50 : (h / total) * 100;
 
@@ -128,12 +145,20 @@ function updateBar(id, valH, valA, isPercent) {
     if(bH) bH.style.width = percH + '%';
     if(bA) bA.style.width = (100 - percH) + '%';
     
-    if (id === 'possession' || id === 'shots') {
+    if(!onlyBar) {
         const lH = document.getElementById(`val-${id}-home`);
         const lA = document.getElementById(`val-${id}-away`);
         if(lH) lH.innerText = isPercent ? Math.round(h) + '%' : h;
         if(lA) lA.innerText = isPercent ? Math.round(a) + '%' : a;
     }
+}
+
+function getNoteColor(n) {
+    const v = parseFloat(n) || 6.0;
+    if (v >= 8) return '#11a85d';
+    if (v >= 7) return '#91ba33';
+    if (v >= 6) return '#e2b01b';
+    return '#f85757';
 }
 
 function parseCSV(t) {
@@ -147,14 +172,6 @@ function parseCSV(t) {
         res.push(cur.trim());
         return res;
     });
-}
-
-function getNoteColor(n) {
-    const v = parseFloat(n) || 6.0;
-    if (v >= 8) return '#11a85d';
-    if (v >= 7) return '#91ba33';
-    if (v >= 6) return '#e2b01b';
-    return '#f85757';
 }
 
 function formatStrikers(s) {
