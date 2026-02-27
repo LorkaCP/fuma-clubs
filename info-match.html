@@ -175,11 +175,13 @@
   /* --- TABLEAU DES JOUEURS OPTIMISÉ --- */
 .player-header, .player-row {
     display: grid;
-    /* On garde le ratio large pour le nom */
     grid-template-columns: 3.5fr 0.8fr 0.6fr 0.6fr 0.7fr 0.6fr; 
     align-items: center;
     gap: 2px;
-    padding: 12px 5px;
+    padding: 10px 5px;
+    /* --- AJUSTEMENTS ICI --- */
+    font-size: 0.7rem; /* Réduit de 0.75 à 0.7 */
+    font-weight: 400;  /* Écriture plus fine par défaut */
     border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
