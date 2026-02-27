@@ -159,20 +159,22 @@ function renderPlayers(containerId, players) {
     if (!container) return;
     
     container.innerHTML = players.map(p => {
+        // p[6] = RATING, p[1] = GAME_TAG, p[7] = GOALS
+        // p[12] = % SUCCESSFUL PASSES, p[15] = % SUCCESSFUL TACKLES
         const note = parseFloat(p[6]) || 0;
         const color = getNoteColor(note);
+        
         return `
             <div class="player-row">
-                <span class="p-name">${p[2]}</span>
+                <span class="p-name">${p[1]}</span> 
                 <span class="p-note" style="background:${color}">${note.toFixed(1)}</span>
-                <span class="p-stat">${p[7]}</span>
-                <span class="p-stat">${p[11]}%</span>
-                <span class="p-stat">${p[14]}%</span>
+                <span class="p-stat">${p[7]} G.</span>
+                <span class="p-stat">${p[12]}% P.</span>
+                <span class="p-stat">${p[15]}% T.</span>
             </div>
         `;
     }).join('');
 }
-
 function getNoteColor(n) {
     if (n >= 8) return '#11a85d';
     if (n >= 7) return '#91ba33';
