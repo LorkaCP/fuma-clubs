@@ -137,7 +137,7 @@ function switchTab(tabId) {
 /**
  * Charge les statistiques des joueurs depuis la DATABASE
  */
-sync function loadPlayerStats(matchId, homeName, awayName) {
+async function loadPlayerStats(matchId, homeName, awayName) {
     // GID de l'onglet DATABASE JOUEURS
     const PLAYER_GID = "2074996595";
     const URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=${PLAYER_GID}`;
