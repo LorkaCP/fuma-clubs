@@ -139,26 +139,34 @@ function switchTab(tabId) {
  */
 function loadPlayerStats(matchId, homeTeam, awayTeam) {
     const DB_URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=1114945484`;
-
-console.log("Recherche Match ID:", matchId);
-console.log("Equipe Home recherchée:", homeTeam);
-console.log("Premier joueur trouvé en DB:", rows[1][5], "Equipe:", rows[1][3]);
-
     
     fetch(DB_URL)
         .then(res => res.text())
         .then(csv => {
-            const rows = parseCSV(csv);
+            const rows = parseCSV(csv); // rows est défini ICI
+
+            // --- DEBOGAGE ---
+            console.log("ID recherché:", matchId);
+            console.log("Équipe Home recherchée:", homeTeam);
             
-            // FILTRAGE CORRIGÉ :
-            // r[5] = MATCH_ID
-            // r[3] = CURRENT_TEAM (L'index était r[1] dans votre ancien code)
+            if (rows.length > 1) {
+                console.log("Exemple ligne 1 en DB - ID:", rows[1][5], "| Equipe:", rows[1][3]);
+            }
+            // ----------------
+
+            // Filtrage avec nettoyage des espaces (trim)
+            // r[5] = MATCH_ID, r[3] = CURRENT_TEAM
             const homePlayers = rows.filter(r => 
-    r[5]?.trim() === matchId?.trim() && r[3]?.trim() === homeTeam?.trim()
-);
-const awayPlayers = rows.filter(r => 
-    r[5]?.trim() === matchId?.trim() && r[3]?.trim() === awayTeam?.trim()
-);
+                r[5] && r[5].trim() === matchId.trim() && 
+                r[3] && r[3].trim() === homeTeam.trim()
+            );
+            
+            const awayPlayers = rows.filter(r => 
+                r[5] && r[5].trim() === matchId.trim() && 
+                r[3] && r[3].trim() === awayTeam.trim()
+            );
+
+            console.log(`Joueurs trouvés: Home(${homePlayers.length}) Away(${awayPlayers.length})`);
 
             renderPlayers('list-players-home', homePlayers);
             renderPlayers('list-players-away', awayPlayers);
@@ -166,7 +174,7 @@ const awayPlayers = rows.filter(r =>
             if(document.getElementById('title-home')) document.getElementById('title-home').innerText = homeTeam;
             if(document.getElementById('title-away')) document.getElementById('title-away').innerText = awayTeam;
         })
-        .catch(err => console.error("Erreur database joueurs:", err));
+        .catch(err => console.error("Erreur dans loadPlayerStats :", err));
 }
 
 /**
