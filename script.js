@@ -175,41 +175,54 @@ async function checkExistingProfile(discordId) {
     const deleteBtn = document.getElementById('delete-profile-btn');
 
     try {
-        // On interroge l'App Script (le doGet va chercher les infos)
-        const response = await fetch(`${APP_SCRIPT_URL}&discord_id=${discordId}`);
+        // Nettoyage de l'URL pour éviter les doublons de paramètres
+        const url = APP_SCRIPT_URL.includes('?') 
+            ? `${APP_SCRIPT_URL}&discord_id=${discordId}`
+            : `${APP_SCRIPT_URL}?action=profile&discord_id=${discordId}`;
+
+        const response = await fetch(url);
         const data = await response.json();
 
         if (data && data.result === 'success') {
-            console.log("Profil trouvé :", data);
+            console.log("Données reçues pour remplissage :", data);
 
-            // 1. Pré-remplissage des champs du formulaire
-            if (document.getElementById('game-tag')) document.getElementById('game-tag').value = data.game_tag || '';
-            if (document.getElementById('id-discord')) document.getElementById('id-discord').value = data.discord_id || '';
-            if (document.getElementById('name-discord')) document.getElementById('name-discord').value = data.discord_name || '';
-            if (document.getElementById('country')) document.getElementById('country').value = data.country || '';
-            if (document.getElementById('current-team')) document.getElementById('current-team').value = data.current_team || '';
-            if (document.getElementById('main-position')) document.getElementById('main-position').value = data.main_position || '';
-            if (document.getElementById('main-archetype')) document.getElementById('main-archetype').value = data.main_archetype || '';
-            if (document.getElementById('avatar')) document.getElementById('avatar').value = data.avatar || '';
+            // Mappage précis entre les clés JSON et les IDs HTML
+            const fields = {
+                'game-tag': data.game_tag,
+                'id-discord': data.discord_id,
+                'name-discord': data.discord_name,
+                'country': data.country,
+                'current-team': data.current_team, // C'est ici que l'équipe est injectée
+                'main-position': data.main_position,
+                'main-archetype': data.main_archetype,
+                'avatar': data.avatar
+            };
 
-            // 2. Mise à jour de l'affichage (bouton Delete)
-            if (deleteBtn) {
-                deleteBtn.style.display = 'block'; // On montre le bouton de suppression
-            }
+            // Remplissage automatique avec vérification d'existence de l'élément
+            Object.keys(fields).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.value = fields[id] || '';
+                    console.log(`Remplissage ${id} avec :`, fields[id]);
+                }
+            });
 
-            // Changer le texte du bouton de validation
+            if (deleteBtn) deleteBtn.style.display = 'block';
+            
             const submitBtn = form.querySelector('button[type="submit"]');
             if (submitBtn) submitBtn.innerText = "Update Profile";
 
         } else {
-            console.log("Aucun profil existant, mode création.");
-            // Si c'est un nouveau profil, on cache le bouton delete
-            if (deleteBtn) deleteBtn.style.display = 'none';
+            console.log("Aucun profil trouvé, mode création.");
+            // Pré-remplir au moins l'ID Discord si on l'a
+            if(document.getElementById('id-discord')) {
+                document.getElementById('id-discord').value = discordId;
+            }
         }
     } catch (error) {
-        console.error("Erreur lors de la vérification du profil:", error);
+        console.error("Erreur de récupération :", error);
     } finally {
-        // On cache le loader et on montre le formulaire
+        // ARRÊT DE LA ROUE (Loader)
         if (loader) loader.style.display = 'none';
         if (form) form.style.display = 'grid';
     }
@@ -931,6 +944,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
