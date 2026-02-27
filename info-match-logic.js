@@ -1,6 +1,6 @@
 /**
  * FUMA CLUBS - INFO MATCH LOGIC
- * Système de gestion de l'affichage des scores, statistiques et rapports.
+ * Gestion de l'affichage, du bouton retour et du bouton rapport.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // URL de la source CSV
+    // URL de la source CSV (Onglet Fixtures)
     const TEAM_URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=${gid}`;
 
     fetch(TEAM_URL)
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (match) {
                 updateUI(match);
             } else {
-                console.error("Match non trouvé dans la base de données");
+                console.error("Match non trouvé");
             }
         })
         .catch(err => console.error("Erreur de chargement :", err));
@@ -47,69 +47,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function updateUI(m) {
     const scoreHome = m[9];
-    // Un match est considéré comme "joué" s'il y a un score numérique (pas vide, pas d'erreur #REF!)
     const isPlayed = scoreHome !== "" && scoreHome !== "#REF!" && scoreHome !== undefined;
 
-    // Éléments d'interface
     const upcoming = document.getElementById('upcoming-section');
     const nav = document.getElementById('match-nav');
     const resume = document.getElementById('resume');
     const joueurs = document.getElementById('joueurs');
-    const playedContent = document.getElementById('played-content'); // Conteneur du score/buteurs
+    const playedContent = document.getElementById('played-content'); 
 
-    // Mise à jour des infos de base (toujours visibles)
+    // Infos de base
     document.getElementById('name-home').innerText = m[6];
     document.getElementById('name-away').innerText = m[7];
     document.getElementById('logo-home').src = m[3] || '';
     document.getElementById('logo-away').src = m[4] || '';
 
     if (!isPlayed) {
-        // --- CAS MATCH NON JOUÉ ---
+        // --- MODE MATCH NON JOUÉ ---
         if(upcoming) upcoming.style.display = 'block';
         if(nav) nav.style.display = 'none';
         if(resume) resume.style.display = 'none';
         if(joueurs) joueurs.style.display = 'none';
         if(playedContent) playedContent.style.display = 'none';
 
-        // Logique du bouton SEND REPORT
         const btnReport = document.getElementById('btn-send-report');
         if (btnReport) {
             btnReport.onclick = () => {
                 const params = new URLSearchParams(window.location.search);
-                const gid = params.get('gid');
-                const home = params.get('home');
-                const away = params.get('away');
-                window.location.href = `report.html?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}&gid=${gid}`;
+                window.location.href = `report.html?home=${encodeURIComponent(params.get('home'))}&away=${encodeURIComponent(params.get('away'))}&gid=${params.get('gid')}`;
             };
         }
     } else {
-        // --- CAS MATCH JOUÉ ---
+        // --- MODE MATCH JOUÉ ---
         if(upcoming) upcoming.style.display = 'none';
         if(nav) nav.style.display = 'flex';
         if(playedContent) playedContent.style.display = 'block';
         
-        // Par défaut, on affiche le résumé (onglet actif)
-        if(resume) resume.style.display = 'block';
-        if(joueurs) joueurs.style.display = 'none';
+        // On affiche l'onglet résumé par défaut
+        switchTab('resume');
 
-        // Remplissage Score et Buteurs
+        // Score et Buteurs
         document.getElementById('score-home').innerText = m[9];
         document.getElementById('score-away').innerText = m[10];
         document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
         document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
 
-        // Mise à jour des barres de statistiques
+        // Stats Équipe
         updateBar('possession', m[13], m[14], true);
         updateBar('shots', m[15], m[16], false);
         
-        // Passes
         const pH = document.getElementById('val-passes-home');
         const pA = document.getElementById('val-passes-away');
         if(pH) pH.innerText = `${m[17] || 0} (${m[19] || 0}%)`;
         if(pA) pA.innerText = `${m[18] || 0} (${m[20] || 0}%)`;
         updateBar('passes', m[19], m[20], true, true);
 
-        // Tacles
         const tH = document.getElementById('val-tackles-home');
         const tA = document.getElementById('val-tackles-away');
         if(tH) tH.innerText = `${m[23] || 0}/${m[21] || 0}`;
@@ -118,87 +109,48 @@ function updateUI(m) {
 
         // Homme du match
         const motmCont = document.getElementById('motm-container');
-        if (motmCont && m[27] && m[27] !== '0' && m[27] !== '#REF!') {
+        if (motmCont && m[27] && m[27] !== '0') {
             motmCont.innerHTML = `<div class="motm-badge"><i class="fas fa-star"></i> MOTM: ${m[27]}</div>`;
-        } else if (motmCont) {
-            motmCont.innerHTML = '';
         }
 
-        // Chargement des statistiques individuelles des joueurs
+        // CHARGEMENT DES JOUEURS (Utilise l'ID en colonne I / index 8)
         loadPlayerStats(m[8], m[6], m[7]);
     }
 }
 
-// Fonction utilitaire pour mettre à jour les jauges de stats
-function updateBar(id, valH, valA, isPercent, isAlreadyRate = false) {
-    const h = parseFloat(valH) || 0;
-    const a = parseFloat(valA) || 0;
-    const total = h + a;
-    let percH = 50;
-    if (total > 0) percH = (h / total) * 100;
-
-    const barH = document.getElementById(`bar-${id}-home`);
-    const barA = document.getElementById(`bar-${id}-away`);
-    
-    if (barH && barA) {
-        barH.style.width = percH + '%';
-        barA.style.width = (100 - percH) + '%';
-    }
-
-    // Si ce n'est pas une barre de passes/tacles complexe, on met à jour les labels simples
-    if (!isAlreadyRate) {
-        const labelH = document.getElementById(`val-${id}-home`);
-        const labelA = document.getElementById(`val-${id}-away`);
-        if(labelH) labelH.innerText = isPercent ? Math.round(h) + '%' : h;
-        if(labelA) labelA.innerText = isPercent ? Math.round(a) + '%' : a;
-    }
-}
-
-function parseCSV(t) {
-    return t.split('\n').map(l => {
-        let res = [], cur = '', q = false;
-        for (let c of l) {
-            if (c === '"') q = !q;
-            else if (c === ',' && !q) { res.push(cur.trim()); cur = ''; }
-            else cur += c;
-        }
-        res.push(cur.trim());
-        return res;
-    });
-}
-
-function formatStrikers(s) {
-    if (!s || s === '0' || s === '#REF!') return '';
-    return s.split('|').map(x => `<div>${x.trim()} <i class="fas fa-futbol"></i></div>`).join('');
-}
-
+// GESTION DES ONGLETS (IMPORTANT POUR L'AFFICHAGE)
 function switchTab(tabId) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    // Cacher tous les contenus
     document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+    // Désactiver tous les boutons
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     
-    const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.innerText.toLowerCase().includes(tabId));
-    if(targetBtn) targetBtn.classList.add('active');
+    // Afficher l'onglet sélectionné
+    const activeContent = document.getElementById(tabId);
+    if(activeContent) activeContent.style.display = 'block';
     
-    const content = document.getElementById(tabId);
-    if(content) content.style.display = 'block';
+    // Activer le bouton correspondant
+    const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+    if(btn) btn.classList.add('active');
 }
 
-// Note: La fonction loadPlayerStats doit être présente pour charger les joueurs depuis la DB (index 5)
 function loadPlayerStats(matchId, homeTeam, awayTeam) {
+    // GID de la base de données globale (DATABASE)
     const DB_URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=1114945484`;
     
     fetch(DB_URL)
         .then(res => res.text())
         .then(csv => {
             const rows = parseCSV(csv);
+            // Filtrer par matchId (index 5 dans DATABASE) et par équipe
             const homePlayers = rows.filter(r => r[5] === matchId && r[1] === homeTeam);
             const awayPlayers = rows.filter(r => r[5] === matchId && r[1] === awayTeam);
 
             renderPlayers('list-players-home', homePlayers);
             renderPlayers('list-players-away', awayPlayers);
             
-            document.getElementById('title-home').innerText = homeTeam;
-            document.getElementById('title-away').innerText = awayTeam;
+            if(document.getElementById('title-home')) document.getElementById('title-home').innerText = homeTeam;
+            if(document.getElementById('title-away')) document.getElementById('title-away').innerText = awayTeam;
         });
 }
 
@@ -226,4 +178,44 @@ function getNoteColor(n) {
     if (n >= 7) return '#91ba33';
     if (n >= 6) return '#e2b01b';
     return '#f85757';
+}
+
+function updateBar(id, valH, valA, isPercent, isAlreadyRate = false) {
+    const h = parseFloat(valH) || 0;
+    const a = parseFloat(valA) || 0;
+    const total = h + a;
+    let percH = 50;
+    if (total > 0) percH = (h / total) * 100;
+
+    const barH = document.getElementById(`bar-${id}-home`);
+    const barA = document.getElementById(`bar-${id}-away`);
+    if (barH && barA) {
+        barH.style.width = percH + '%';
+        barA.style.width = (100 - percH) + '%';
+    }
+
+    if (!isAlreadyRate) {
+        const labelH = document.getElementById(`val-${id}-home`);
+        const labelA = document.getElementById(`val-${id}-away`);
+        if(labelH) labelH.innerText = isPercent ? Math.round(h) + '%' : h;
+        if(labelA) labelA.innerText = isPercent ? Math.round(a) + '%' : a;
+    }
+}
+
+function parseCSV(t) {
+    return t.split('\n').map(l => {
+        let res = [], cur = '', q = false;
+        for (let c of l) {
+            if (c === '"') q = !q;
+            else if (c === ',' && !q) { res.push(cur.trim()); cur = ''; }
+            else cur += c;
+        }
+        res.push(cur.trim());
+        return res;
+    });
+}
+
+function formatStrikers(s) {
+    if (!s || s === '0' || s === '#REF!') return '';
+    return s.split('|').map(x => `<div>${x.trim()} <i class="fas fa-futbol"></i></div>`).join('');
 }
