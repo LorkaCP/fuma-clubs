@@ -96,8 +96,7 @@ function updateUI(m) {
     }
 }
 
-async function loadPlayerStats(matchId, homeName, awayName) {
-    // GID de l'onglet DATABASE JOUEURS
+async function loadPlayerStats(matchId, homeTeam, awayTeam) {
     const PLAYER_GID = "2074996595";
     const URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=${PLAYER_GID}`;
 
@@ -106,35 +105,33 @@ async function loadPlayerStats(matchId, homeName, awayName) {
         const csv = await res.text();
         const rows = parseCSV(csv);
 
-        // Filtrer : MATCH_ID est en Colonne F (index 5)
+        // On filtre par MATCH_ID (index 5)
         const players = rows.filter(p => p[5] === matchId);
 
         let hHtml = '', aHtml = '';
         players.forEach(p => {
-            // Index DATABASE : Tag(1), Team(3), Note(6), But(7), %Passes(12), %Tacles(15)
+            // Création de la ligne joueur (Index : Nom=1, Team=3, Note=6, Buts=7, %P=12, %T=15)
             const row = `
                 <div class="player-row">
-                    <div style="font-weight:600;">${p[1]}</div>
-                    <div class="p-note" style="background:${getNoteColor(p[6])}">${p[6] || '6.0'}</div>
-                    <div style="text-align:center">${p[7] > 0 ? p[7]+'⚽' : '-'}</div>
-                    <div style="text-align:center">${p[12] || 0}%</div>
-                    <div style="text-align:center">${p[15] || 0}%</div>
+                    <span class="p-name">${p[1]}</span> 
+                    <span class="p-note" style="background:${getNoteColor(p[6])}">${parseFloat(p[6]).toFixed(1)}</span>
+                    <span class="p-stat">${p[7] || 0} G.</span> 
+                    <span class="p-stat">${p[12] || 0}% P.</span> 
+                    <span class="p-stat">${p[15] || 0}% T.</span>
                 </div>`;
             
-            if (p[3] === homeName) hHtml += row; 
-            else if (p[3] === awayName) aHtml += row;
+            // On sépare Domicile et Extérieur selon le nom de l'équipe (index 3)
+            if (p[3] === homeTeam) hHtml += row; 
+            else if (p[3] === awayTeam) aHtml += row;
         });
 
-        document.getElementById('list-players-home').innerHTML = hHtml || "Aucun joueur trouvé";
-        document.getElementById('list-players-away').innerHTML = aHtml || "Aucun joueur trouvé";
+        document.getElementById('list-players-home').innerHTML = hHtml || "Aucune donnée";
+        document.getElementById('list-players-away').innerHTML = aHtml || "Aucune donnée";
         
-        // Mise à jour des titres des colonnes joueurs
-        document.getElementById('title-home').innerText = homeName;
-        document.getElementById('title-away').innerText = awayName;
-
-    } catch (e) { console.error("Erreur Stats Joueurs:", e); }
+    } catch (err) {
+        console.error("Erreur de chargement des joueurs:", err);
+    }
 }
-
 // --- UTILITAIRES DE CALCUL ET PARSING ---
 
 function updateBar(id, valH, valA, isPercent, onlyBar = false) {
