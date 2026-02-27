@@ -42,23 +42,26 @@ function updateUI(m) {
     // Un match est joué si le score n'est pas vide et pas #REF!
     const isPlayed = scoreHome !== "" && scoreHome !== "#REF!" && scoreHome !== undefined;
 
+    // Récupération des éléments d'interface
     const upcoming = document.getElementById('upcoming-section');
-    const played = document.getElementById('played-content'); // Note: Assurez-vous que cette ID englobe le résumé et le nav dans votre HTML
     const nav = document.getElementById('match-nav');
+    const resume = document.getElementById('resume');
+    const joueurs = document.getElementById('joueurs');
 
-    // Noms et Logos
+    // Noms et Logos (toujours visibles)
     document.getElementById('name-home').innerText = m[6];
     document.getElementById('name-away').innerText = m[7];
     document.getElementById('logo-home').src = m[3] || '';
     document.getElementById('logo-away').src = m[4] || '';
 
     if (!isPlayed) {
-        // --- LOGIQUE MATCH NON JOUÉ ---
+        // --- MATCH NON JOUÉ : On masque tout le reste ---
         if(upcoming) upcoming.style.display = 'block';
-        if(played) played.style.display = 'none';
         if(nav) nav.style.display = 'none';
+        if(resume) resume.style.display = 'none';
+        if(joueurs) joueurs.style.display = 'none';
 
-        // Gestion du bouton de redirection vers report.html
+        // Logique du bouton Send Report
         const btnReport = document.getElementById('btn-send-report');
         if (btnReport) {
             btnReport.onclick = () => {
@@ -66,16 +69,16 @@ function updateUI(m) {
                 const gid = params.get('gid');
                 const home = params.get('home');
                 const away = params.get('away');
-                
-                // Redirection avec les paramètres URL pour pré-remplir le rapport
                 window.location.href = `report.html?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}&gid=${gid}`;
             };
         }
     } else {
-        // --- LOGIQUE MATCH JOUÉ ---
+        // --- MATCH JOUÉ : On affiche tout ---
         if(upcoming) upcoming.style.display = 'none';
-        if(played) played.style.display = 'block';
         if(nav) nav.style.display = 'flex';
+        // On rétablit le comportement des tabs (Resume actif par défaut)
+        if(resume) resume.style.display = 'block'; 
+        if(joueurs) joueurs.style.display = 'none'; // Masqué par défaut jusqu'au clic
 
         // Score et Buteurs
         document.getElementById('score-home').innerText = m[9];
@@ -83,31 +86,28 @@ function updateUI(m) {
         document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
         document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
 
-        // --- SECTION RÉSUMÉ (STATS ÉQUIPE) ---
+        // Stats Equipe
         updateBar('possession', m[13], m[14], true);
         updateBar('shots', m[15], m[16], false);
         
-        // Passes (17/18=Tentées, 19/20=%)
+        // ... (suite de votre logique de mise à jour des stats) ...
         const pH = document.getElementById('val-passes-home');
         const pA = document.getElementById('val-passes-away');
         if(pH) pH.innerText = `${m[17] || 0} (${m[19] || 0}%)`;
         if(pA) pA.innerText = `${m[18] || 0} (${m[20] || 0}%)`;
         updateBar('passes', m[19], m[20], true, true);
 
-        // Tacles (21/22=Tentés, 23/24=Réussis)
         const tH = document.getElementById('val-tackles-home');
         const tA = document.getElementById('val-tackles-away');
         if(tH) tH.innerText = `${m[23] || 0}/${m[21] || 0}`;
         if(tA) tA.innerText = `${m[24] || 0}/${m[22] || 0}`;
         updateBar('tackles', m[23], m[24], false, true);
 
-        // Homme du match (index 27)
         const motmCont = document.getElementById('motm-container');
         if (motmCont && m[27] && m[27] !== '0' && m[27] !== '#REF!') {
             motmCont.innerHTML = `<div class="motm-badge"><i class="fas fa-star"></i> MOTM: ${m[27]}</div>`;
         }
 
-        // --- SECTION JOUEURS (Liaison Col F / index 5) ---
         loadPlayerStats(m[8], m[6], m[7]);
     }
 }
