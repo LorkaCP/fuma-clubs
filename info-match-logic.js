@@ -38,36 +38,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function updateUI(m) {
     const scoreHome = m[9];
-    // Un match est considéré comme "non joué" si le score est vide, 0 ou #REF!
+    // Un match est considéré comme "joué" si le score n'est pas vide, pas 0 et pas une erreur #REF!
     const isPlayed = scoreHome !== "" && scoreHome !== "#REF!" && scoreHome !== undefined && scoreHome !== "0";
 
-    // Éléments à masquer/afficher
+    // Récupération des éléments de structure
     const resumeTab = document.getElementById('resume');
     const joueursTab = document.getElementById('joueurs');
     const matchNav = document.getElementById('match-nav');
     const upcomingSection = document.getElementById('upcoming-section');
+    
+    // Récupération des éléments de score
+    const elScoreHome = document.getElementById('score-home');
+    const elScoreAway = document.getElementById('score-away');
 
-    // 1. Affichage de base (Logos et Noms)
+    // 1. Mise à jour des infos de base (toujours visibles)
     document.getElementById('name-home').innerText = m[6];
     document.getElementById('name-away').innerText = m[7];
     document.getElementById('logo-home').src = m[3] || '';
     document.getElementById('logo-away').src = m[4] || '';
 
+    // Nettoyage systématique des classes de score au début
+    elScoreHome.classList.remove('score-loser');
+    elScoreAway.classList.remove('score-loser');
+
     if (!isPlayed) {
-        // --- MODE ATTENTE DE RÉSULTATS ---
-        // On cache toute la navigation et les tableaux de stats
+        // --- MODE MATCH NON JOUÉ ---
+        // Masquer la navigation et les onglets de statistiques
         if (resumeTab) resumeTab.style.display = 'none';
         if (joueursTab) joueursTab.style.display = 'none';
         if (matchNav) matchNav.style.display = 'none';
         
-        // On affiche la section avec le bouton DATA REPORT
+        // Afficher la section d'attente avec le bouton rapport
         if (upcomingSection) upcomingSection.style.display = 'block';
 
-        // On affiche "- : -" au lieu de "0 : 0"
-        document.getElementById('score-home').innerText = "-";
-        document.getElementById('score-away').innerText = "-";
+        // Afficher un score neutre
+        elScoreHome.innerText = "-";
+        elScoreAway.innerText = "-";
         
-        // Config du bouton de rapport
+        // Configuration du bouton de rapport
         const btnReport = document.getElementById('btn-send-report');
         if (btnReport) {
             btnReport.onclick = () => {
@@ -77,37 +85,57 @@ function updateUI(m) {
         }
     } else {
         // --- MODE MATCH JOUÉ ---
-        // On affiche la navigation et on active l'onglet Résumé par défaut
+        // Afficher la navigation et masquer la section d'attente
         if (matchNav) matchNav.style.display = 'flex';
         if (upcomingSection) upcomingSection.style.display = 'none';
         
-        // On utilise la fonction switchTab pour s'assurer que l'affichage est propre
+        // Activer l'onglet Résumé par défaut pour l'affichage
         switchTab('resume');
 
-        // Remplissage des scores et buteurs
-        document.getElementById('score-home').innerText = m[9];
-        document.getElementById('score-away').innerText = m[10];
+        // Affichage des scores
+        elScoreHome.innerText = m[9];
+        elScoreAway.innerText = m[10];
+
+        // Logique pour griser le score du perdant
+        const sH = parseInt(m[9]) || 0;
+        const sA = parseInt(m[10]) || 0;
+        if (sH < sA) {
+            elScoreHome.classList.add('score-loser');
+        } else if (sA < sH) {
+            elScoreAway.classList.add('score-loser');
+        }
+
+        // Buteurs
         document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
         document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
 
-        // Mise à jour des barres de statistiques
+        // Statistiques d'équipe (Barres de progression)
         updateBar('possession', m[13], m[14], true);
         updateBar('shots', m[15], m[16], false);
         
-        // Détails Passes et Tacles
+        // Statistiques de Passes
         const pH = document.getElementById('val-passes-home');
         const pA = document.getElementById('val-passes-away');
         if(pH) pH.innerText = `${m[17] || 0} (${m[19] || 0}%)`;
         if(pA) pA.innerText = `${m[18] || 0} (${m[20] || 0}%)`;
         updateBar('passes', m[19], m[20], true, true);
 
+        // Statistiques de Tacles
         const tH = document.getElementById('val-tackles-home');
         const tA = document.getElementById('val-tackles-away');
         if(tH) tH.innerText = `${m[23] || 0}/${m[21] || 0}`;
         if(tA) tA.innerText = `${m[24] || 0}/${m[22] || 0}`;
         updateBar('tackles', m[23], m[24], false, true);
 
-        // Chargement des stats joueurs depuis la DATABASE
+        // Affichage de l'Homme du Match (MOTM)
+        const motmCont = document.getElementById('motm-container');
+        if (motmCont && m[27] && m[27] !== '0' && m[27] !== '#REF!') {
+            motmCont.innerHTML = `<div class="motm-badge"><i class="fas fa-star"></i> MOTM: ${m[27]}</div>`;
+        } else if (motmCont) {
+            motmCont.innerHTML = ""; // Vide le container si pas de MOTM
+        }
+
+        // Chargement des statistiques individuelles des joueurs
         loadPlayerStats(m[8], m[6], m[7]);
     }
 }
