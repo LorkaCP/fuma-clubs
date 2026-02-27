@@ -139,6 +139,11 @@ function switchTab(tabId) {
  */
 function loadPlayerStats(matchId, homeTeam, awayTeam) {
     const DB_URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=1114945484`;
+
+console.log("Recherche Match ID:", matchId);
+console.log("Equipe Home recherchée:", homeTeam);
+console.log("Premier joueur trouvé en DB:", rows[1][5], "Equipe:", rows[1][3]);
+
     
     fetch(DB_URL)
         .then(res => res.text())
