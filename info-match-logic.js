@@ -148,8 +148,12 @@ function loadPlayerStats(matchId, homeTeam, awayTeam) {
             // FILTRAGE CORRIGÉ :
             // r[5] = MATCH_ID
             // r[3] = CURRENT_TEAM (L'index était r[1] dans votre ancien code)
-            const homePlayers = rows.filter(r => r[5] === matchId && r[3] === homeTeam);
-            const awayPlayers = rows.filter(r => r[5] === matchId && r[3] === awayTeam);
+            const homePlayers = rows.filter(r => 
+    r[5]?.trim() === matchId?.trim() && r[3]?.trim() === homeTeam?.trim()
+);
+const awayPlayers = rows.filter(r => 
+    r[5]?.trim() === matchId?.trim() && r[3]?.trim() === awayTeam?.trim()
+);
 
             renderPlayers('list-players-home', homePlayers);
             renderPlayers('list-players-away', awayPlayers);
