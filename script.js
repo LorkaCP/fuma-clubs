@@ -164,47 +164,85 @@ async function loadTeamsList() {
     }
 }
 
-    async function checkExistingProfile(discordId) {
-        const loader = document.getElementById('fuma-loader');
-        const form = document.getElementById('profile-form');
-        const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+  /**
+ * Vérifie si un profil existe déjà pour l'utilisateur connecté via Discord.
+ * Si oui, pré-remplit le formulaire et affiche le bouton de suppression.
+ * @param {string} discordId - L'ID Discord de l'utilisateur.
+ */
+async function checkExistingProfile(discordId) {
+    const loader = document.getElementById('profile-loader');
+    const form = document.getElementById('profile-form');
+    const deleteBtn = document.getElementById('delete-profile-btn');
 
-        if (loader) loader.style.display = 'flex';
-        if (form) form.style.display = 'none';
+    try {
+        // On interroge l'App Script (le doGet va chercher les infos)
+        const response = await fetch(`${APP_SCRIPT_URL}&discord_id=${discordId}`);
+        const data = await response.json();
 
-        try {
-            // Correction : on utilise & pour ajouter un paramètre supplémentaire
-const response = await fetch(`${APP_SCRIPT_URL}&discord_id=${discordId}&t=${Date.now()}`);
-            if (!response.ok) throw new Error('Erreur serveur');
-            
-            const data = await response.json();
+        if (data && data.result === 'success') {
+            console.log("Profil trouvé :", data);
 
-            if (data && data.result === "success") {
-                const fill = (id, val) => {
-                    const el = document.getElementById(id);
-                    if (el) el.value = (val !== undefined && val !== null) ? val : "";
-                };
+            // 1. Pré-remplissage des champs du formulaire
+            if (document.getElementById('game-tag')) document.getElementById('game-tag').value = data.game_tag || '';
+            if (document.getElementById('id-discord')) document.getElementById('id-discord').value = data.discord_id || '';
+            if (document.getElementById('name-discord')) document.getElementById('name-discord').value = data.discord_name || '';
+            if (document.getElementById('country')) document.getElementById('country').value = data.country || '';
+            if (document.getElementById('current-team')) document.getElementById('current-team').value = data.current_team || '';
+            if (document.getElementById('main-position')) document.getElementById('main-position').value = data.main_position || '';
+            if (document.getElementById('main-archetype')) document.getElementById('main-archetype').value = data.main_archetype || '';
+            if (document.getElementById('avatar')) document.getElementById('avatar').value = data.avatar || '';
 
-                fill('id-game', data.game_tag);
-                fill('country', data.country);
-                fill('avatar', data.avatar);
-                fill('team', data.current_team);
-                fill('main-archetype', data.main_archetype);
-                fill('main-position', data.main_position);
-
-                if (submitBtn) submitBtn.innerText = "Update Existing Profile";
-            } else {
-                if (submitBtn) submitBtn.innerText = "Create My Profile";
+            // 2. Mise à jour de l'affichage (bouton Delete)
+            if (deleteBtn) {
+                deleteBtn.style.display = 'block'; // On montre le bouton de suppression
             }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setTimeout(() => {
-                if (loader) loader.style.display = 'none';
-                if (form) form.style.display = 'grid';
-            }, 300);
+
+            // Changer le texte du bouton de validation
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.innerText = "Update Profile";
+
+        } else {
+            console.log("Aucun profil existant, mode création.");
+            // Si c'est un nouveau profil, on cache le bouton delete
+            if (deleteBtn) deleteBtn.style.display = 'none';
         }
+    } catch (error) {
+        console.error("Erreur lors de la vérification du profil:", error);
+    } finally {
+        // On cache le loader et on montre le formulaire
+        if (loader) loader.style.display = 'none';
+        if (form) form.style.display = 'grid';
     }
+}
+
+    function setupDeleteButton() {
+    const deleteBtn = document.getElementById('delete-profile-btn');
+    if (!deleteBtn) return;
+
+    deleteBtn.addEventListener('click', async () => {
+        const discordId = document.getElementById('id-discord')?.value;
+        
+        if (confirm("⚠️ ARE YOU SURE? This will permanently delete your player profile and stats.")) {
+            deleteBtn.disabled = true;
+            deleteBtn.innerText = "Deleting...";
+
+            try {
+                // Appel vers Google Apps Script avec l'action delete
+                await fetch(`${APP_SCRIPT_URL}&action=delete&discord_id=${discordId}`, {
+                    method: 'POST',
+                    mode: 'no-cors'
+                });
+
+                alert("Profile deleted successfully.");
+                window.location.href = 'index.html'; // Redirection vers l'accueil
+            } catch (error) {
+                console.error("Delete error:", error);
+                alert("An error occurred.");
+                deleteBtn.disabled = false;
+            }
+        }
+    });
+}
 
     // --- 5. ENVOI DU FORMULAIRE ---
     function setupFormSubmission() {
@@ -893,6 +931,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
