@@ -172,15 +172,24 @@
             padding-bottom: 10px;
         }
 
-     .player-header, .player-row {
+   .player-header, .player-row {
     display: grid;
-    /* On donne un peu plus de place au nom et aux passes */
-    grid-template-columns: 2.2fr 0.7fr 0.6fr 0.6fr 1.1fr 0.6fr; 
+    /* On augmente le ratio du nom à 3.5fr */
+    /* Structure : Nom (3.5) | Note (0.8) | But (0.6) | Ast (0.6) | Pas (0.7) | Tac (0.6) */
+    grid-template-columns: 3.5fr 0.8fr 0.6fr 0.6fr 0.7fr 0.6fr; 
     align-items: center;
-    gap: 4px;
-    padding: 10px 5px;
+    gap: 2px; /* Réduction de l'espace entre colonnes */
+    padding: 10px 4px;
     font-size: 0.75rem;
     border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* On force le nom à ne pas s'étaler sur deux lignes pour garder de la hauteur */
+.player-row div:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 5px;
 }
 
 .p-note {
