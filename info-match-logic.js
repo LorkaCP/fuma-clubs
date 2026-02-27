@@ -147,43 +147,68 @@ async function loadPlayerStats(matchId, homeName, awayName) {
         const res = await fetch(URL);
         const csv = await res.text();
         const rows = parseCSV(csv);
-        const players = rows.filter(p => p[5] === matchId);
+        
+        // 1. Filtrer les joueurs du match
+        let players = rows.filter(p => p[5] === matchId);
+
+        // 2. Définir l'ordre des positions
+        const positionOrder = {
+            "goalkeeper": 1,
+            "defender": 2,
+            "midfielder": 3,
+            "forward": 4
+        };
+
+        // 3. Trier les joueurs selon l'ordre défini
+        players.sort((a, b) => {
+            const posA = (a[4] || "").toLowerCase();
+            const posB = (b[4] || "").toLowerCase();
+            
+            // On cherche quelle clé de positionOrder est incluse dans la chaîne
+            const getRank = (posStr) => {
+                if (posStr.includes("goalkeeper")) return 1;
+                if (posStr.includes("defender")) return 2;
+                if (posStr.includes("midfielder")) return 3;
+                if (posStr.includes("forward")) return 4;
+                return 5; // Au cas où
+            };
+
+            return getRank(posA) - getRank(posB);
+        });
 
         let hHtml = '', aHtml = '';
         
-       const getPosMarkup = (pos) => {
-    if (!pos) return "";
-    let p = pos.toLowerCase();
-    let short = "N/A", color = "#aaaaaa";
+        const getPosMarkup = (pos) => {
+            if (!pos) return "";
+            let p = pos.toLowerCase();
+            let short = "N/A", color = "#aaaaaa";
+            if (p.includes("goalkeeper")) { short = "GK"; color = "#ff9800"; }
+            else if (p.includes("defender")) { short = "DEF"; color = "#ffeb3b"; }
+            else if (p.includes("midfielder")) { short = "MID"; color = "#4caf50"; }
+            else if (p.includes("forward")) { short = "FWD"; color = "#2196f3"; }
+            return `<span style="color:${color}; font-size:0.6rem; font-weight:800; margin-left:3px; vertical-align:middle;">${short}</span>`;
+        };
 
-    if (p.includes("goalkeeper")) { short = "GK"; color = "#ff9800"; }
-    else if (p.includes("defender")) { short = "DEF"; color = "#ffeb3b"; }
-    else if (p.includes("midfielder")) { short = "MID"; color = "#4caf50"; }
-    else if (p.includes("forward")) { short = "FWD"; color = "#2196f3"; }
-
-    // Utilisation de font-size: 0.6rem pour l'abréviation
-    return `<span style="color:${color}; font-size:0.6rem; font-weight:800; margin-left:3px; vertical-align:middle;">${short}</span>`;
-};
-
+        // 4. Générer le HTML (maintenant que la liste est triée)
         players.forEach(p => {
             const name = p[1];
             const posBadge = getPosMarkup(p[4]);
             const note = p[6] || '6.0';
             const goals = parseInt(p[7]) || 0;
             const assists = parseInt(p[8]) || 0; 
-            const passReussies = parseInt(p[11]) || 0; // Colonne L (Index 11)
-            const taclesReussis = parseInt(p[14]) || 0; // Colonne O (Index 14)
+            const passReussies = parseInt(p[11]) || 0;
+            const taclesReussis = parseInt(p[14]) || 0;
 
             const row = `
                 <div class="player-row">
-                    <div style="font-weight:600; font-size: 0.8rem; display: flex; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    <div style="font-size: 0.75rem; display: flex; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                         ${name} ${posBadge}
                     </div>
                     <div class="p-note" style="background:${getNoteColor(note)}">${note}</div>
-                    <div style="text-align:center;">${goals > 0 ? goals+'⚽' : '-'}</div>
-                    <div style="text-align:center;">${assists > 0 ? assists+'🅰️' : '-'}</div>
-                    <div style="text-align:center; font-weight: 600; color: #4caf50;">${passReussies > 0 ? passReussies : '-'}</div>
-                    <div style="text-align:center; font-weight: 600; color: #4caf50;">${taclesReussis > 0 ? taclesReussis : '-'}</div>
+                    <div>${goals > 0 ? goals+'⚽' : '-'}</div>
+                    <div>${assists > 0 ? assists+'🅰️' : '-'}</div>
+                    <div style="color: #4caf50;">${passReussies > 0 ? passReussies : '-'}</div>
+                    <div style="color: #4caf50;">${taclesReussis > 0 ? taclesReussis : '-'}</div>
                 </div>`;
             
             if (p[3] === homeName) hHtml += row; 
