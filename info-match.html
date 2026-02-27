@@ -4,180 +4,208 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FUMA CLUBS - Match Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-<style>
-:root {
-    --fuma-gold: #d4af37;
-    --fuma-bg: #0b0b0b;
-    --fuma-card: #1a1a1a;
-    --fuma-text: #ffffff;
-    --fuma-text-dim: #aaaaaa;
-}
+    
+    <style>
+        :root {
+            --fuma-gold: #d4af37;
+            --fuma-bg: #0b0b0b;
+            --fuma-card: #1a1a1a;
+            --fuma-text: #ffffff;
+            --fuma-text-dim: #aaaaaa;
+        }
 
-body {
-    background-color: var(--fuma-bg);
-    color: var(--fuma-text);
-    font-family: 'Poppins', sans-serif;
-    margin: 0;
-}
+        body {
+            background-color: var(--fuma-bg);
+            color: var(--fuma-text);
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
 
-/* Header */
-.match-header {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding: 40px 20px;
-    background: linear-gradient(180deg, #1a1a1a 0%, #000000 100%);
-    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-}
+        /* --- HEADER & SCORE --- */
+        .match-header {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 40px 20px;
+            background: linear-gradient(180deg, #1a1a1a 0%, #000000 100%);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
 
-.team-block { text-align: center; width: 30%; }
-.team-block img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
-.team-block h1 { font-size: 1.2rem; margin: 0; color: var(--fuma-gold); }
+        .team-block { text-align: center; width: 30%; }
+        .team-block img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
+        .team-block h1 { font-size: 1.2rem; margin: 0; color: var(--fuma-gold); text-transform: uppercase; }
 
-.score-display {
-    font-size: 3rem;
-    font-weight: 800;
-    letter-spacing: 5px;
-}
+        .score-block { text-align: center; }
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: 5px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
 
-.strikers { font-size: 0.75rem; color: var(--fuma-text-dim); margin-top: 10px; }
+        .strikers { font-size: 0.75rem; color: var(--fuma-text-dim); margin-top: 10px; line-height: 1.4; }
+        .motm-badge {
+            background: var(--fuma-gold);
+            color: #000;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            margin-top: 15px;
+            display: inline-block;
+            text-transform: uppercase;
+        }
 
-/* Onglets */
-.match-nav {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin: 20px 0;
-}
+        /* --- NAVIGATION --- */
+        .match-nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 25px 0;
+        }
 
-.tab-btn {
-    background: none;
-    border: 1px solid #333;
-    color: var(--fuma-text-dim);
-    padding: 10px 25px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: 0.3s;
-}
+        .tab-btn {
+            background: none;
+            border: 1px solid #333;
+            color: var(--fuma-text-dim);
+            padding: 10px 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+        }
 
-.tab-btn.active {
-    background: var(--fuma-gold);
-    color: #000;
-    border-color: var(--fuma-gold);
-}
+        .tab-btn.active {
+            background: var(--fuma-gold);
+            color: #000;
+            border-color: var(--fuma-gold);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
 
-.tab-content { display: none; padding: 0 20px; }
-.tab-content.active { display: block; }
+        /* --- CONTENU --- */
+        .tab-content { display: none; padding: 0 20px 50px; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s ease; }
 
-/* Barres de stats */
-.stats-container { max-width: 600px; margin: 0 auto; }
-.stat-row { margin-bottom: 25px; }
-.stat-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    font-weight: 700;
-    margin-bottom: 8px;
-    color: var(--fuma-text-dim);
-}
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-.progress-container {
-    display: flex;
-    height: 8px;
-    background: #333;
-    border-radius: 4px;
-    overflow: hidden;
-}
+        /* --- STATS RESUME --- */
+        .stats-container { max-width: 700px; margin: 0 auto; background: var(--fuma-card); padding: 30px; border-radius: 12px; }
+        .stat-row { margin-bottom: 30px; }
+        .stat-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--fuma-text-dim);
+        }
+        .stat-title { color: var(--fuma-gold); letter-spacing: 1px; }
 
-.bar-home { background: var(--fuma-gold); transition: width 1s ease-in-out; }
-.bar-away { background: #eee; transition: width 1s ease-in-out; }
+        .progress-container {
+            display: flex;
+            height: 10px;
+            background: #000;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid #222;
+        }
 
-/* Grille Joueurs */
-.players-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    max-width: 1000px;
-    margin: 0 auto;
-}
+        .bar-home { background: var(--fuma-gold); width: 50%; transition: width 1s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
+        .bar-away { background: #ffffff; width: 50%; transition: width 1s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
 
-.player-header {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-    font-size: 0.65rem;
-    color: var(--fuma-gold);
-    padding: 10px;
-    border-bottom: 1px solid #333;
-}
+        /* --- GRILLE JOUEURS --- */
+        .players-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
 
-.player-row {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-    align-items: center;
-    padding: 12px 10px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    font-size: 0.85rem;
-}
+        .team-players { background: var(--fuma-card); border-radius: 10px; padding: 15px; }
+        .team-title-stats { 
+            color: var(--fuma-gold); 
+            text-align: center; 
+            margin-bottom: 15px; 
+            font-size: 1rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
 
-.p-note {
-    text-align: center;
-    border-radius: 4px;
-    color: #000;
-    font-weight: 800;
-    padding: 2px 0;
-}
+        .player-header {
+            display: grid;
+            grid-template-columns: 2.5fr 1fr 1fr 1fr 1fr;
+            font-size: 0.65rem;
+            color: #666;
+            padding: 5px 10px;
+            font-weight: 800;
+        }
 
-.motm-badge {
-    background: var(--fuma-gold);
-    color: #000;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: 800;
-    margin-top: 10px;
-    display: inline-block;
-}
+        .player-row {
+            display: grid;
+            grid-template-columns: 2.5fr 1fr 1fr 1fr 1fr;
+            align-items: center;
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            font-size: 0.85rem;
+        }
 
-/* Loader */
-#loader-container { text-align: center; padding-top: 100px; }
-.loader {
-    border: 4px solid #1a1a1a;
-    border-top: 4px solid var(--fuma-gold);
-    border-radius: 50%;
-    width: 40px; height: 40px;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 20px;
-}
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .p-note {
+            text-align: center;
+            border-radius: 3px;
+            color: #000;
+            font-weight: 800;
+            padding: 2px 0;
+            width: 35px;
+            margin: 0 auto;
+        }
 
-@media (max-width: 768px) {
-    .players-grid { grid-template-columns: 1fr; }
-    .score-display { font-size: 2rem; }
-}
+        /* --- LOADER --- */
+        #loader-container { text-align: center; padding-top: 150px; height: 100vh; background: #000; }
+        .loader {
+            border: 3px solid #1a1a1a;
+            border-top: 3px solid var(--fuma-gold);
+            border-radius: 50%;
+            width: 50px; height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-<style>    
+        /* Mobile */
+        @media (max-width: 768px) {
+            .players-grid { grid-template-columns: 1fr; }
+            .score-display { font-size: 2.2rem; }
+            .match-header { flex-direction: column; gap: 20px; }
+            .team-block { width: 100%; }
+        }
+    </style>
 </head>
 <body>
 
     <div id="loader-container">
         <div class="loader"></div>
-        <p>Chargement des statistiques...</p>
+        <p style="color: var(--fuma-gold); font-weight: 600;">CHARGEMENT DES DONNÉES...</p>
     </div>
 
     <div id="main-content" style="display:none;">
+        
         <div class="match-header">
             <div class="team-block">
                 <img id="logo-home" src="" alt="">
-                <h1 id="name-home">-</h1>
+                <h1 id="name-home">DOMICILE</h1>
                 <div id="strikers-home" class="strikers"></div>
             </div>
             
             <div class="score-block">
                 <div class="score-display">
                     <span id="score-home">0</span>
-                    <span>-</span>
+                    <span style="color: var(--fuma-gold)">:</span>
                     <span id="score-away">0</span>
                 </div>
                 <div id="motm-container"></div>
@@ -185,7 +213,7 @@ body {
 
             <div class="team-block">
                 <img id="logo-away" src="" alt="">
-                <h1 id="name-away">-</h1>
+                <h1 id="name-away">EXTÉRIEUR</h1>
                 <div id="strikers-away" class="strikers"></div>
             </div>
         </div>
@@ -200,48 +228,48 @@ body {
                 <div class="stat-row">
                     <div class="stat-label">
                         <span id="val-possession-home">50%</span>
-                        <span>POSSESSION</span>
+                        <span class="stat-title">POSSESSION</span>
                         <span id="val-possession-away">50%</span>
                     </div>
                     <div class="progress-container">
-                        <div id="bar-possession-home" class="bar-home" style="width: 50%"></div>
-                        <div id="bar-possession-away" class="bar-away" style="width: 50%"></div>
+                        <div id="bar-possession-home" class="bar-home"></div>
+                        <div id="bar-possession-away" class="bar-away"></div>
                     </div>
                 </div>
 
                 <div class="stat-row">
                     <div class="stat-label">
                         <span id="val-shots-home">0</span>
-                        <span>TIRS</span>
+                        <span class="stat-title">TIRS</span>
                         <span id="val-shots-away">0</span>
                     </div>
                     <div class="progress-container">
-                        <div id="bar-shots-home" class="bar-home" style="width: 50%"></div>
-                        <div id="bar-shots-away" class="bar-away" style="width: 50%"></div>
+                        <div id="bar-shots-home" class="bar-home"></div>
+                        <div id="bar-shots-away" class="bar-away"></div>
                     </div>
                 </div>
 
                 <div class="stat-row">
                     <div class="stat-label">
                         <span id="val-passes-home">0 (0%)</span>
-                        <span>PASSES (PRÉC.)</span>
+                        <span class="stat-title">PASSES</span>
                         <span id="val-passes-away">0 (0%)</span>
                     </div>
                     <div class="progress-container">
-                        <div id="bar-passes-home" class="bar-home" style="width: 50%"></div>
-                        <div id="bar-passes-away" class="bar-away" style="width: 50%"></div>
+                        <div id="bar-passes-home" class="bar-home"></div>
+                        <div id="bar-passes-away" class="bar-away"></div>
                     </div>
                 </div>
 
                 <div class="stat-row">
                     <div class="stat-label">
                         <span id="val-tackles-home">0/0</span>
-                        <span>TACLES RÉUSSIS</span>
+                        <span class="stat-title">TACLES RÉUSSIS</span>
                         <span id="val-tackles-away">0/0</span>
                     </div>
                     <div class="progress-container">
-                        <div id="bar-tackles-home" class="bar-home" style="width: 50%"></div>
-                        <div id="bar-tackles-away" class="bar-away" style="width: 50%"></div>
+                        <div id="bar-tackles-home" class="bar-home"></div>
+                        <div id="bar-tackles-away" class="bar-away"></div>
                     </div>
                 </div>
             </div>
@@ -250,14 +278,14 @@ body {
         <div id="joueurs" class="tab-content">
             <div class="players-grid">
                 <div class="team-players">
-                    <h3 id="title-home" class="team-title-stats">Equipe Domicile</h3>
+                    <h3 id="title-home" class="team-title-stats">-</h3>
                     <div class="player-header">
                         <span>NOM</span><span>NOTE</span><span>BUT</span><span>PAS%</span><span>TAC%</span>
                     </div>
                     <div id="list-players-home"></div>
                 </div>
                 <div class="team-players">
-                    <h3 id="title-away" class="team-title-stats">Equipe Extérieure</h3>
+                    <h3 id="title-away" class="team-title-stats">-</h3>
                     <div class="player-header">
                         <span>NOM</span><span>NOTE</span><span>BUT</span><span>PAS%</span><span>TAC%</span>
                     </div>
@@ -266,8 +294,9 @@ body {
             </div>
         </div>
 
-        <div id="upcoming-section" style="display:none; text-align:center; padding: 50px;">
-            <p>Ce match n'a pas encore été joué.</p>
+        <div id="upcoming-section" style="display:none; text-align:center; padding: 100px 20px;">
+            <i class="fa-regular fa-calendar-check" style="font-size: 3rem; color: var(--fuma-gold); margin-bottom: 20px;"></i>
+            <p>CE MATCH N'A PAS ENCORE ÉTÉ DISPUTÉ.</p>
         </div>
     </div>
 
