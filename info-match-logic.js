@@ -171,17 +171,19 @@ async function loadPlayerStats(matchId, homeName, awayName) {
             const goals = parseInt(p[7]) || 0;
             const assists = parseInt(p[8]) || 0; 
             const passReussies = parseInt(p[11]) || 0;
-            const passTentees = parseInt(p[10]) || 0; // Index 10 pour les tentatives
+            const passTentees = parseInt(p[10]) || 0;
+            const taclesReussis = parseInt(p[13]) || 0; // Tacles réussis uniquement
 
             const row = `
                 <div class="player-row">
-                    <div style="font-weight:600; font-size: 0.8rem; display: flex; align-items: center; overflow: hidden;">
+                    <div style="font-weight:600; font-size: 0.8rem; display: flex; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                         ${name} ${posBadge}
                     </div>
                     <div class="p-note" style="background:${getNoteColor(note)}">${note}</div>
                     <div style="text-align:center;">${goals > 0 ? goals+'⚽' : '-'}</div>
                     <div style="text-align:center;">${assists > 0 ? assists+'🅰️' : '-'}</div>
-                    <div style="text-align:center; font-size: 0.8rem; font-weight: 500;">${passReussies}/${passTentees}</div>
+                    <div style="text-align:center; font-size: 0.8rem;">${passReussies}/${passTentees}</div>
+                    <div style="text-align:center; font-weight: 600;">${taclesReussis > 0 ? taclesReussis : '-'}</div>
                 </div>`;
             
             if (p[3] === homeName) hHtml += row; 
@@ -194,7 +196,6 @@ async function loadPlayerStats(matchId, homeName, awayName) {
         document.getElementById('title-away').innerText = awayName;
 
     } catch (e) { console.error("Erreur Stats Joueurs:", e); }
-}
 }
 // --- UTILITAIRES ---
 
