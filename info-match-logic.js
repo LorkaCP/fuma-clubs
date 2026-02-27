@@ -1,5 +1,5 @@
 /**
- * FUMA CLUBS - LOGIC OPTIMISÉE (Version Fusionnée avec état "Non Joué" épuré)
+ * FUMA CLUBS - LOGIC OPTIMISÉE (Version Finale avec masquage automatique)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -41,11 +41,13 @@ function updateUI(m) {
     // Un match est considéré comme "non joué" si le score est vide, 0 ou #REF!
     const isPlayed = scoreHome !== "" && scoreHome !== "#REF!" && scoreHome !== undefined && scoreHome !== "0";
 
-    const playedContent = document.getElementById('played-content');
+    // Éléments à masquer/afficher
+    const resumeTab = document.getElementById('resume');
+    const joueursTab = document.getElementById('joueurs');
     const matchNav = document.getElementById('match-nav');
-    const upcomingSection = document.getElementById('upcoming-section'); // Contient le bouton DATA REPORT
+    const upcomingSection = document.getElementById('upcoming-section');
 
-    // 1. Affichage de base (toujours visible)
+    // 1. Affichage de base (Logos et Noms)
     document.getElementById('name-home').innerText = m[6];
     document.getElementById('name-away').innerText = m[7];
     document.getElementById('logo-home').src = m[3] || '';
@@ -53,15 +55,19 @@ function updateUI(m) {
 
     if (!isPlayed) {
         // --- MODE ATTENTE DE RÉSULTATS ---
-        if (playedContent) playedContent.style.display = 'none';
+        // On cache toute la navigation et les tableaux de stats
+        if (resumeTab) resumeTab.style.display = 'none';
+        if (joueursTab) joueursTab.style.display = 'none';
         if (matchNav) matchNav.style.display = 'none';
+        
+        // On affiche la section avec le bouton DATA REPORT
         if (upcomingSection) upcomingSection.style.display = 'block';
 
-        // Affichage du score vide
+        // On affiche "- : -" au lieu de "0 : 0"
         document.getElementById('score-home').innerText = "-";
         document.getElementById('score-away').innerText = "-";
         
-        // Configuration du bouton de rapport
+        // Config du bouton de rapport
         const btnReport = document.getElementById('btn-send-report');
         if (btnReport) {
             btnReport.onclick = () => {
@@ -70,10 +76,13 @@ function updateUI(m) {
             };
         }
     } else {
-        // --- MODE MATCH JOUÉ (Stats visibles) ---
-        if (playedContent) playedContent.style.display = 'block';
+        // --- MODE MATCH JOUÉ ---
+        // On affiche la navigation et on active l'onglet Résumé par défaut
         if (matchNav) matchNav.style.display = 'flex';
         if (upcomingSection) upcomingSection.style.display = 'none';
+        
+        // On utilise la fonction switchTab pour s'assurer que l'affichage est propre
+        switchTab('resume');
 
         // Remplissage des scores et buteurs
         document.getElementById('score-home').innerText = m[9];
@@ -81,7 +90,7 @@ function updateUI(m) {
         document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
         document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
 
-        // Mise à jour des barres de stats (Possession, Tirs, etc.)
+        // Mise à jour des barres de statistiques
         updateBar('possession', m[13], m[14], true);
         updateBar('shots', m[15], m[16], false);
         
@@ -98,11 +107,10 @@ function updateUI(m) {
         if(tA) tA.innerText = `${m[24] || 0}/${m[22] || 0}`;
         updateBar('tackles', m[23], m[24], false, true);
 
-        // Chargement des joueurs
+        // Chargement des stats joueurs depuis la DATABASE
         loadPlayerStats(m[8], m[6], m[7]);
     }
 }
-
 async function loadPlayerStats(matchId, homeName, awayName) {
     const PLAYER_GID = "2074996595"; // GID Vérifié
     const URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=${PLAYER_GID}`;
