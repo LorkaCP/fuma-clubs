@@ -151,18 +151,19 @@ async function loadPlayerStats(matchId, homeName, awayName) {
 
         let hHtml = '', aHtml = '';
         
-        const getPosMarkup = (pos) => {
-            if (!pos) return "";
-            let p = pos.toLowerCase();
-            let short = "N/A", color = "#aaaaaa";
+       const getPosMarkup = (pos) => {
+    if (!pos) return "";
+    let p = pos.toLowerCase();
+    let short = "N/A", color = "#aaaaaa";
 
-            if (p.includes("goalkeeper")) { short = "GK"; color = "#ff9800"; }
-            else if (p.includes("defender")) { short = "DEF"; color = "#ffeb3b"; }
-            else if (p.includes("midfielder")) { short = "MID"; color = "#4caf50"; }
-            else if (p.includes("forward")) { short = "FWD"; color = "#2196f3"; }
+    if (p.includes("goalkeeper")) { short = "GK"; color = "#ff9800"; }
+    else if (p.includes("defender")) { short = "DEF"; color = "#ffeb3b"; }
+    else if (p.includes("midfielder")) { short = "MID"; color = "#4caf50"; }
+    else if (p.includes("forward")) { short = "FWD"; color = "#2196f3"; }
 
-            return `<span style="color:${color}; font-size:0.7rem; font-weight:bold; margin-left:4px;">${short}</span>`;
-        };
+    // Utilisation de font-size: 0.6rem pour l'abréviation
+    return `<span style="color:${color}; font-size:0.6rem; font-weight:800; margin-left:3px; vertical-align:middle;">${short}</span>`;
+};
 
         players.forEach(p => {
             const name = p[1];
