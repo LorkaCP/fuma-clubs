@@ -140,7 +140,7 @@ function updateUI(m) {
     }
 }
 async function loadPlayerStats(matchId, homeName, awayName) {
-    const PLAYER_GID = "2074996595"; // GID Vérifié
+    const PLAYER_GID = "2074996595";
     const URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=${PLAYER_GID}`;
 
     try {
@@ -148,19 +148,43 @@ async function loadPlayerStats(matchId, homeName, awayName) {
         const csv = await res.text();
         const rows = parseCSV(csv);
 
-        // Filtrage par Match ID (Index 5)
         const players = rows.filter(p => p[5] === matchId);
 
         let hHtml = '', aHtml = '';
+        
+        // Fonction pour abréger et colorer les positions
+        const getPosMarkup = (pos) => {
+            if (!pos) return "";
+            let short = "N/A";
+            let color = "#aaaaaa"; // Par défaut gris
+
+            if (pos.includes("Goalkeeper")) { short = "GK"; color = "#ff9800"; } // Orange
+            else if (pos.includes("Defender")) { short = "DEF"; color = "#ffeb3b"; } // Jaune
+            else if (pos.includes("Midfielder")) { short = "MID"; color = "#4caf50"; } // Vert
+            else if (pos.includes("Forward")) { short = "FWD"; color = "#2196f3"; } // Bleu
+
+            return `<span style="color:${color}; font-size:0.7rem; font-weight:bold; margin-left:4px;">${short}</span>`;
+        };
+
         players.forEach(p => {
+            const name = p[1];
+            const posBadge = getPosMarkup(p[4]);
             const note = p[6] || '6.0';
+            const goals = parseInt(p[7]) || 0;
+            const assists = parseInt(p[8]) || 0; 
+            const passReussies = p[11] || 0;
+            const passPct = p[12] || 0;
+            const tacles = p[13] || 0;
+
             const row = `
                 <div class="player-row">
-                    <div style="font-weight:600;">${p[1]}</div>
+                    <div style="font-weight:600; font-size: 0.85rem; display: flex; align-items: center;">
+                        ${name} ${posBadge}
+                    </div>
                     <div class="p-note" style="background:${getNoteColor(note)}">${note}</div>
-                    <div style="text-align:center">${p[7] > 0 ? p[7]+'⚽' : '-'}</div>
-                    <div style="text-align:center">${p[12] || 0}%</div>
-                    <div style="text-align:center">${p[15] || 0}%</div>
+                    <div style="text-align:center; font-weight:bold;">${goals}/${assists}</div>
+                    <div style="text-align:center; font-size: 0.75rem;">${passReussies} <span style="color:var(--fuma-text-dim)">(${passPct}%)</span></div>
+                    <div style="text-align:center">${tacles}</div>
                 </div>`;
             
             if (p[3] === homeName) hHtml += row; 
@@ -174,7 +198,6 @@ async function loadPlayerStats(matchId, homeName, awayName) {
 
     } catch (e) { console.error("Erreur Stats Joueurs:", e); }
 }
-
 // --- UTILITAIRES ---
 
 function updateBar(id, valH, valA, isPercent, onlyBar = false) {
