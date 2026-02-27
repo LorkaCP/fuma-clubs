@@ -137,42 +137,48 @@ function switchTab(tabId) {
 /**
  * Charge les statistiques des joueurs depuis la DATABASE
  */
+/**
+ * Charge les statistiques des joueurs depuis la DATABASE
+ */
 async function loadPlayerStats(matchId, homeName, awayName) {
     // GID de l'onglet DATABASE JOUEURS
     const PLAYER_GID = "2074996595";
     const URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=${PLAYER_GID}`;
     
-    fetch(DB_URL)
-        .then(res => {
-            if (!res.ok) throw new Error("Erreur HTTP: " + res.status);
-            return res.text();
-        })
-        .then(csv => {
-            const rows = parseCSV(csv);
+    try {
+        const res = await fetch(URL);
+        if (!res.ok) throw new Error("Erreur HTTP: " + res.status);
+        const csv = await res.text();
+        const rows = parseCSV(csv);
 
-            // Nettoyage et Filtrage 
-            const homePlayers = rows.filter(r => {
-                const rMatchId = r[5] ? r[5].trim() : "";
-                const rTeam = r[3] ? r[3].trim() : "";
-                return rMatchId === matchId.trim() && rTeam === homeTeam.trim();
-            });
+        // Filtrage des joueurs par MatchID (index 5) et Nom d'équipe (index 3)
+        const homePlayers = rows.filter(r => {
+            const rMatchId = r[5] ? r[5].trim() : "";
+            const rTeam = r[3] ? r[3].trim() : "";
+            return rMatchId === matchId.trim() && rTeam === homeName.trim();
+        });
 
-            const awayPlayers = rows.filter(r => {
-                const rMatchId = r[5] ? r[5].trim() : "";
-                const rTeam = r[3] ? r[3].trim() : "";
-                return rMatchId === matchId.trim() && rTeam === awayTeam.trim();
-            });
+        const awayPlayers = rows.filter(r => {
+            const rMatchId = r[5] ? r[5].trim() : "";
+            const rTeam = r[3] ? r[3].trim() : "";
+            return rMatchId === matchId.trim() && rTeam === awayName.trim();
+        });
 
-            console.log("MatchID recherché:", matchId);
-            console.log(`Résultats - Home: ${homePlayers.length}, Away: ${awayPlayers.length}`);
+        console.log("MatchID recherché:", matchId);
+        console.log(`Résultats - Home: ${homePlayers.length}, Away: ${awayPlayers.length}`);
 
-            renderPlayers('list-players-home', homePlayers);
-            renderPlayers('list-players-away', awayPlayers);
-            
-            if(document.getElementById('title-home')) document.getElementById('title-home').innerText = homeTeam;
-            if(document.getElementById('title-away')) document.getElementById('title-away').innerText = awayTeam;
-        })
-        .catch(err => console.error("Erreur de chargement des joueurs:", err));
+        renderPlayers('list-players-home', homePlayers);
+        renderPlayers('list-players-away', awayPlayers);
+        
+        // Mise à jour des titres si les éléments existent
+        const titleHome = document.getElementById('title-home');
+        const titleAway = document.getElementById('title-away');
+        if(titleHome) titleHome.innerText = homeName;
+        if(titleAway) titleAway.innerText = awayName;
+
+    } catch (err) {
+        console.error("Erreur de chargement des joueurs:", err);
+    }
 }
 /**
  * Affiche la liste des joueurs avec les bonnes colonnes
