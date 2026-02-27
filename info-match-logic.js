@@ -1,5 +1,5 @@
 /**
- * FUMA CLUBS - LOGIC OPTIMISÉE (Version Fusionnée)
+ * FUMA CLUBS - LOGIC OPTIMISÉE (Version Fusionnée avec état "Non Joué" épuré)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const homeName = params.get('home');
     const awayName = params.get('away');
 
-    // Gestion du bouton retour (issu du script 1)
     const btnBack = document.getElementById('btn-back-fixtures');
     if (btnBack) {
         btnBack.onclick = () => window.location.href = `league.html?tab=fixtures`;
@@ -19,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // URL de l'onglet Fixtures (Performance Équipe)
     const TEAM_URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=${gid}`;
 
     fetch(TEAM_URL)
@@ -34,33 +32,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (match) {
                 updateUI(match);
-            } else {
-                console.error("Match non trouvé dans le CSV Fixtures");
             }
         }).catch(err => console.error("Erreur de chargement Fixtures:", err));
 });
 
 function updateUI(m) {
     const scoreHome = m[9];
-    const isPlayed = scoreHome !== "" && scoreHome !== "#REF!" && scoreHome !== undefined;
+    // Un match est considéré comme "non joué" si le score est vide, 0 ou #REF!
+    const isPlayed = scoreHome !== "" && scoreHome !== "#REF!" && scoreHome !== undefined && scoreHome !== "0";
 
-    const sections = {
-        upcoming: document.getElementById('upcoming-section'),
-        played: document.getElementById('played-content'),
-        nav: document.getElementById('match-nav')
-    };
+    const playedContent = document.getElementById('played-content');
+    const matchNav = document.getElementById('match-nav');
+    const upcomingSection = document.getElementById('upcoming-section'); // Contient le bouton DATA REPORT
 
-    // Mise à jour noms et logos
+    // 1. Affichage de base (toujours visible)
     document.getElementById('name-home').innerText = m[6];
     document.getElementById('name-away').innerText = m[7];
     document.getElementById('logo-home').src = m[3] || '';
     document.getElementById('logo-away').src = m[4] || '';
 
     if (!isPlayed) {
-        if(sections.upcoming) sections.upcoming.style.display = 'block';
-        if(sections.played) sections.played.style.display = 'none';
-        if(sections.nav) sections.nav.style.display = 'none';
+        // --- MODE ATTENTE DE RÉSULTATS ---
+        if (playedContent) playedContent.style.display = 'none';
+        if (matchNav) matchNav.style.display = 'none';
+        if (upcomingSection) upcomingSection.style.display = 'block';
 
+        // Affichage du score vide
+        document.getElementById('score-home').innerText = "-";
+        document.getElementById('score-away').innerText = "-";
+        
+        // Configuration du bouton de rapport
         const btnReport = document.getElementById('btn-send-report');
         if (btnReport) {
             btnReport.onclick = () => {
@@ -69,41 +70,35 @@ function updateUI(m) {
             };
         }
     } else {
-        if(sections.upcoming) sections.upcoming.style.display = 'none';
-        if(sections.played) sections.played.style.display = 'block';
-        if(sections.nav) sections.nav.style.display = 'flex';
+        // --- MODE MATCH JOUÉ (Stats visibles) ---
+        if (playedContent) playedContent.style.display = 'block';
+        if (matchNav) matchNav.style.display = 'flex';
+        if (upcomingSection) upcomingSection.style.display = 'none';
 
-        // Score et Buteurs
+        // Remplissage des scores et buteurs
         document.getElementById('score-home').innerText = m[9];
         document.getElementById('score-away').innerText = m[10];
         document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
         document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
 
-        // Stats Équipes (Logique du script 2)
+        // Mise à jour des barres de stats (Possession, Tirs, etc.)
         updateBar('possession', m[13], m[14], true);
         updateBar('shots', m[15], m[16], false);
         
-        // Passes
+        // Détails Passes et Tacles
         const pH = document.getElementById('val-passes-home');
         const pA = document.getElementById('val-passes-away');
         if(pH) pH.innerText = `${m[17] || 0} (${m[19] || 0}%)`;
         if(pA) pA.innerText = `${m[18] || 0} (${m[20] || 0}%)`;
         updateBar('passes', m[19], m[20], true, true);
 
-        // Tacles
         const tH = document.getElementById('val-tackles-home');
         const tA = document.getElementById('val-tackles-away');
         if(tH) tH.innerText = `${m[23] || 0}/${m[21] || 0}`;
         if(tA) tA.innerText = `${m[24] || 0}/${m[22] || 0}`;
         updateBar('tackles', m[23], m[24], false, true);
 
-        // MOTM
-        const motmCont = document.getElementById('motm-container');
-        if (motmCont && m[27] && m[27] !== '0' && m[27] !== '#REF!') {
-            motmCont.innerHTML = `<div class="motm-badge"><i class="fas fa-star"></i> MOTM: ${m[27]}</div>`;
-        }
-
-        // Chargement des joueurs avec le bon GID (Script 2)
+        // Chargement des joueurs
         loadPlayerStats(m[8], m[6], m[7]);
     }
 }
