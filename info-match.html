@@ -25,18 +25,48 @@
         }
 
         /* --- HEADER & SCORE --- */
-        .match-header {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 40px 20px;
-            background: linear-gradient(180deg, #1a1a1a 0%, #000000 100%);
-            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-        }
+       /* --- HEADER & SCORE --- */
+.match-header {
+    display: flex;
+    justify-content: center; /* Centre le bloc entier */
+    align-items: flex-start; /* Aligne les blocs équipes et score par le haut */
+    padding: 40px 20px;
+    background: linear-gradient(180deg, #1a1a1a 0%, #000000 100%);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+    gap: 20px;
+}
 
-        .team-block { text-align: center; width: 30%; }
-        .team-block img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
-        .team-block h1 { font-size: 1.2rem; margin: 0; color: var(--fuma-gold); text-transform: uppercase; }
+.team-block { 
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    width: 35%; 
+    min-height: 180px; /* Force une hauteur minimum pour stabiliser l'ensemble */
+}
+
+.team-block img { 
+    width: 80px; 
+    height: 80px; 
+    object-fit: contain; 
+    margin-bottom: 15px;
+    /* Assure que même si l'image est petite, elle occupe le même espace */
+    display: block;
+}
+
+.team-block h1 { 
+    font-size: 1.2rem; 
+    margin: 0; 
+    color: var(--fuma-gold); 
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.score-block { 
+    flex: 1; /* Prend l'espace central de manière égale */
+    text-align: center; 
+    padding-top: 10px; /* Ajuste la hauteur du score par rapport aux logos */
+}
 
         .score-block { text-align: center; }
         .score-display {
