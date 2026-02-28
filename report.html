@@ -184,16 +184,18 @@
     </style>
   <script>
     // --- 1. CONFIGURATION ---
+    const CLIENT_ID = '1473807551329079408'; 
+    const ALLOWED_REPORTERS = ["1060358016328810616"]; // Ton ID Discord
     const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=1610453677&single=true&output=csv";
     const PLAYERS_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=420142588&single=true&output=csv";
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkvEq_gPVk6ooIg0twQy9HnpbzoKetSOiKIpoOlHDYCmcMQmobi5w99krpm-fKEwRFHw/exec?action=match";
-      let currentPlayersData = []; // Pour stocker les données fusionnées
+    
+    let currentPlayersData = []; 
 
     const CLUB_ALIASES = {
         "fuma y pasa": "f y pasa",
         "croser fc": "croser fc",
         "fuma clubs a": "fuma clubs a",
-        
     };
 
     const params = new URLSearchParams(window.location.search);
@@ -215,7 +217,7 @@
                 .trim();
     }
 
-    // --- 3. RECHERCHE DES MATCHS ---
+    // --- 3. RECHERCHE DES MATCHS & RESTAURATION ---
     async function init() {
         const statusEl = document.getElementById('loading-status');
         try {
@@ -239,6 +241,20 @@
             } else {
                 statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Aucun match trouvé.';
             }
+
+            // --- RESTAURATION AUTO APRES LOGIN DISCORD ---
+            const backupRaw = localStorage.getItem('report_backup');
+            if (backupRaw) {
+                const backup = JSON.parse(backupRaw);
+                setTimeout(() => {
+                    Object.keys(backup).forEach(key => {
+                        const input = document.querySelector(`[name="${key}"]`);
+                        if (input) input.value = backup[key];
+                    });
+                    console.log("Données restaurées");
+                }, 1000); // On attend 1s que tout soit chargé
+            }
+
         } catch (err) {
             statusEl.innerHTML = "Erreur de chargement.";
             console.error(err);
@@ -249,7 +265,6 @@
         const container = document.getElementById('match-selector-container');
         window.tempMatchesData = matches;
         let html = '<div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">';
-        
         matches.forEach((m, i) => {
             html += `
                 <label style="display: flex; align-items: center; background: #252525; border: 1px solid #444; padding: 12px; cursor: pointer; border-radius: 6px; color: #fff;">
@@ -257,35 +272,27 @@
                     <span><i class="far fa-calendar-alt"></i> ${m[0]} | <strong>${m[1]}</strong> ${m[4]}-${m[5]} <strong>${m[2]}</strong></span>
                 </label>`;
         });
-
-        html += `
-            <button type="button" onclick="processSelectedMatches()" 
-                    style="background: #d4af37; color: #000; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase; width:100%;">
-                Fusionner les 2 mi-temps sélectionnées
-            </button>
-        </div>`;
+        html += `<button type="button" onclick="processSelectedMatches()" style="background: #d4af37; color: #000; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase; width:100%;">Fusionner les 2 mi-temps sélectionnées</button></div>`;
         container.innerHTML = html;
     }
 
-    // --- 4. LOGIQUE DE FUSION (EQUIPE + JOUEURS) ---
+    // --- 4. LOGIQUE DE FUSION ---
     window.processSelectedMatches = async function() {
         const selectedCheckboxes = document.querySelectorAll('.match-checkbox:checked');
-        
         if (selectedCheckboxes.length !== 2) {
-            alert("Veuillez sélectionner exactement 2 matchs pour fusionner les mi-temps.");
+            alert("Sélectionnez exactement 2 mi-temps.");
             return;
         }
 
         const m1 = window.tempMatchesData[selectedCheckboxes[0].value];
         const m2 = window.tempMatchesData[selectedCheckboxes[1].value];
-        
         const isRev1 = (normalizeName(m1[1]) === normalizeName(awayName));
         const isRev2 = (normalizeName(m2[1]) === normalizeName(awayName));
 
         const sum = (colH, colA, isR1, isR2) => (parseInt(m1[isR1 ? colA : colH]) || 0) + (parseInt(m2[isR2 ? colA : colH]) || 0);
         const avg = (colH, colA, isR1, isR2) => Math.round(((parseInt(m1[isR1 ? colA : colH]) || 0) + (parseInt(m2[isR2 ? colA : colH]) || 0)) / 2);
 
-        // Stats Equipe
+        // Remplissage auto des champs
         document.getElementById('in-sh').value = sum(4, 5, isRev1, isRev2); 
         document.getElementById('in-sa').value = sum(5, 4, isRev1, isRev2); 
         document.getElementById('in-posH').value = avg(8, 9, isRev1, isRev2); 
@@ -296,168 +303,121 @@
         document.getElementById('in-pasAttA').value = sum(13, 12, isRev1, isRev2);
         document.getElementById('in-accH').value = avg(14, 15, isRev1, isRev2); 
         document.getElementById('in-accA').value = avg(15, 14, isRev1, isRev2);
-        
-        // Tacles Equipe
         document.getElementById('in-tacAttH').value = sum(16, 17, isRev1, isRev2); 
         document.getElementById('in-tacAttA').value = sum(17, 16, isRev1, isRev2);
         document.getElementById('in-tacMadH').value = sum(18, 19, isRev1, isRev2); 
         document.getElementById('in-tacMadA').value = sum(19, 18, isRev1, isRev2);
-
         document.getElementById('in-redH').value = sum(20, 21, isRev1, isRev2); 
         document.getElementById('in-redA').value = sum(21, 20, isRev1, isRev2);
 
-        // Buteurs avec " | "
         const bH1 = (m1[isRev1 ? 7 : 6] || "").trim();
         const bH2 = (m2[isRev2 ? 7 : 6] || "").trim();
         const bA1 = (m1[isRev1 ? 6 : 7] || "").trim();
         const bA2 = (m2[isRev2 ? 6 : 7] || "").trim();
-
         document.getElementById('in-stH').value = [bH1, bH2].filter(x => x !== "").join(" | ");
         document.getElementById('in-stA').value = [bA1, bA2].filter(x => x !== "").join(" | ");
 
-        // Fusion Joueurs
         await fetchPlayersForTwoMatches(m1[3].trim(), m2[3].trim());
-        alert("Fusion terminée ! Vérifiez les statistiques avant de valider.");
+        alert("Fusion terminée !");
     };
 
     async function fetchPlayersForTwoMatches(id1, id2) {
-    try {
-        const response = await fetch(PLAYERS_DATA_URL);
-        const csvText = await response.text();
-        const rows = csvText.split('\n').map(row => row.split(','));
-        const playersMap = {};
+        try {
+            const response = await fetch(PLAYERS_DATA_URL);
+            const csvText = await response.text();
+            const rows = csvText.split('\n').map(row => row.split(','));
+            const playersMap = {};
 
-        rows.forEach(r => {
-            const mId = r[0] ? r[0].trim() : "";
-            if (mId === id1 || mId === id2) {
-                const pName = r[1]; // Nom du joueur
-                
-                if (!playersMap[pName]) {
-                    // Premier passage : on initialise l'entrée avec une copie de la ligne
-                    playersMap[pName] = [...r];
-                    
-                    // Conversion des colonnes numériques pour permettre les calculs
-                    // 5:Note, 6:Buts, 7:Assists, 8:Tirs, 9:PassesT, 10:PassesR, 12:TaclesT, 13:TaclesR, 15:Rouge, 16:Motm
-                    [5, 6, 7, 8, 9, 10, 12, 13, 15, 16].forEach(idx => {
-                        playersMap[pName][idx] = parseFloat(r[idx]) || 0;
-                    });
-                } else {
-                    // Deuxième passage : on additionne les statistiques
-                    [6, 7, 8, 9, 10, 12, 13, 15, 16].forEach(idx => {
-                        playersMap[pName][idx] += (parseFloat(r[idx]) || 0);
-                    });
-                    
-                    // Moyenne de la note sur les deux mi-temps
-                    playersMap[pName][5] = parseFloat(((playersMap[pName][5] + (parseFloat(r[5]) || 0)) / 2).toFixed(1));
+            rows.forEach(r => {
+                const mId = r[0] ? r[0].trim() : "";
+                if (mId === id1 || mId === id2) {
+                    const pName = r[1];
+                    if (!playersMap[pName]) {
+                        playersMap[pName] = [...r];
+                        [5, 6, 7, 8, 9, 10, 12, 13, 15, 16].forEach(idx => { playersMap[pName][idx] = parseFloat(r[idx]) || 0; });
+                    } else {
+                        [6, 7, 8, 9, 10, 12, 13, 15, 16].forEach(idx => { playersMap[pName][idx] += (parseFloat(r[idx]) || 0); });
+                        playersMap[pName][5] = parseFloat(((playersMap[pName][5] + (parseFloat(r[5]) || 0)) / 2).toFixed(1));
+                    }
                 }
-            }
-        });
+            });
 
-        const finalPlayers = Object.values(playersMap);
+            const finalPlayers = Object.values(playersMap);
+            let bestNote = 0; let motmName = "";
+            finalPlayers.forEach(p => {
+                p[11] = p[9] > 0 ? Math.round((p[10] / p[9]) * 100) : 0;
+                p[14] = p[12] > 0 ? Math.round((p[13] / p[12]) * 100) : 0;
+                if (p[5] > bestNote) { bestNote = p[5]; motmName = p[1]; }
+            });
 
-        // --- CALCULS FINAUX ET MOTM ---
-        let bestNote = 0;
-        let motmName = "";
-
-        finalPlayers.forEach(p => {
-            // Recalcul des % de précision après fusion
-            p[11] = p[9] > 0 ? Math.round((p[10] / p[9]) * 100) : 0;   // % Passes
-            p[14] = p[12] > 0 ? Math.round((p[13] / p[12]) * 100) : 0; // % Tacles
-
-            // Détection du meilleur joueur (MOTM automatique basé sur la note)
-            const playerNote = p[5];
-            if (playerNote > bestNote) {
-                bestNote = playerNote;
-                motmName = p[1];
-            }
-        });
-
-        // Injection automatique du nom du MOTM dans le champ du formulaire
-        if (motmName) {
-            document.getElementById('in-motm').value = motmName;
-        }
-
-        // Mise à jour de la variable globale et affichage
-        currentPlayersData = finalPlayers;
-        displayPlayers(currentPlayersData);
-
-    } catch (err) {
-        console.error("Erreur lors de la récupération et fusion des joueurs:", err);
-        alert("Erreur lors de la fusion des joueurs. Vérifiez la console.");
+            if (motmName) document.getElementById('in-motm').value = motmName;
+            currentPlayersData = finalPlayers;
+            displayPlayers(currentPlayersData);
+        } catch (err) { console.error(err); }
     }
-}
+
     function displayPlayers(players) {
-    const homeList = document.querySelector('#home-players-list .list');
-    const awayList = document.querySelector('#away-players-list .list');
-    
-    // Modification des titres H3 pour afficher les vrais noms d'équipes
-    document.querySelector('#home-players-list h3').innerText = `Joueurs (${homeName})`;
-    document.querySelector('#away-players-list h3').innerText = `Joueurs (${awayName})`;
+        const homeList = document.querySelector('#home-players-list .list');
+        const awayList = document.querySelector('#away-players-list .list');
+        document.querySelector('#home-players-list h3').innerText = `Joueurs (${homeName})`;
+        document.querySelector('#away-players-list h3').innerText = `Joueurs (${awayName})`;
+        homeList.innerHTML = ""; awayList.innerHTML = "";
+        const normalizedHomeMatchName = normalizeName(homeName);
 
-    homeList.innerHTML = ""; 
-    awayList.innerHTML = "";
-
-    const normalizedHomeMatchName = normalizeName(homeName);
-
-    players.forEach(p => {
-        const playerTeamName = p[2] ? p[2].trim() : "";
-        
-        const playerHtml = `
-            <div class="player-stat-row">
-                <span class="player-name-header">
-                    ${p[1]} <span style="color: #888; font-size: 0.7rem;">[${p[3] || 'N/A'}]</span> ${p[16] == 1 ? '⭐' : ''}
-                </span>
-                <div class="stats-grid">
-                    <div class="stat-item">Note: <strong>${p[5]}</strong></div>
-                    <div class="stat-item">Buts: ${p[6]}</div>
-                    <div class="stat-item">Assists: ${p[7]}</div>
-                    <div class="stat-item">Tirs: ${p[8]}</div>
-                    <div class="stat-item">Passes: ${p[10]}/${p[9]} (${p[11]}%)</div>
-                    <div class="stat-item">Tacles: ${p[13]}/${p[12]} (${p[14]}%)</div>
-                </div>
-            </div>`;
-
-        if (normalizeName(playerTeamName) === normalizedHomeMatchName) {
-            homeList.innerHTML += playerHtml;
-        } else {
-            awayList.innerHTML += playerHtml;
-        }
-    });
-}
-
-    // --- 5. ENVOI FINAL ---
-    document.getElementById('match-report-form').onsubmit = async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('btn-submit');
-    btn.innerText = "ENREGISTREMENT...";
-    btn.disabled = true;
-
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData.entries());
-    
-    data.home = homeName; 
-    data.away = awayName; 
-    data.gid = currentGid;
-    // On ajoute le tableau des joueurs fusionnés
-    data.players = currentPlayersData; 
-
-    try {
-        await fetch(APPS_SCRIPT_URL, { 
-            method: 'POST', 
-            mode: 'no-cors', 
-            body: JSON.stringify(data) 
+        players.forEach(p => {
+            const playerHtml = `<div class="player-stat-row"><span class="player-name-header">${p[1]} <span style="color:#888;font-size:0.7rem;">[${p[3]||'N/A'}]</span> ${p[16]==1?'⭐':''}</span><div class="stats-grid"><div class="stat-item">Note: <strong>${p[5]}</strong></div><div class="stat-item">Buts: ${p[6]}</div><div class="stat-item">Assists: ${p[7]}</div><div class="stat-item">Tirs: ${p[8]}</div><div class="stat-item">Passes: ${p[10]}/${p[9]} (${p[11]}%)</div><div class="stat-item">Tacles: ${p[13]}/${p[12]} (${p[14]}%)</div></div></div>`;
+            if (normalizeName(p[2]) === normalizedHomeMatchName) homeList.innerHTML += playerHtml;
+            else awayList.innerHTML += playerHtml;
         });
-        alert("Rapport et statistiques joueurs enregistrés !");
-        window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
-    } catch (e) {
-        alert("Erreur lors de l'envoi");
-        btn.disabled = false;
-        btn.innerText = "Valider et enregistrer le match";
     }
-};
 
+    // --- 5. ENVOI FINAL AVEC SECURITE DISCORD ---
+    document.getElementById('match-report-form').onsubmit = async (e) => {
+        e.preventDefault();
+        
+        const params = new URLSearchParams(window.location.search);
+        const discordId = params.get('id');
 
-      
+        // A. SI PAS CONNECTÉ -> SAUVEGARDE ET REDIRECTION
+        if (!discordId) {
+            const currentData = new FormData(e.target);
+            localStorage.setItem('report_backup', JSON.stringify(Object.fromEntries(currentData.entries())));
+            
+            alert("Authentification requise. Vos données sont sauvegardées.");
+            const baseUrl = window.location.origin + window.location.pathname;
+            window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(baseUrl)}&response_type=code&scope=identify`;
+            return;
+        }
+
+        // B. SI CONNECTÉ MAIS PAS AUTORISÉ
+        if (!ALLOWED_REPORTERS.includes(discordId)) {
+            alert(`Accès refusé : ID ${discordId} non autorisé.`);
+            return;
+        }
+
+        // C. ENVOI FINAL
+        const btn = document.getElementById('btn-submit');
+        btn.innerText = "ENREGISTREMENT...";
+        btn.disabled = true;
+
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        data.home = homeName; data.away = awayName; data.gid = currentGid;
+        data.players = currentPlayersData;
+        data.reporter_id = discordId;
+
+        try {
+            await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+            localStorage.removeItem('report_backup');
+            alert("Match enregistré avec succès !");
+            window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
+        } catch (err) {
+            alert("Erreur d'envoi.");
+            btn.disabled = false;
+            btn.innerText = "Valider et enregistrer";
+        }
+    };
+
     init();
 </script>
 
