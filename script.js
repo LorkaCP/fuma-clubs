@@ -219,22 +219,21 @@ async function loadTeamsList() {
     const profileForm = document.getElementById('profile-form');
     if (!profileForm) return;
 
+    // --- 1. GESTION DE LA SOUMISSION (CRÉATION / MISE À JOUR) ---
     profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const submitBtn = profileForm.querySelector('button[type="submit"]');
         const originalBtnText = submitBtn.innerText;
         
-        // 1. État visuel de chargement
         submitBtn.disabled = true;
         submitBtn.innerText = "Updating...";
 
-        // 2. Préparation des données
         const avatarInput = document.getElementById('avatar')?.value.trim();
-        const DEFAULT_AVATAR = "https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png"; // Assurez-vous que cette variable est définie
         const finalAvatar = (avatarInput === "" || avatarInput.toLowerCase() === "none") ? DEFAULT_AVATAR : avatarInput;
 
         const formData = new URLSearchParams();
+        // L'action par défaut dans votre script Apps Script est la soumission de profil [cite: 8]
         formData.append('game_tag', document.getElementById('id-game')?.value || "");
         formData.append('discord_id', document.getElementById('id-discord')?.value || "");
         formData.append('discord_name', document.getElementById('discord-name')?.value || "");
@@ -245,7 +244,6 @@ async function loadTeamsList() {
         formData.append('main_position', document.getElementById('main-position')?.value || "");
 
         try {
-            // 3. Envoi à Google Apps Script
             await fetch(APP_SCRIPT_URL, {
                 method: 'POST',
                 body: formData,
@@ -253,34 +251,70 @@ async function loadTeamsList() {
                 mode: 'no-cors'
             });
 
-            // 4. Succès : Mise à jour de l'interface
             const statusBox = document.getElementById('status-message');
             const statusText = document.getElementById('status-text');
 
             if (statusBox && statusText) {
-                // On affiche le message et on cache le formulaire
                 statusText.innerText = "Profile updated! Redirecting to players list in 3 seconds...";
                 statusBox.style.display = 'block';
                 profileForm.style.display = 'none'; 
-                
-                // Remonte en haut de page pour que le message soit visible
                 window.scrollTo({ top: 0, behavior: 'smooth' });
 
-                // 5. Redirection automatique après 3 secondes
                 setTimeout(() => {
                     window.location.href = 'players.html';
                 }, 3000);
             }
-
         } catch (error) {
             console.error("Submission error:", error);
-            
-            // En cas d'erreur, on avertit l'utilisateur et on réactive le bouton
             alert("An error occurred during update. Please try again.");
             submitBtn.disabled = false;
             submitBtn.innerText = originalBtnText;
         }
     });
+
+    // --- 2. GESTION DE LA SUPPRESSION ---
+    const deleteBtn = document.getElementById('btn-delete-profile');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', async () => {
+            const discordId = document.getElementById('id-discord')?.value;
+            const discordName = document.getElementById('discord-name')?.value;
+
+            if (!discordId) {
+                alert("Discord ID is missing, cannot delete.");
+                return;
+            }
+
+            const confirmation = confirm(`Warning: Are you sure you want to delete the profile of ${discordName}? This action cannot be undone.`);
+            
+            if (confirmation) {
+                deleteBtn.disabled = true;
+                deleteBtn.innerText = "Deleting...";
+
+                const deleteData = new URLSearchParams();
+                deleteData.append('action', 'delete'); // Déclenche handleDeleteProfile dans le Apps Script [cite: 6]
+                deleteData.append('discord_id', discordId);
+
+                try {
+                    await fetch(APP_SCRIPT_URL, {
+                        method: 'POST',
+                        body: deleteData,
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        mode: 'no-cors'
+                    });
+
+                    // Notification de succès et redirection
+                    alert("Your profile has been successfully deleted.");
+                    window.location.href = 'index.html';
+
+                } catch (error) {
+                    console.error("Deletion error:", error);
+                    alert("An error occurred while deleting the profile.");
+                    deleteBtn.disabled = false;
+                    deleteBtn.innerText = "Delete My Profile";
+                }
+            }
+        });
+    }
 }
     // --- 6. LOGIQUE LISTE DES CLUBS (clubs.html) ---
     async function fetchFumaClubs() {
@@ -901,6 +935,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
