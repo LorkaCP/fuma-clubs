@@ -260,6 +260,17 @@ body, .fuma-wrapper {
     cursor: pointer;
 }
 
+.fuma-loading-wrapper {
+    grid-column: 1 / -1; /* S'étend de la première à la dernière colonne */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px; /* Donne de l'espace vertical pour le centrage */
+    width: 100%;
+    text-align: center;
+}
+
 
 /* --- CLUB PROFILE PAGE --- */
 
@@ -758,6 +769,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
