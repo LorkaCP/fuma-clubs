@@ -14,16 +14,6 @@
     </style>
 </head>
 <body>
-<div id="auth-banner" style="background: #1a1a1a; border-bottom: 2px solid #d4af37; padding: 15px; text-align: center;">
-    <div id="auth-status">
-        <span style="color: #fff; margin-right: 15px;">🔒 Connexion requise pour soumettre un rapport</span>
-        <button onclick="loginWithDiscord()" style="background: #5865F2; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">
-            <i class="fab fa-discord"></i> Se connecter avec Discord
-        </button>
-    </div>
-</div>
-
-    
     <div class="fuma-container">
         <header style="text-align: center; padding: 30px 0;">
             <h1 style="color: var(--fuma-primary); font-weight: 800; letter-spacing: 2px; margin: 0;">DATA REPORT SYSTEM</h1>
@@ -196,7 +186,7 @@
     // --- 1. CONFIGURATION ---
     const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=1610453677&single=true&output=csv";
     const PLAYERS_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=420142588&single=true&output=csv";
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzq1aeIc_6vfcG_37LaY0w9cfdDP1RIodp2FiAR39Fz3u_d8NlYFxjQJ08SfimZ2fNK0Q/exec?action=match";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKgKzQ6QBYxQgfeIYmFCI4GyxBZOJXxu09rgiR9N6VjjTFlqGOnVQND14Ba5425K_IUQ/exec?action=match";
       let currentPlayersData = []; // Pour stocker les données fusionnées
 
     const CLUB_ALIASES = {
@@ -214,92 +204,6 @@
     document.getElementById('name-home').innerText = homeName;
     document.getElementById('name-away').innerText = awayName;
 
-
-// --- CONFIGURATION DISCORD ---
-const DISCORD_CLIENT_ID = "1473807551329079408"; // À remplacer
-const REDIRECT_URI = window.location.href.split('?')[0]; // Redirige sur la même page
-
-function loginWithDiscord() {
-    const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=identify`;
-    window.location.href = url;
-}
-
-async function checkAuth() {
-    const fragment = new URLSearchParams(window.location.hash.slice(1));
-    let accessToken = fragment.get('access_token') || localStorage.getItem('discord_token');
-
-    if (accessToken) {
-        localStorage.setItem('discord_token', accessToken);
-        window.location.hash = ""; // Nettoie l'URL
-        
-        try {
-            const response = await fetch('https://discord.com/api/users/@me', {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            });
-            const user = await response.json();
-            
-            if (user.id) {
-                // On vérifie maintenant si cet ID existe dans ta DATABASE Google Sheet
-                verifyUserRole(user.id, user.username);
-            }
-        } catch (err) {
-            console.error("Erreur Discord:", err);
-            logout();
-        }
-    } else {
-        document.getElementById('btn-submit').disabled = true;
-        document.getElementById('btn-submit').style.opacity = "0.5";
-        document.getElementById('btn-submit').innerText = "Veuillez vous connecter";
-    }
-}
-
-async function verifyUserRole(discordId, username) {
-    const scriptId = "VOTRE_ID_SCRIPT"; 
-    const url = `https://script.google.com/macros/s/${scriptId}/exec?discord_id=${discordId}`;
-    const authStatusEl = document.getElementById('auth-status');
-    const submitBtn = document.getElementById('btn-submit');
-
-    try {
-        const response = await fetch(url);
-        const dbUser = await response.json();
-        
-        // CONDITION DE RESTRICTION PAR RÔLE
-        const ROLE_AUTORISE = "Admin"; // Changez ceci par le rôle souhaité
-
-        if (dbUser.result === "success" && dbUser.role === ROLE_AUTORISE) {
-            // L'utilisateur est reconnu ET a le bon rôle
-            localStorage.setItem('discord_id', discordId);
-            
-            authStatusEl.innerHTML = `<span style="color: #d4af37;">✅ Bonjour ${username}, accès autorisé (Rôle: ${dbUser.role})</span>`;
-            submitBtn.disabled = false;
-            submitBtn.style.opacity = "1";
-        } 
-        else if (dbUser.result === "success" && dbUser.role !== ROLE_AUTORISE) {
-            // L'utilisateur est reconnu mais n'a PAS le bon rôle
-            authStatusEl.innerHTML = `<span style="color: #ff4444;">🚫 Accès refusé : Votre rôle (${dbUser.role || 'Joueur'}) ne permet pas de poster des rapports.</span>`;
-            submitBtn.disabled = true;
-            submitBtn.style.opacity = "0.3";
-        }
-        else {
-            // Utilisateur non trouvé dans la base
-            authStatusEl.innerHTML = `<span style="color: #ff4444;">❌ Utilisateur inconnu dans la base FUMA.</span>`;
-            submitBtn.disabled = true;
-        }
-    } catch (e) {
-        console.error(e);
-    }
-}
-
-function logout() {
-    localStorage.removeItem('discord_token');
-    window.location.href = REDIRECT_URI;
-}
-
-// Appeler checkAuth au chargement
-window.addEventListener('DOMContentLoaded', checkAuth);
-
-
-      
     // --- 2. NORMALISATION ---
     function normalizeName(name) {
         if (!name) return "";
@@ -524,60 +428,34 @@ window.addEventListener('DOMContentLoaded', checkAuth);
     // --- 5. ENVOI FINAL ---
     document.getElementById('match-report-form').onsubmit = async (e) => {
     e.preventDefault();
-    
-    // 1. Vérification de sécurité locale avant l'envoi
-    const discordId = localStorage.getItem('discord_id');
-    if (!discordId) {
-        alert("Erreur : Vous devez être connecté via Discord pour soumettre un rapport.");
-        return;
-    }
-
     const btn = document.getElementById('btn-submit');
-    const originalBtnText = btn.innerText;
-    
-    // 2. État de chargement
-    btn.innerText = "ENREGISTREMENT EN COURS...";
+    btn.innerText = "ENREGISTREMENT...";
     btn.disabled = true;
-    btn.style.opacity = "0.7";
 
-    // 3. Préparation des données du formulaire
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
     
-    // 4. Enrichissement des données avec les variables de session et joueurs
-    data.home = homeName; // Variable définie au début du script
-    data.away = awayName; // Variable définie au début du script
-    data.gid = currentGid; // ID de la compétition/match
-    data.submittedBy = discordId; // ID Discord de l'auteur pour traçabilité
-    data.players = currentPlayersData; // Tableau des joueurs fusionnés
+    data.home = homeName; 
+    data.away = awayName; 
+    data.gid = currentGid;
+    // On ajoute le tableau des joueurs fusionnés
+    data.players = currentPlayersData; 
 
     try {
-        // 5. Envoi vers Google Apps Script (Action: match)
-        // Note: On utilise mode 'no-cors' comme dans ton script original
-        const response = await fetch(APPS_SCRIPT_URL, { 
+        await fetch(APPS_SCRIPT_URL, { 
             method: 'POST', 
             mode: 'no-cors', 
             body: JSON.stringify(data) 
         });
-
-        // 6. Succès et Redirection
-        alert("✅ Rapport et statistiques joueurs enregistrés avec succès !");
-        
-        // Redirection vers la page d'info match avec les paramètres
-        const redirectUrl = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
-        window.location.href = redirectUrl;
-
-    } catch (error) {
-        // 7. Gestion des erreurs
-        console.error("Erreur lors de l'envoi :", error);
-        alert("❌ Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.");
-        
-        // Réinitialisation du bouton en cas d'échec
+        alert("Rapport et statistiques joueurs enregistrés !");
+        window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
+    } catch (e) {
+        alert("Erreur lors de l'envoi");
         btn.disabled = false;
-        btn.innerText = originalBtnText;
-        btn.style.opacity = "1";
+        btn.innerText = "Valider et enregistrer le match";
     }
 };
+
 
       
     init();
