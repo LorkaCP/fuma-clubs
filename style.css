@@ -558,6 +558,39 @@ select option {
     color: white;
 }
 
+
+/* Style spécifique pour le bouton supprimer */
+#btn-delete-profile {
+    display: none; /* Caché par défaut, affiché par le JS */
+    background-color: transparent;
+    color: #ff4d4d; /* Rouge élégant */
+    border: 1px solid rgba(255, 77, 77, 0.3);
+    padding: 12px 24px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 15px;
+    border-radius: 4px;
+    width: 100%; /* S'adapte à la largeur du formulaire */
+}
+
+#btn-delete-profile:hover {
+    background-color: #ff4d4d;
+    color: #fff;
+    border-color: #ff4d4d;
+    box-shadow: 0 0 15px rgba(255, 77, 77, 0.2);
+}
+
+#btn-delete-profile:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(1);
+}
+
+
 /* --- UTILS & ANIMATIONS --- */
 
 .loader-container {
@@ -769,6 +802,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
