@@ -475,13 +475,13 @@ document.getElementById('match-report-form').onsubmit = async (e) => {
         return;
     }
 
-  // --- 5. ENVOI FINAL ---
+// --- 5. ENVOI FINAL ---
 document.getElementById('match-report-form').onsubmit = async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-submit');
     
     btn.innerText = "VÉRIFICATION DISCORD...";
-    const token = await getDiscordAuth(); // On récupère le token via la popup
+    const token = await getDiscordAuth(); // Récupère le jeton Discord via la popup
     
     if (!token) {
         alert("Authentification annulée.");
@@ -489,14 +489,22 @@ document.getElementById('match-report-form').onsubmit = async (e) => {
         return;
     }
 
-    // Définition propre des URLs
+    // Définition de l'URL de base pour éviter les erreurs de paramètres
     const BASE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNXeddIze29OEQ4F3rqwHthcNzvjIEb1EaAl5mRMzKmGsU2_UWlMxAP7pHHEM96aRGyQ/exec";
+    
+    // Construction explicite de l'URL de vérification (GET)
     const authCheckUrl = `${BASE_SCRIPT_URL}?action=check_auth&token=${token}`;
 
     try {
-        // Étape 1 : Vérification des droits (GET)
+        // Étape 1 : Vérification des droits sur le serveur Discord
         const authCheck = await fetch(authCheckUrl);
         const authResult = await authCheck.json();
+
+        if (authResult.result === "error") {
+            alert("Erreur serveur : " + authResult.message);
+            btn.innerText = "Erreur de validation";
+            return;
+        }
 
         if (!authResult.authorized) {
             alert("Accès refusé : Vous n'avez pas le rôle requis sur le serveur FUMA.");
@@ -504,7 +512,7 @@ document.getElementById('match-report-form').onsubmit = async (e) => {
             return;
         }
 
-        // Étape 2 : Si autorisé, on prépare les données du match
+        // Étape 2 : Si autorisé, préparation et envoi des données du match (POST)
         btn.innerText = "ENREGISTREMENT...";
         btn.disabled = true;
 
@@ -514,10 +522,9 @@ document.getElementById('match-report-form').onsubmit = async (e) => {
         data.home = homeName; 
         data.away = awayName; 
         data.gid = currentGid;
-        data.players = currentPlayersData; 
+        data.players = currentPlayersData; // Utilise les données fusionnées
 
-        // Étape 3 : Envoi au script Google (POST) avec action=match
-        // Note : On utilise BASE_SCRIPT_URL + action=match
+        // Appel POST avec l'action spécifiée
         await fetch(`${BASE_SCRIPT_URL}?action=match`, { 
             method: 'POST', 
             mode: 'no-cors', 
