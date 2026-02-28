@@ -190,244 +190,139 @@
     font-size: 0.7rem;
 }
     </style>
-  <script>
+ <script>
     // --- 1. CONFIGURATION ---
     const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=1610453677&single=true&output=csv";
     const PLAYERS_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=420142588&single=true&output=csv";
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbya3FyeM59GPw7Io5yxN9OKHIhOVFfDeYboA7Nt2aUskLZAokzGeN3Utr9sna89RfBoRA/exec?action=match";
-      let currentPlayersData = []; // Pour stocker les données fusionnées
+    
+    let currentPlayersData = []; 
+    let discordAuthCode = null;
 
     const CLUB_ALIASES = {
         "fuma y pasa": "f y pasa",
         "croser fc": "croser fc",
         "fuma clubs a": "fuma clubs a",
-        
     };
 
-    const params = new URLSearchParams(window.location.search);
-    const homeName = params.get('home') || "";
-    const awayName = params.get('away') || "";
-    const currentGid = params.get('gid');
+    // Initialisation globale
+    const urlParams = new URLSearchParams(window.location.search);
+    window.homeName = urlParams.get('home') || "";
+    window.awayName = urlParams.get('away') || "";
+    window.currentGid = urlParams.get('gid');
 
-    document.getElementById('name-home').innerText = homeName;
-    document.getElementById('name-away').innerText = awayName;
+    // Affichage initial des noms
+    document.getElementById('name-home').innerText = window.homeName;
+    document.getElementById('name-away').innerText = window.awayName;
 
-
-// Variable globale pour stocker le code d'autorisation
-let discordAuthCode = null;
-
-function redirectToDiscord(event) {
-    event.preventDefault();
-    
-    const params = new URLSearchParams(window.location.search);
-    const selected = document.querySelectorAll('.match-checkbox:checked');
-    
-    // On prépare les données à sauvegarder : contexte de l'URL + matchs cochés
-    const stateData = {
-        home: params.get('home'),
-        away: params.get('away'),
-        gid: params.get('gid'),
-        // On récupère l'ID du match (colonne index 3) pour chaque mi-temps sélectionnée
-        m1: selected.length > 0 ? window.tempMatchesData[selected[0].value][3] : null,
-        m2: selected.length > 1 ? window.tempMatchesData[selected[1].value][3] : null
-    };
-
-    // Encodage en Base64 pour que Discord puisse transporter l'objet en un seul paramètre 'state'
-    const state = btoa(JSON.stringify(stateData));
-    
-    const clientId = "1473807551329079408";
-    const redirectUri = encodeURIComponent("https://fuma-clubs-official.vercel.app/report.html");
-    const scope = encodeURIComponent("identify guilds.members.read");
-    
-    // Redirection vers Discord avec le paramètre state inclus
-    window.location.href = `https://discord.com/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
-}
-      
-     async function checkDiscordAuth() {
-    const params = new URLSearchParams(window.location.search);
-    discordAuthCode = params.get('code');
-    const stateRaw = params.get('state');
-
-    if (discordAuthCode && stateRaw) {
-        try {
-            // 1. Décodage du state (mémoire du formulaire)
-            const stateData = JSON.parse(atob(stateRaw));
-            
-            // 2. RESTAURATION DES VARIABLES GLOBALES
-            // Indispensable pour que displayPlayers sache qui est Home ou Away
-            window.homeName = stateData.home;
-            window.awayName = stateData.away;
-            window.currentGid = stateData.gid;
-
-            // Mise à jour visuelle des titres
-            document.getElementById('name-home').innerText = window.homeName;
-            document.getElementById('name-away').innerText = window.awayName;
-
-            // 3. Masquer le bouton de connexion
-            if (document.getElementById('discord-login-btn')) {
-                document.getElementById('discord-login-btn').style.display = 'none';
-            }
-
-            // 4. RELANCE DE LA FUSION AUTOMATIQUE
-            if (stateData.m1 && stateData.m2) {
-                console.log("Restauration de la fusion...");
-                
-                // On attend que les données CSV soient prêtes (init)
-                setTimeout(async () => {
-                    // On simule le comportement du bouton "Fusionner"
-                    // Cela va remplir les stats équipe ET les joueurs
-                    await fetchMatchDataForState(stateData.m1, stateData.m2);
-                }, 1000);
-            }
-        } catch (e) {
-            console.error("Erreur lors de la restauration :", e);
-        }
-    }
-}
-
-      async function fetchMatchDataForState(id1, id2) {
-    // 1. On retrouve les mi-temps dans les données déjà chargées par init()
-    const m1 = window.tempMatchesData.find(m => m[3].trim() === id1);
-    const m2 = window.tempMatchesData.find(m => m[3].trim() === id2);
-
-    if (m1 && m2) {
-        // 2. On exécute la logique de fusion d'équipe (reprise de processSelectedMatches)
-        // On définit les index comme dans votre script original
-        const isRev1 = (normalizeName(m1[1]) === normalizeName(window.awayName));
-        const isRev2 = (normalizeName(m2[1]) === normalizeName(window.awayName));
-        const sum = (colH, colA, isR1, isR2) => (parseInt(m1[isR1 ? colA : colH]) || 0) + (parseInt(m2[isR2 ? colA : colH]) || 0);
-        const avg = (colH, colA, isR1, isR2) => Math.round(((parseInt(m1[isR1 ? colA : colH]) || 0) + (parseInt(m2[isR2 ? colA : colH]) || 0)) / 2);
-
-        document.getElementById('in-sh').value = sum(4, 5, isRev1, isRev2);
-        document.getElementById('in-sa').value = sum(5, 4, isRev1, isRev2);
-        document.getElementById('in-posH').value = avg(8, 9, isRev1, isRev2);
-        document.getElementById('in-posA').value = avg(9, 8, isRev1, isRev2);
-        // ... ajoutez ici les autres lignes de document.getElementById si nécessaire
-
-        // 3. On lance la fusion des joueurs
-        await fetchPlayersForTwoMatches(id1, id2);
-    }
-}
-      
-
-    // --- 2. NORMALISATION ---
-    function normalizeName(name) {
-        if (!name) return "";
-        let n = name.toLowerCase().trim();
-        if (CLUB_ALIASES[n]) n = CLUB_ALIASES[n];
-        return n.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                .replace(/\b(fc|sc|club|as|ol|de)\b/gi, "")
-                .replace(/[^a-z0-9]/g, "")
-                .trim();
-    }
-
-    // --- 3. RECHERCHE DES MATCHS ---
-    async function init() {
-        const statusEl = document.getElementById('loading-status');
-        try {
-            const response = await fetch(GLOBAL_DATA_URL);
-            const data = await response.text();
-            const rows = data.split('\n').map(r => r.split(','));
-            
-            const normHome = normalizeName(homeName);
-            const normAway = normalizeName(awayName);
-
-            const matches = rows.filter(r => {
-                const rHome = normalizeName(r[1]);
-                const rAway = normalizeName(r[2]);
-                return (rHome === normHome && rAway === normAway) || 
-                       (rHome === normAway && rAway === normHome);
-            });
-
-            if (matches.length > 0) {
-                statusEl.innerHTML = `<i class="fas fa-check"></i> ${matches.length} mi-temps trouvées`;
-                displayMatchSelector(matches);
-            } else {
-                statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Aucun match trouvé.';
-            }
-        } catch (err) {
-            statusEl.innerHTML = "Erreur de chargement.";
-            console.error(err);
-        }
-    }
-
-    function displayMatchSelector(matches) {
-        const container = document.getElementById('match-selector-container');
-        window.tempMatchesData = matches;
-        let html = '<div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">';
+    // --- 2. LOGIQUE DISCORD (REDIRECTION) ---
+    function redirectToDiscord(event) {
+        event.preventDefault();
+        const selected = document.querySelectorAll('.match-checkbox:checked');
         
-        matches.forEach((m, i) => {
-            html += `
-                <label style="display: flex; align-items: center; background: #252525; border: 1px solid #444; padding: 12px; cursor: pointer; border-radius: 6px; color: #fff;">
-                    <input type="checkbox" class="match-checkbox" value="${i}" style="width: 20px; height: 20px; margin-right: 15px;">
-                    <span><i class="far fa-calendar-alt"></i> ${m[0]} | <strong>${m[1]}</strong> ${m[4]}-${m[5]} <strong>${m[2]}</strong></span>
-                </label>`;
-        });
-
-        html += `
-            <button type="button" onclick="processSelectedMatches()" 
-                    style="background: #d4af37; color: #000; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase; width:100%;">
-                Fusionner les 2 mi-temps sélectionnées
-            </button>
-        </div>`;
-        container.innerHTML = html;
-    }
-
-    // --- 4. LOGIQUE DE FUSION (EQUIPE + JOUEURS) ---
-    window.processSelectedMatches = async function() {
-        const selectedCheckboxes = document.querySelectorAll('.match-checkbox:checked');
-        
-        if (selectedCheckboxes.length !== 2) {
-            alert("Veuillez sélectionner exactement 2 matchs pour fusionner les mi-temps.");
+        if (selected.length !== 2) {
+            alert("Veuillez d'abord sélectionner les 2 mi-temps à fusionner.");
             return;
         }
 
-        const m1 = window.tempMatchesData[selectedCheckboxes[0].value];
-        const m2 = window.tempMatchesData[selectedCheckboxes[1].value];
+        // On sauvegarde tout dans le state avant de partir
+        const stateData = {
+            home: window.homeName,
+            away: window.awayName,
+            gid: window.currentGid,
+            m1: window.tempMatchesData[selected[0].value][3],
+            m2: window.tempMatchesData[selected[1].value][3]
+        };
+
+        const state = btoa(JSON.stringify(stateData));
+        const clientId = "1473807551329079408";
+        const redirectUri = encodeURIComponent("https://fuma-clubs-official.vercel.app/report.html");
         
-        const isRev1 = (normalizeName(m1[1]) === normalizeName(awayName));
-        const isRev2 = (normalizeName(m2[1]) === normalizeName(awayName));
+        window.location.href = `https://discord.com/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=identify+guilds.members.read&state=${state}`;
+    }
 
-        const sum = (colH, colA, isR1, isR2) => (parseInt(m1[isR1 ? colA : colH]) || 0) + (parseInt(m2[isR2 ? colA : colH]) || 0);
-        const avg = (colH, colA, isR1, isR2) => Math.round(((parseInt(m1[isR1 ? colA : colH]) || 0) + (parseInt(m2[isR2 ? colA : colH]) || 0)) / 2);
+    // --- 3. LOGIQUE RETOUR DISCORD (RESTAURATION) ---
+    async function checkDiscordAuth() {
+        const params = new URLSearchParams(window.location.search);
+        discordAuthCode = params.get('code');
+        const stateRaw = params.get('state');
 
-        // Stats Equipe
-        document.getElementById('in-sh').value = sum(4, 5, isRev1, isRev2); 
-        document.getElementById('in-sa').value = sum(5, 4, isRev1, isRev2); 
-        document.getElementById('in-posH').value = avg(8, 9, isRev1, isRev2); 
-        document.getElementById('in-posA').value = avg(9, 8, isRev1, isRev2);
-        document.getElementById('in-shoH').value = sum(10, 11, isRev1, isRev2); 
-        document.getElementById('in-shoA').value = sum(11, 10, isRev1, isRev2);
-        document.getElementById('in-pasAttH').value = sum(12, 13, isRev1, isRev2); 
-        document.getElementById('in-pasAttA').value = sum(13, 12, isRev1, isRev2);
-        document.getElementById('in-accH').value = avg(14, 15, isRev1, isRev2); 
-        document.getElementById('in-accA').value = avg(15, 14, isRev1, isRev2);
-        
-        // Tacles Equipe
-        document.getElementById('in-tacAttH').value = sum(16, 17, isRev1, isRev2); 
-        document.getElementById('in-tacAttA').value = sum(17, 16, isRev1, isRev2);
-        document.getElementById('in-tacMadH').value = sum(18, 19, isRev1, isRev2); 
-        document.getElementById('in-tacMadA').value = sum(19, 18, isRev1, isRev2);
+        if (discordAuthCode && stateRaw) {
+            try {
+                const stateData = JSON.parse(atob(stateRaw));
+                
+                // On restaure les noms d'équipes pour que la fusion sache qui est qui
+                window.homeName = stateData.home;
+                window.awayName = stateData.away;
+                window.currentGid = stateData.gid;
 
-        document.getElementById('in-redH').value = sum(20, 21, isRev1, isRev2); 
-        document.getElementById('in-redA').value = sum(21, 20, isRev1, isRev2);
+                document.getElementById('name-home').innerText = window.homeName;
+                document.getElementById('name-away').innerText = window.awayName;
 
-        // Buteurs avec " | "
-        const bH1 = (m1[isRev1 ? 7 : 6] || "").trim();
-        const bH2 = (m2[isRev2 ? 7 : 6] || "").trim();
-        const bA1 = (m1[isRev1 ? 6 : 7] || "").trim();
-        const bA2 = (m2[isRev2 ? 6 : 7] || "").trim();
+                if (document.getElementById('discord-login-btn')) {
+                    document.getElementById('discord-login-btn').style.display = 'none';
+                }
 
-        document.getElementById('in-stH').value = [bH1, bH2].filter(x => x !== "").join(" | ");
-        document.getElementById('in-stA').value = [bA1, bA2].filter(x => x !== "").join(" | ");
+                // On attend que les données CSV soient chargées par init() avant de restaurer
+                let attempts = 0;
+                const checkDataReady = setInterval(() => {
+                    if (window.tempMatchesData || attempts > 10) {
+                        clearInterval(checkDataReady);
+                        if (stateData.m1 && stateData.m2) {
+                            fetchMatchDataForState(stateData.m1, stateData.m2);
+                        }
+                    }
+                    attempts++;
+                }, 500);
 
-        // Fusion Joueurs
-        await fetchPlayersForTwoMatches(m1[3].trim(), m2[3].trim());
-        alert("Fusion terminée ! Vérifiez les statistiques avant de valider.");
-    };
+            } catch (e) {
+                console.error("Erreur State:", e);
+            }
+        }
+    }
+
+    // --- 4. LOGIQUE DE FUSION (EQUIPE + JOUEURS) ---
+    async function fetchMatchDataForState(id1, id2) {
+        const m1 = window.tempMatchesData.find(m => m[3].trim() === id1);
+        const m2 = window.tempMatchesData.find(m => m[3].trim() === id2);
+
+        if (m1 && m2) {
+            const isRev1 = (normalizeName(m1[1]) === normalizeName(window.awayName));
+            const isRev2 = (normalizeName(m2[1]) === normalizeName(window.awayName));
+            
+            const sum = (colH, colA, isR1, isR2) => (parseInt(m1[isR1 ? colA : colH]) || 0) + (parseInt(m2[isR2 ? colA : colH]) || 0);
+            const avg = (colH, colA, isR1, isR2) => Math.round(((parseInt(m1[isR1 ? colA : colH]) || 0) + (parseInt(m2[isR2 ? colA : colH]) || 0)) / 2);
+
+            // Remplissage automatique du formulaire (Stats Equipe)
+            document.getElementById('in-sh').value = sum(4, 5, isRev1, isRev2);
+            document.getElementById('in-sa').value = sum(5, 4, isRev1, isRev2);
+            document.getElementById('in-posH').value = avg(8, 9, isRev1, isRev2);
+            document.getElementById('in-posA').value = avg(9, 8, isRev1, isRev2);
+            document.getElementById('in-shoH').value = sum(10, 11, isRev1, isRev2);
+            document.getElementById('in-shoA').value = sum(11, 10, isRev1, isRev2);
+            document.getElementById('in-pasAttH').value = sum(12, 13, isRev1, isRev2);
+            document.getElementById('in-pasAttA').value = sum(13, 12, isRev1, isRev2);
+            document.getElementById('in-accH').value = avg(14, 15, isRev1, isRev2);
+            document.getElementById('in-accA').value = avg(15, 14, isRev1, isRev2);
+            document.getElementById('in-tacAttH').value = sum(16, 17, isRev1, isRev2);
+            document.getElementById('in-tacAttA').value = sum(17, 16, isRev1, isRev2);
+            document.getElementById('in-tacMadH').value = sum(18, 19, isRev1, isRev2);
+            document.getElementById('in-tacMadA').value = sum(19, 18, isRev1, isRev2);
+            document.getElementById('in-redH').value = sum(20, 21, isRev1, isRev2);
+            document.getElementById('in-redA').value = sum(21, 20, isRev1, isRev2);
+
+            // Buteurs
+            const bH = [(m1[isRev1 ? 7 : 6] || ""), (m2[isRev2 ? 7 : 6] || "")].filter(x => x.trim() !== "").join(" | ");
+            const bA = [(m1[isRev1 ? 6 : 7] || ""), (m2[isRev2 ? 6 : 7] || "")].filter(x => x.trim() !== "").join(" | ");
+            document.getElementById('in-stH').value = bH;
+            document.getElementById('in-stA').value = bA;
+
+            // Fusion des joueurs (id1, id2)
+            await fetchPlayersForTwoMatches(id1, id2);
+        }
+    }
 
     async function fetchPlayersForTwoMatches(id1, id2) {
-    try {
         const response = await fetch(PLAYERS_DATA_URL);
         const csvText = await response.text();
         const rows = csvText.split('\n').map(row => row.split(','));
@@ -436,154 +331,127 @@ function redirectToDiscord(event) {
         rows.forEach(r => {
             const mId = r[0] ? r[0].trim() : "";
             if (mId === id1 || mId === id2) {
-                const pName = r[1]; // Nom du joueur
-                
+                const pName = r[1];
                 if (!playersMap[pName]) {
-                    // Premier passage : on initialise l'entrée avec une copie de la ligne
                     playersMap[pName] = [...r];
-                    
-                    // Conversion des colonnes numériques pour permettre les calculs
-                    // 5:Note, 6:Buts, 7:Assists, 8:Tirs, 9:PassesT, 10:PassesR, 12:TaclesT, 13:TaclesR, 15:Rouge, 16:Motm
-                    [5, 6, 7, 8, 9, 10, 12, 13, 15, 16].forEach(idx => {
-                        playersMap[pName][idx] = parseFloat(r[idx]) || 0;
-                    });
+                    [5, 6, 7, 8, 9, 10, 12, 13, 15, 16].forEach(idx => playersMap[pName][idx] = parseFloat(r[idx]) || 0);
                 } else {
-                    // Deuxième passage : on additionne les statistiques
-                    [6, 7, 8, 9, 10, 12, 13, 15, 16].forEach(idx => {
-                        playersMap[pName][idx] += (parseFloat(r[idx]) || 0);
-                    });
-                    
-                    // Moyenne de la note sur les deux mi-temps
+                    [6, 7, 8, 9, 10, 12, 13, 15, 16].forEach(idx => playersMap[pName][idx] += (parseFloat(r[idx]) || 0));
                     playersMap[pName][5] = parseFloat(((playersMap[pName][5] + (parseFloat(r[5]) || 0)) / 2).toFixed(1));
                 }
             }
         });
 
-        const finalPlayers = Object.values(playersMap);
-
-        // --- CALCULS FINAUX ET MOTM ---
-        let bestNote = 0;
-        let motmName = "";
-
-        finalPlayers.forEach(p => {
-            // Recalcul des % de précision après fusion
-            p[11] = p[9] > 0 ? Math.round((p[10] / p[9]) * 100) : 0;   // % Passes
-            p[14] = p[12] > 0 ? Math.round((p[13] / p[12]) * 100) : 0; // % Tacles
-
-            // Détection du meilleur joueur (MOTM automatique basé sur la note)
-            const playerNote = p[5];
-            if (playerNote > bestNote) {
-                bestNote = playerNote;
-                motmName = p[1];
-            }
+        currentPlayersData = Object.values(playersMap);
+        currentPlayersData.forEach(p => {
+            p[11] = p[9] > 0 ? Math.round((p[10] / p[9]) * 100) : 0;
+            p[14] = p[12] > 0 ? Math.round((p[13] / p[12]) * 100) : 0;
         });
 
-        // Injection automatique du nom du MOTM dans le champ du formulaire
-        if (motmName) {
-            document.getElementById('in-motm').value = motmName;
-        }
-
-        // Mise à jour de la variable globale et affichage
-        currentPlayersData = finalPlayers;
         displayPlayers(currentPlayersData);
-
-    } catch (err) {
-        console.error("Erreur lors de la récupération et fusion des joueurs:", err);
-        alert("Erreur lors de la fusion des joueurs. Vérifiez la console.");
     }
-}
+
     function displayPlayers(players) {
-    const homeList = document.querySelector('#home-players-list .list');
-    const awayList = document.querySelector('#away-players-list .list');
-    
-    // Modification des titres H3 pour afficher les vrais noms d'équipes
-    document.querySelector('#home-players-list h3').innerText = `Joueurs (${homeName})`;
-    document.querySelector('#away-players-list h3').innerText = `Joueurs (${awayName})`;
-
-    homeList.innerHTML = ""; 
-    awayList.innerHTML = "";
-
-    const normalizedHomeMatchName = normalizeName(homeName);
-
-    players.forEach(p => {
-        const playerTeamName = p[2] ? p[2].trim() : "";
+        const homeList = document.querySelector('#home-players-list .list');
+        const awayList = document.querySelector('#away-players-list .list');
+        homeList.innerHTML = ""; awayList.innerHTML = "";
         
-        const playerHtml = `
-            <div class="player-stat-row">
-                <span class="player-name-header">
-                    ${p[1]} <span style="color: #888; font-size: 0.7rem;">[${p[3] || 'N/A'}]</span> ${p[16] == 1 ? '⭐' : ''}
-                </span>
-                <div class="stats-grid">
-                    <div class="stat-item">Note: <strong>${p[5]}</strong></div>
-                    <div class="stat-item">Buts: ${p[6]}</div>
-                    <div class="stat-item">Assists: ${p[7]}</div>
-                    <div class="stat-item">Tirs: ${p[8]}</div>
-                    <div class="stat-item">Passes: ${p[10]}/${p[9]} (${p[11]}%)</div>
-                    <div class="stat-item">Tacles: ${p[13]}/${p[12]} (${p[14]}%)</div>
-                </div>
-            </div>`;
+        const normHome = normalizeName(window.homeName);
 
-        if (normalizeName(playerTeamName) === normalizedHomeMatchName) {
-            homeList.innerHTML += playerHtml;
-        } else {
-            awayList.innerHTML += playerHtml;
-        }
-    });
-}
-
-    // --- 5. ENVOI FINAL ---
- document.getElementById('match-report-form').onsubmit = async (e) => {
-    e.preventDefault();
-
-    // Vérification locale avant l'envoi
-    if (!discordAuthCode) {
-        alert("Erreur : Vous devez être connecté via Discord (cliquez sur le lien de connexion) pour soumettre un match.");
-        return;
-    }
-
-    const btn = document.getElementById('btn-submit');
-    const originalBtnText = btn.innerText;
-    
-    btn.innerText = "VÉRIFICATION DES DROITS...";
-    btn.disabled = true;
-
-    // Préparation des données
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData.entries());
-    
-    // Ajout des informations nécessaires pour le Apps Script [cite: 67]
-    data.action = "match"; 
-    data.discord_code = discordAuthCode; 
-    data.home = homeName; 
-    data.away = awayName; 
-    data.gid = currentGid;
-    data.players = currentPlayersData; // Les données fusionnées précédemment [cite: 67]
-
-    try {
-        // Appel au Apps Script (sans mode 'no-cors' pour lire la réponse JSON)
-        const response = await fetch(APPS_SCRIPT_URL, { 
-            method: 'POST', 
-            body: JSON.stringify(data) 
+        players.forEach(p => {
+            const playerHtml = `
+                <div class="player-stat-row">
+                    <span>${p[1]} [Note: ${p[5]}]</span>
+                </div>`;
+            if (normalizeName(p[2]) === normHome) homeList.innerHTML += playerHtml;
+            else awayList.innerHTML += playerHtml;
         });
-
-        const result = await response.json();
-
-        if (result.result === "success") {
-            alert("Rapport et statistiques enregistrés avec succès !");
-            window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
-        } else {
-            // Affiche l'erreur précise renvoyée par le serveur (ex: "Rôle insuffisant")
-            alert("Erreur serveur : " + (result.message || "Une erreur inconnue est survenue."));
-            btn.disabled = false;
-            btn.innerText = originalBtnText;
-        }
-    } catch (err) {
-        console.error("Erreur d'envoi:", err);
-        alert("Erreur lors de l'envoi. Assurez-vous que le script Google est bien déployé et accepte les requêtes.");
-        btn.disabled = false;
-        btn.innerText = originalBtnText;
     }
-};
+
+    // --- 5. INITIALISATION ET ENVOI ---
+    function normalizeName(name) {
+        if (!name) return "";
+        let n = name.toLowerCase().trim();
+        if (CLUB_ALIASES[n]) n = CLUB_ALIASES[n];
+        return n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\b(fc|sc|club|as|ol|de)\b/gi, "").replace(/[^a-z0-9]/g, "").trim();
+    }
+
+    async function init() {
+        const statusEl = document.getElementById('loading-status');
+        try {
+            const response = await fetch(GLOBAL_DATA_URL);
+            const data = await response.text();
+            const rows = data.split('\n').map(r => r.split(','));
+            const normHome = normalizeName(window.homeName);
+            const normAway = normalizeName(window.awayName);
+
+            const matches = rows.filter(r => {
+                const rHome = normalizeName(r[1]);
+                const rAway = normalizeName(r[2]);
+                return (rHome === normHome && rAway === normAway) || (rHome === normAway && rAway === normHome);
+            });
+
+            window.tempMatchesData = matches;
+            if (matches.length > 0) {
+                statusEl.innerHTML = `<i class="fas fa-check"></i> ${matches.length} mi-temps trouvées`;
+                displayMatchSelector(matches);
+            } else {
+                statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Aucun match trouvé.';
+            }
+        } catch (err) {
+            statusEl.innerHTML = "Erreur de chargement.";
+        }
+    }
+
+    function displayMatchSelector(matches) {
+        const container = document.getElementById('match-selector-container');
+        let html = '<div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">';
+        matches.forEach((m, i) => {
+            html += `<label style="display: flex; align-items: center; background: #252525; border: 1px solid #444; padding: 12px; cursor: pointer; border-radius: 6px; color: #fff;">
+                <input type="checkbox" class="match-checkbox" value="${i}" style="width: 20px; height: 20px; margin-right: 15px;">
+                <span>${m[0]} | <strong>${m[1]}</strong> ${m[4]}-${m[5]} <strong>${m[2]}</strong></span>
+            </label>`;
+        });
+        html += `<button type="button" onclick="processSelectedMatches()" style="background: #d4af37; color: #000; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: 800; width:100%;">FUSIONNER LES MI-TEMPS</button></div>`;
+        container.innerHTML = html;
+    }
+
+    window.processSelectedMatches = async function() {
+        const selected = document.querySelectorAll('.match-checkbox:checked');
+        if (selected.length !== 2) { alert("Sélectionnez 2 mi-temps."); return; }
+        const m1 = window.tempMatchesData[selected[0].value];
+        const m2 = window.tempMatchesData[selected[1].value];
+        await fetchMatchDataForState(m1[3].trim(), m2[3].trim());
+        alert("Fusion terminée !");
+    };
+
+    document.getElementById('match-report-form').onsubmit = async (e) => {
+        e.preventDefault();
+        if (!discordAuthCode) { alert("Veuillez vous connecter à Discord."); return; }
+        const btn = document.getElementById('btn-submit');
+        btn.disabled = true;
+        btn.innerText = "VÉRIFICATION ET ENVOI...";
+
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        data.action = "match";
+        data.discord_code = discordAuthCode;
+        data.home = window.homeName;
+        data.away = window.awayName;
+        data.gid = window.currentGid;
+        data.players = currentPlayersData;
+
+        const response = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+        const res = await response.json();
+        if (res.result === "success") {
+            alert("Match enregistré avec succès !");
+            window.location.href = `info-match.html?home=${encodeURIComponent(window.homeName)}&away=${encodeURIComponent(window.awayName)}&gid=${window.currentGid}`;
+        } else {
+            alert("Erreur: " + res.message);
+            btn.disabled = false;
+            btn.innerText = "VALIDER ET ENREGISTRER LE MATCH";
+        }
+    };
 
     checkDiscordAuth();
     init();
