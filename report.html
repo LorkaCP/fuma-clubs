@@ -475,11 +475,26 @@ document.getElementById('match-report-form').onsubmit = async (e) => {
         return;
     }
 
-    // --- CORRECTION ICI : Utilisation d'une URL propre pour l'auth ---
-    const BASE_URL = "https://script.google.com/macros/s/AKfycbzNXeddIze29OEQ4F3rqwHthcNzvjIEb1EaAl5mRMzKmGsU2_UWlMxAP7pHHEM96aRGyQ/exec";
-    const authCheckUrl = `${BASE_URL}?action=check_auth&token=${token}`;
+  // --- 5. ENVOI FINAL ---
+document.getElementById('match-report-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
     
+    btn.innerText = "VÉRIFICATION DISCORD...";
+    const token = await getDiscordAuth(); // On récupère le token via la popup
+    
+    if (!token) {
+        alert("Authentification annulée.");
+        btn.innerText = "Valider et enregistrer le match";
+        return;
+    }
+
+    // Définition propre des URLs
+    const BASE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNXeddIze29OEQ4F3rqwHthcNzvjIEb1EaAl5mRMzKmGsU2_UWlMxAP7pHHEM96aRGyQ/exec";
+    const authCheckUrl = `${BASE_SCRIPT_URL}?action=check_auth&token=${token}`;
+
     try {
+        // Étape 1 : Vérification des droits (GET)
         const authCheck = await fetch(authCheckUrl);
         const authResult = await authCheck.json();
 
@@ -489,7 +504,7 @@ document.getElementById('match-report-form').onsubmit = async (e) => {
             return;
         }
 
-        // Si autorisé, on continue l'enregistrement
+        // Étape 2 : Si autorisé, on prépare les données du match
         btn.innerText = "ENREGISTREMENT...";
         btn.disabled = true;
 
@@ -501,7 +516,9 @@ document.getElementById('match-report-form').onsubmit = async (e) => {
         data.gid = currentGid;
         data.players = currentPlayersData; 
 
-        await fetch(BASE_URL, { 
+        // Étape 3 : Envoi au script Google (POST) avec action=match
+        // Note : On utilise BASE_SCRIPT_URL + action=match
+        await fetch(`${BASE_SCRIPT_URL}?action=match`, { 
             method: 'POST', 
             mode: 'no-cors', 
             body: JSON.stringify(data) 
