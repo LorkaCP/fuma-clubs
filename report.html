@@ -20,6 +20,13 @@
             <p style="color: var(--fuma-text-dim); font-size: 0.9rem;">Enregistrement des statistiques officielles FUMA</p>
         </header>
 
+<div id="auth-section" style="text-align: center; margin-bottom: 20px; padding: 0 20px;">
+    <a id="discord-login-btn" href="https://discord.com/oauth2/authorize?client_id=1473807551329079408&response_type=code&redirect_uri=https%3A%2F%2Ffuma-clubs-official.vercel.app%2Freport.html&scope=identify+guilds.members.read" 
+       style="display: inline-block; background: #5865F2; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; transition: 0.3s; border: 1px solid rgba(255,255,255,0.1);">
+        <i class="fab fa-discord"></i> Se connecter avec Discord
+    </a>
+</div>
+        
         <div id="import-section" style="max-width: 800px; margin: 0 auto 30px auto; padding: 0 20px;">
             <div id="loading-status" style="text-align: center; margin-bottom: 10px; font-weight: 600;">
                 <i class="fas fa-spinner fa-spin"></i> Recherche de matchs existants...
@@ -210,20 +217,25 @@ let discordAuthCode = null;
 
 async function checkDiscordAuth() {
     const params = new URLSearchParams(window.location.search);
-    discordAuthCode = params.get('code'); // Récupère le code généré par Discord 
+    discordAuthCode = params.get('code'); 
 
     const statusEl = document.getElementById('loading-status');
+    const loginBtn = document.getElementById('discord-login-btn');
 
     if (discordAuthCode) {
         console.log("Code Discord détecté : " + discordAuthCode);
-        // Mise à jour visuelle pour rassurer l'utilisateur
+        
+        // On cache le bouton de connexion puisqu'on est déjà authentifié
+        if (loginBtn) loginBtn.style.display = 'none';
+
         if (statusEl) {
-            statusEl.innerHTML = '<i class="fas fa-user-check" style="color: #d4af37;"></i> Authentification Discord active. Vous pouvez fusionner et envoyer.';
+            statusEl.innerHTML = '<div style="background: rgba(212, 175, 55, 0.1); border: 1px solid #d4af37; padding: 10px; border-radius: 8px;">' +
+                                 '<i class="fas fa-user-check" style="color: #d4af37;"></i> Session Discord active. Vous pouvez soumettre le rapport.</div>';
         }
     } else {
-        console.warn("Aucun code Discord trouvé dans l'URL.");
+        console.warn("Aucun code Discord trouvé.");
         if (statusEl) {
-            statusEl.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #f44336;"></i> Attention : Connectez-vous via Discord pour pouvoir envoyer le rapport.';
+            statusEl.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #f44336;"></i> Veuillez vous connecter à Discord ci-dessus avant de valider.';
         }
     }
 }
