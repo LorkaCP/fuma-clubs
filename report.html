@@ -243,34 +243,69 @@ function redirectToDiscord(event) {
     window.location.href = `https://discord.com/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
 }
       
-      async function checkDiscordAuth() {
+     async function checkDiscordAuth() {
     const params = new URLSearchParams(window.location.search);
     discordAuthCode = params.get('code');
     const stateRaw = params.get('state');
 
     if (discordAuthCode && stateRaw) {
         try {
-            // Décodage des données sauvegardées
+            // 1. Décodage du state (mémoire du formulaire)
             const stateData = JSON.parse(atob(stateRaw));
             
-            // On cache le bouton de connexion
+            // 2. RESTAURATION DES VARIABLES GLOBALES
+            // Indispensable pour que displayPlayers sache qui est Home ou Away
+            window.homeName = stateData.home;
+            window.awayName = stateData.away;
+            window.currentGid = stateData.gid;
+
+            // Mise à jour visuelle des titres
+            document.getElementById('name-home').innerText = window.homeName;
+            document.getElementById('name-away').innerText = window.awayName;
+
+            // 3. Masquer le bouton de connexion
             if (document.getElementById('discord-login-btn')) {
                 document.getElementById('discord-login-btn').style.display = 'none';
             }
 
-            // Si des matchs étaient sélectionnés, on relance la fusion automatiquement
+            // 4. RELANCE DE LA FUSION AUTOMATIQUE
             if (stateData.m1 && stateData.m2) {
-                console.log("Restauration de la fusion pour :", stateData.m1, stateData.m2);
+                console.log("Restauration de la fusion...");
                 
-                // On attend que init() ait chargé les données avant de fusionner
+                // On attend que les données CSV soient prêtes (init)
                 setTimeout(async () => {
-                    await fetchPlayersForTwoMatches(stateData.m1, stateData.m2);
-                    // On peut aussi tenter de remplir les scores si m1/m2 sont dispos
-                }, 1500); 
+                    // On simule le comportement du bouton "Fusionner"
+                    // Cela va remplir les stats équipe ET les joueurs
+                    await fetchMatchDataForState(stateData.m1, stateData.m2);
+                }, 1000);
             }
         } catch (e) {
-            console.error("Erreur de restauration du state:", e);
+            console.error("Erreur lors de la restauration :", e);
         }
+    }
+}
+
+      async function fetchMatchDataForState(id1, id2) {
+    // 1. On retrouve les mi-temps dans les données déjà chargées par init()
+    const m1 = window.tempMatchesData.find(m => m[3].trim() === id1);
+    const m2 = window.tempMatchesData.find(m => m[3].trim() === id2);
+
+    if (m1 && m2) {
+        // 2. On exécute la logique de fusion d'équipe (reprise de processSelectedMatches)
+        // On définit les index comme dans votre script original
+        const isRev1 = (normalizeName(m1[1]) === normalizeName(window.awayName));
+        const isRev2 = (normalizeName(m2[1]) === normalizeName(window.awayName));
+        const sum = (colH, colA, isR1, isR2) => (parseInt(m1[isR1 ? colA : colH]) || 0) + (parseInt(m2[isR2 ? colA : colH]) || 0);
+        const avg = (colH, colA, isR1, isR2) => Math.round(((parseInt(m1[isR1 ? colA : colH]) || 0) + (parseInt(m2[isR2 ? colA : colH]) || 0)) / 2);
+
+        document.getElementById('in-sh').value = sum(4, 5, isRev1, isRev2);
+        document.getElementById('in-sa').value = sum(5, 4, isRev1, isRev2);
+        document.getElementById('in-posH').value = avg(8, 9, isRev1, isRev2);
+        document.getElementById('in-posA').value = avg(9, 8, isRev1, isRev2);
+        // ... ajoutez ici les autres lignes de document.getElementById si nécessaire
+
+        // 3. On lance la fusion des joueurs
+        await fetchPlayersForTwoMatches(id1, id2);
     }
 }
       
