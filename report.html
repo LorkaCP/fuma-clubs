@@ -204,6 +204,31 @@
     document.getElementById('name-home').innerText = homeName;
     document.getElementById('name-away').innerText = awayName;
 
+
+// Variable globale pour stocker le code d'autorisation
+let discordAuthCode = null;
+
+async function checkDiscordAuth() {
+    const params = new URLSearchParams(window.location.search);
+    discordAuthCode = params.get('code'); // Récupère le code généré par Discord 
+
+    const statusEl = document.getElementById('loading-status');
+
+    if (discordAuthCode) {
+        console.log("Code Discord détecté : " + discordAuthCode);
+        // Mise à jour visuelle pour rassurer l'utilisateur
+        if (statusEl) {
+            statusEl.innerHTML = '<i class="fas fa-user-check" style="color: #d4af37;"></i> Authentification Discord active. Vous pouvez fusionner et envoyer.';
+        }
+    } else {
+        console.warn("Aucun code Discord trouvé dans l'URL.");
+        if (statusEl) {
+            statusEl.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #f44336;"></i> Attention : Connectez-vous via Discord pour pouvoir envoyer le rapport.';
+        }
+    }
+}
+      
+
     // --- 2. NORMALISATION ---
     function normalizeName(name) {
         if (!name) return "";
@@ -426,36 +451,58 @@
 }
 
     // --- 5. ENVOI FINAL ---
-    document.getElementById('match-report-form').onsubmit = async (e) => {
+ document.getElementById('match-report-form').onsubmit = async (e) => {
     e.preventDefault();
+
+    // Vérification locale avant l'envoi
+    if (!discordAuthCode) {
+        alert("Erreur : Vous devez être connecté via Discord (cliquez sur le lien de connexion) pour soumettre un match.");
+        return;
+    }
+
     const btn = document.getElementById('btn-submit');
-    btn.innerText = "ENREGISTREMENT...";
+    const originalBtnText = btn.innerText;
+    
+    btn.innerText = "VÉRIFICATION DES DROITS...";
     btn.disabled = true;
 
+    // Préparation des données
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
     
+    // Ajout des informations nécessaires pour le Apps Script [cite: 67]
+    data.action = "match"; 
+    data.discord_code = discordAuthCode; 
     data.home = homeName; 
     data.away = awayName; 
     data.gid = currentGid;
-    // On ajoute le tableau des joueurs fusionnés
-    data.players = currentPlayersData; 
+    data.players = currentPlayersData; // Les données fusionnées précédemment [cite: 67]
 
     try {
-        await fetch(APPS_SCRIPT_URL, { 
+        // Appel au Apps Script (sans mode 'no-cors' pour lire la réponse JSON)
+        const response = await fetch(APPS_SCRIPT_URL, { 
             method: 'POST', 
-            mode: 'no-cors', 
             body: JSON.stringify(data) 
         });
-        alert("Rapport et statistiques joueurs enregistrés !");
-        window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
-    } catch (e) {
-        alert("Erreur lors de l'envoi");
+
+        const result = await response.json();
+
+        if (result.result === "success") {
+            alert("Rapport et statistiques enregistrés avec succès !");
+            window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
+        } else {
+            // Affiche l'erreur précise renvoyée par le serveur (ex: "Rôle insuffisant")
+            alert("Erreur serveur : " + (result.message || "Une erreur inconnue est survenue."));
+            btn.disabled = false;
+            btn.innerText = originalBtnText;
+        }
+    } catch (err) {
+        console.error("Erreur d'envoi:", err);
+        alert("Erreur lors de l'envoi. Assurez-vous que le script Google est bien déployé et accepte les requêtes.");
         btn.disabled = false;
-        btn.innerText = "Valider et enregistrer le match";
+        btn.innerText = originalBtnText;
     }
 };
-
 
       
     init();
