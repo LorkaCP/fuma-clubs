@@ -186,7 +186,7 @@
     // --- 1. CONFIGURATION ---
     const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=1610453677&single=true&output=csv";
     const PLAYERS_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=420142588&single=true&output=csv";
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKgKzQ6QBYxQgfeIYmFCI4GyxBZOJXxu09rgiR9N6VjjTFlqGOnVQND14Ba5425K_IUQ/exec?action=match";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwx_gi3YJA-3L_QRAAR_6k6mHxb847AHkrpqVbRYiTlAm67P9UaQaKoXqQqierLzqgJlQ/exec?action=match";
       let currentPlayersData = []; // Pour stocker les données fusionnées
 
     const CLUB_ALIASES = {
@@ -203,6 +203,40 @@
 
     document.getElementById('name-home').innerText = homeName;
     document.getElementById('name-away').innerText = awayName;
+
+
+
+      // Variable pour stocker le token une fois récupéré
+let discordAccessToken = null;
+
+async function getDiscordAuth() {
+    if (discordAccessToken) return discordAccessToken; // Déjà connecté
+
+    return new Promise((resolve) => {
+        const CLIENT_ID = '1473807551329079408'; 
+        const REDIRECT_URI = "https://fuma-clubs-official.vercel.app/report.html";
+        const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=identify%20guilds.members.read`;
+        
+        const width = 500, height = 700;
+        const left = (window.innerWidth / 2) - (width / 2);
+        const authWindow = window.open(authUrl, "DiscordAuth", `width=${width},height=${height},left=${left}`);
+
+        const timer = setInterval(async () => {
+            try {
+                if (authWindow.location.hash) {
+                    const params = new URLSearchParams(authWindow.location.hash.slice(1));
+                    discordAccessToken = params.get('access_token');
+                    if (discordAccessToken) {
+                        clearInterval(timer);
+                        authWindow.close();
+                        resolve(discordAccessToken);
+                    }
+                }
+            } catch (e) { /* Erreur cross-origin normale pendant le login */ }
+            if (authWindow.closed) clearInterval(timer);
+        }, 500);
+    });
+}
 
     // --- 2. NORMALISATION ---
     function normalizeName(name) {
@@ -429,6 +463,28 @@
     document.getElementById('match-report-form').onsubmit = async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-submit');
+    
+    // --- ÉTAPE DE SÉCURITÉ OPTION 2 ---
+    btn.innerText = "VÉRIFICATION DISCORD...";
+    const token = await getDiscordAuth();
+    
+    if (!token) {
+        alert("Authentification annulée.");
+        btn.innerText = "Valider et enregistrer le match";
+        return;
+    }
+
+    // Appel à votre Apps Script pour vérifier le rôle
+    const authCheck = await fetch(`${APPS_SCRIPT_URL.split('?')[0]}?action=check_auth&token=${token}`);
+    const authResult = await authCheck.json();
+
+    if (!authResult.authorized) {
+        alert("Accès refusé : Vous n'avez pas le rôle requis sur le serveur FUMA.");
+        btn.innerText = "Accès Refusé";
+        return;
+    }
+    // --- FIN DE L'ÉTAPE DE SÉCURITÉ ---
+
     btn.innerText = "ENREGISTREMENT...";
     btn.disabled = true;
 
@@ -438,8 +494,7 @@
     data.home = homeName; 
     data.away = awayName; 
     data.gid = currentGid;
-    // On ajoute le tableau des joueurs fusionnés
-    data.players = currentPlayersData; 
+    data.players = currentPlayersData; // Les données fusionnées sont bien conservées ici 
 
     try {
         await fetch(APPS_SCRIPT_URL, { 
@@ -447,7 +502,7 @@
             mode: 'no-cors', 
             body: JSON.stringify(data) 
         });
-        alert("Rapport et statistiques joueurs enregistrés !");
+        alert("Match validé par " + authResult.user + " !");
         window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
     } catch (e) {
         alert("Erreur lors de l'envoi");
@@ -455,7 +510,6 @@
         btn.innerText = "Valider et enregistrer le match";
     }
 };
-
 
       
     init();
