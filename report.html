@@ -466,59 +466,59 @@ document.getElementById('match-report-form').onsubmit = async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-submit');
     
-    // Définition de l'URL de base (indispensable pour éviter le plantage)
-    const BASE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNXeddIze29OEQ4F3rqwHthcNzvjIEb1EaAl5mRMzKmGsU2_UWlMxAP7pHHEM96aRGyQ/exec";
-    
-    btn.innerText = "VÉRIFICATION DISCORD...";
+    btn.innerText = "AUTHENTIFICATION DISCORD...";
     const token = await getDiscordAuth();
     
     if (!token) {
-        alert("Authentification annulée.");
+        alert("Authentification annulée ou échouée.");
         btn.innerText = "Valider et enregistrer le match";
         return;
     }
 
-    // Construction de l'URL de vérification
-    const authCheckUrl = `${BASE_SCRIPT_URL}?action=check_auth&token=${token}`;
+    // URL de votre Web App Google Script (la même pour GET et POST)
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNXeddIze29OEQ4F3rqwHthcNzvjIEb1EaAl5mRMzKmGsU2_UWlMxAP7pHHEM96aRGyQ/exec";
 
     try {
-        // Étape 1 : Vérification des droits
-        const authCheck = await fetch(authCheckUrl);
+        // Étape 1 : Vérification des droits via le script
+        const authCheck = await fetch(`${SCRIPT_URL}?action=check_auth&token=${token}`);
         const authResult = await authCheck.json();
 
         if (!authResult.authorized) {
-            alert("Accès refusé : Vous n'avez pas le rôle requis sur le serveur FUMA.");
+            alert("Accès refusé : Vous n'avez pas le rôle requis sur Discord.");
             btn.innerText = "Accès Refusé";
             return;
         }
 
-        // Étape 2 : Enregistrement du match
-        btn.innerText = "ENREGISTREMENT...";
+        // Étape 2 : Préparation des données
+        btn.innerText = "ENREGISTREMENT EN COURS...";
         btn.disabled = true;
 
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData.entries());
         
+        // Ajout des informations cruciales
+        data.action = "match"; 
         data.home = homeName; 
         data.away = awayName; 
         data.gid = currentGid;
         data.players = currentPlayersData; 
 
-        // Envoi POST final
-        await fetch(`${BASE_SCRIPT_URL}?action=match`, { 
+        // Étape 3 : Envoi final en POST
+        await fetch(SCRIPT_URL, { 
             method: 'POST', 
-            mode: 'no-cors', 
+            mode: 'no-cors', // Nécessaire pour Google Apps Script via Fetch
             body: JSON.stringify(data) 
         });
 
-        alert("Match validé par " + authResult.user + " !");
+        alert("Match enregistré avec succès par " + authResult.user + " !");
+        // Redirection après succès
         window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
 
     } catch (err) {
-        console.error("Erreur détaillée:", err);
-        alert("Le script a rencontré une erreur lors de la validation.");
+        console.error("Erreur technique:", err);
+        alert("Une erreur est survenue lors de l'enregistrement.");
         btn.disabled = false;
-        btn.innerText = "Réessayer la validation";
+        btn.innerText = "Valider et enregistrer le match";
     }
 };
       
