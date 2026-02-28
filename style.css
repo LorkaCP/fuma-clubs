@@ -534,7 +534,55 @@ body, .fuma-wrapper {
     margin-left: 5px;
 }
 
+/* Conteneur des boutons */
+.form-actions-container {
+    grid-column: 1 / -1; /* Prend toute la largeur du formulaire */
+    display: flex;
+    flex-direction: column; /* Empilés pour plus de clarté */
+    gap: 15px;
+    margin-top: 30px;
+    align-items: center;
+}
 
+/* Bouton principal (déjà existant dans votre thème, on l'assure ici) */
+.fuma-btn-primary {
+    width: 100%;
+    max-width: 400px;
+    background: var(--fuma-primary);
+    color: #000;
+    border: none;
+    padding: 15px;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.fuma-btn-primary:hover {
+    transform: scale(1.02);
+}
+
+/* Bouton Supprimer - Style élégant et dangereux */
+.fuma-btn-delete {
+    display: none; /* Sera affiché par le JS si le profil existe */
+    background: transparent;
+    color: #ff4444;
+    border: 1px solid rgba(255, 68, 68, 0.4);
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+}
+
+.fuma-btn-delete:hover {
+    background: #ff4444;
+    color: white;
+    border-color: #ff4444;
+    box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);
+}
 
 /* --- INPUTS SPÉCIFIQUES & SELECTS --- */
 
@@ -802,6 +850,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
