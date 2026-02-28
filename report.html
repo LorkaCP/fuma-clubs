@@ -206,7 +206,24 @@
     document.getElementById('name-home').innerText = homeName;
     document.getElementById('name-away').innerText = awayName;
 
-    // --- 2. NORMALISATION ---
+    // 2. RÉCUPÉRATION DE L'ID DISCORD (La partie cruciale)
+    // Ce petit bloc remplace ce que fait script.js d'habitude
+    async function checkDiscordAuth() {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const idInUrl = params.get('id');
+
+        // Si on a un code mais pas encore d'ID, on doit échanger le code (via votre API/Worker)
+        if (code && !idInUrl) {
+            // Ici, vous devriez avoir la logique qui transforme le code en ID
+            // Ou alors, votre redirection Discord doit pointer vers une URL qui contient déjà l'ID
+            console.log("Code Discord détecté, échange en cours...");
+        }
+    }
+      
+      
+      
+      // --- 2. NORMALISATION ---
     function normalizeName(name) {
         if (!name) return "";
         let n = name.toLowerCase().trim();
