@@ -21,9 +21,10 @@
         </header>
 
 <div id="auth-section" style="text-align: center; margin-bottom: 20px; padding: 0 20px;">
-    <a id="discord-login-btn" href="https://discord.com/oauth2/authorize?client_id=1473807551329079408&response_type=code&redirect_uri=https%3A%2F%2Ffuma-clubs-official.vercel.app%2Freport.html&scope=identify+guilds.members.read" 
+    <a id="discord-login-btn" href="#" 
+       onclick="redirectToDiscord(event)"
        style="display: inline-block; background: #5865F2; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; transition: 0.3s; border: 1px solid rgba(255,255,255,0.1);">
-        <i class="fab fa-discord"></i> Se connecter avec Discord
+        <i class="fab fa-discord"></i> Se connecter avec Discord pour valider
     </a>
 </div>
         
@@ -215,27 +216,60 @@
 // Variable globale pour stocker le code d'autorisation
 let discordAuthCode = null;
 
-async function checkDiscordAuth() {
+function redirectToDiscord(event) {
+    event.preventDefault();
+    
     const params = new URLSearchParams(window.location.search);
-    discordAuthCode = params.get('code'); 
+    const selected = document.querySelectorAll('.match-checkbox:checked');
+    
+    // On prépare les données à sauvegarder : contexte de l'URL + matchs cochés
+    const stateData = {
+        home: params.get('home'),
+        away: params.get('away'),
+        gid: params.get('gid'),
+        // On récupère l'ID du match (colonne index 3) pour chaque mi-temps sélectionnée
+        m1: selected.length > 0 ? window.tempMatchesData[selected[0].value][3] : null,
+        m2: selected.length > 1 ? window.tempMatchesData[selected[1].value][3] : null
+    };
 
-    const statusEl = document.getElementById('loading-status');
-    const loginBtn = document.getElementById('discord-login-btn');
+    // Encodage en Base64 pour que Discord puisse transporter l'objet en un seul paramètre 'state'
+    const state = btoa(JSON.stringify(stateData));
+    
+    const clientId = "1473807551329079408";
+    const redirectUri = encodeURIComponent("https://fuma-clubs-official.vercel.app/report.html");
+    const scope = encodeURIComponent("identify guilds.members.read");
+    
+    // Redirection vers Discord avec le paramètre state inclus
+    window.location.href = `https://discord.com/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
+}
+      
+      async function checkDiscordAuth() {
+    const params = new URLSearchParams(window.location.search);
+    discordAuthCode = params.get('code');
+    const stateRaw = params.get('state');
 
-    if (discordAuthCode) {
-        console.log("Code Discord détecté : " + discordAuthCode);
-        
-        // On cache le bouton de connexion puisqu'on est déjà authentifié
-        if (loginBtn) loginBtn.style.display = 'none';
+    if (discordAuthCode && stateRaw) {
+        try {
+            // Décodage des données sauvegardées
+            const stateData = JSON.parse(atob(stateRaw));
+            
+            // On cache le bouton de connexion
+            if (document.getElementById('discord-login-btn')) {
+                document.getElementById('discord-login-btn').style.display = 'none';
+            }
 
-        if (statusEl) {
-            statusEl.innerHTML = '<div style="background: rgba(212, 175, 55, 0.1); border: 1px solid #d4af37; padding: 10px; border-radius: 8px;">' +
-                                 '<i class="fas fa-user-check" style="color: #d4af37;"></i> Session Discord active. Vous pouvez soumettre le rapport.</div>';
-        }
-    } else {
-        console.warn("Aucun code Discord trouvé.");
-        if (statusEl) {
-            statusEl.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #f44336;"></i> Veuillez vous connecter à Discord ci-dessus avant de valider.';
+            // Si des matchs étaient sélectionnés, on relance la fusion automatiquement
+            if (stateData.m1 && stateData.m2) {
+                console.log("Restauration de la fusion pour :", stateData.m1, stateData.m2);
+                
+                // On attend que init() ait chargé les données avant de fusionner
+                setTimeout(async () => {
+                    await fetchPlayersForTwoMatches(stateData.m1, stateData.m2);
+                    // On peut aussi tenter de remplir les scores si m1/m2 sont dispos
+                }, 1500); 
+            }
+        } catch (e) {
+            console.error("Erreur de restauration du state:", e);
         }
     }
 }
