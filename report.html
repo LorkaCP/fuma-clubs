@@ -186,7 +186,7 @@
     // --- 1. CONFIGURATION ---
     const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=1610453677&single=true&output=csv";
     const PLAYERS_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=420142588&single=true&output=csv";
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw9sQLFYDXX9UDxbqtCymbPXTSPx3UWXE4A1I69DtJTce1FDr7XkTxpiFnDsLz63Pinnw/exec?action=match";
+    const APPS_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw9sQLFYDXX9UDxbqtCymbPXTSPx3UWXE4A1I69DtJTce1FDr7XkTxpiFnDsLz63Pinnw/exec?action=match";
       let currentPlayersData = []; // Pour stocker les données fusionnées
 
     const CLUB_ALIASES = {
@@ -477,10 +477,10 @@ document.getElementById('match-report-form').onsubmit = async (e) => {
     }
 
     // URL de votre Web App Google Script (la même pour GET et POST)
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNXeddIze29OEQ4F3rqwHthcNzvjIEb1EaAl5mRMzKmGsU2_UWlMxAP7pHHEM96aRGyQ/exec";
+    const APPS_APPS_SCRIPT_URL = "const authCheck = await fetch(`${APPS_APPS_SCRIPT_URL}?action=check_auth&token=${token}`);
     try {
         // Étape 1 : Vérification des droits via le script
-        const authCheck = await fetch(`${SCRIPT_URL}?action=check_auth&token=${token}`);
+        const authCheck = await fetch(`${APPS_SCRIPT_URL}?action=check_auth&token=${token}`);
         const authResult = await authCheck.json();
 
         if (!authResult.authorized) {
@@ -503,13 +503,11 @@ document.getElementById('match-report-form').onsubmit = async (e) => {
         data.gid = currentGid;
         data.players = currentPlayersData; 
 
-        // Étape 3 : Envoi final en POST
-        await fetch(SCRIPT_URL, { 
+        await fetch(APPS_SCRIPT_URL, { 
             method: 'POST', 
             mode: 'no-cors', // Nécessaire pour Google Apps Script via Fetch
             body: JSON.stringify(data) 
         });
-
         alert("Match enregistré avec succès par " + authResult.user + " !");
         // Redirection après succès
         window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
