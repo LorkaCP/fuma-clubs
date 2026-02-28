@@ -165,46 +165,54 @@ async function loadTeamsList() {
 }
 
     async function checkExistingProfile(discordId) {
-        const loader = document.getElementById('fuma-loader');
-        const form = document.getElementById('profile-form');
-        const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+    const loader = document.getElementById('fuma-loader');
+    const form = document.getElementById('profile-form');
+    const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+    const deleteBtn = document.getElementById('btn-delete-profile'); // Récupération du bouton de suppression
 
-        if (loader) loader.style.display = 'flex';
-        if (form) form.style.display = 'none';
+    if (loader) loader.style.display = 'flex';
+    if (form) form.style.display = 'none';
 
-        try {
-            // Correction : on utilise & pour ajouter un paramètre supplémentaire
-const response = await fetch(`${APP_SCRIPT_URL}&discord_id=${discordId}&t=${Date.now()}`);
-            if (!response.ok) throw new Error('Erreur serveur');
-            
-            const data = await response.json();
+    try {
+        // Appel au Google Apps Script avec l'ID Discord et un paramètre de temps pour éviter le cache [cite: 24]
+        const response = await fetch(`${APP_SCRIPT_URL}&discord_id=${discordId}&t=${Date.now()}`);
+        if (!response.ok) throw new Error('Erreur serveur');
+        
+        const data = await response.json();
 
-            if (data && data.result === "success") {
-                const fill = (id, val) => {
-                    const el = document.getElementById(id);
-                    if (el) el.value = (val !== undefined && val !== null) ? val : "";
-                };
+        // Si le profil existe dans la base de données [cite: 26, 27, 28]
+        if (data && data.result === "success") {
+            const fill = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = (val !== undefined && val !== null) ? val : "";
+            };
 
-                fill('id-game', data.game_tag);
-                fill('country', data.country);
-                fill('avatar', data.avatar);
-                fill('team', data.current_team);
-                fill('main-archetype', data.main_archetype);
-                fill('main-position', data.main_position);
+            // Remplissage automatique des champs avec les données existantes [cite: 27]
+            fill('id-game', data.game_tag);
+            fill('country', data.country);
+            fill('avatar', data.avatar);
+            fill('team', data.current_team);
+            fill('main-archetype', data.main_archetype);
+            fill('main-position', data.main_position);
 
-                if (submitBtn) submitBtn.innerText = "Update Existing Profile";
-            } else {
-                if (submitBtn) submitBtn.innerText = "Create My Profile";
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setTimeout(() => {
-                if (loader) loader.style.display = 'none';
-                if (form) form.style.display = 'grid';
-            }, 300);
+            // Mise à jour de l'interface : on affiche le bouton Supprimer et on change le texte du bouton Valider
+            if (submitBtn) submitBtn.innerText = "Update Existing Profile";
+            if (deleteBtn) deleteBtn.style.display = 'block'; 
+        } else {
+            // Si aucun profil n'est trouvé [cite: 29]
+            if (submitBtn) submitBtn.innerText = "Create My Profile";
+            if (deleteBtn) deleteBtn.style.display = 'none';
         }
+    } catch (e) {
+        console.error("Erreur lors de la vérification du profil :", e);
+    } finally {
+        // Masquage du loader et affichage du formulaire
+        setTimeout(() => {
+            if (loader) loader.style.display = 'none';
+            if (form) form.style.display = 'grid';
+        }, 300);
     }
+}
 
     // --- 5. ENVOI DU FORMULAIRE ---
     function setupFormSubmission() {
@@ -893,6 +901,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
