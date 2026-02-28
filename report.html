@@ -185,7 +185,7 @@
   <script>
     // --- 1. CONFIGURATION ---
     const CLIENT_ID = '1473807551329079408'; 
-    const ALLOWED_REPORTERS = ["1458544321988006063"]; // Ton ID Discord
+    const ALLOWED_REPORTERS = ["1060358016328810616"]; // Ton ID Discord
     const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=1610453677&single=true&output=csv";
     const PLAYERS_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=420142588&single=true&output=csv";
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkvEq_gPVk6ooIg0twQy9HnpbzoKetSOiKIpoOlHDYCmcMQmobi5w99krpm-fKEwRFHw/exec?action=match";
@@ -206,24 +206,7 @@
     document.getElementById('name-home').innerText = homeName;
     document.getElementById('name-away').innerText = awayName;
 
-    // 2. RÉCUPÉRATION DE L'ID DISCORD (La partie cruciale)
-    // Ce petit bloc remplace ce que fait script.js d'habitude
-    async function checkDiscordAuth() {
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get('code');
-        const idInUrl = params.get('id');
-
-        // Si on a un code mais pas encore d'ID, on doit échanger le code (via votre API/Worker)
-        if (code && !idInUrl) {
-            // Ici, vous devriez avoir la logique qui transforme le code en ID
-            // Ou alors, votre redirection Discord doit pointer vers une URL qui contient déjà l'ID
-            console.log("Code Discord détecté, échange en cours...");
-        }
-    }
-      
-      
-      
-      // --- 2. NORMALISATION ---
+    // --- 2. NORMALISATION ---
     function normalizeName(name) {
         if (!name) return "";
         let n = name.toLowerCase().trim();
@@ -389,78 +372,52 @@
     }
 
     // --- 5. ENVOI FINAL AVEC SECURITE DISCORD ---
-    // --- 5. GESTION DE L'ENVOI ET SÉCURITÉ DISCORD ---
-document.getElementById('match-report-form').onsubmit = async (e) => {
-    e.preventDefault();
-    
-    // 1. Récupération de l'ID Discord dans l'URL après le retour d'auth
-    const params = new URLSearchParams(window.location.search);
-    const discordId = params.get('id');
-
-    // 2. SI L'UTILISATEUR N'EST PAS CONNECTÉ
-    if (!discordId) {
-        // On récupère toutes les données actuellement saisies dans le formulaire
-        const currentData = new FormData(e.target);
-        const backup = Object.fromEntries(currentData.entries());
+    document.getElementById('match-report-form').onsubmit = async (e) => {
+        e.preventDefault();
         
-        // On sauvegarde dans la mémoire du navigateur pour ne rien perdre
-        localStorage.setItem('report_backup', JSON.stringify(backup));
+        const params = new URLSearchParams(window.location.search);
+        const discordId = params.get('id');
 
-        alert("Authentification requise : Vos données sont sauvegardées. Vous allez être redirigé vers Discord pour valider votre identité.");
+        // A. SI PAS CONNECTÉ -> SAUVEGARDE ET REDIRECTION
+        if (!discordId) {
+            const currentData = new FormData(e.target);
+            localStorage.setItem('report_backup', JSON.stringify(Object.fromEntries(currentData.entries())));
+            
+            alert("Authentification requise. Vos données sont sauvegardées.");
+            const baseUrl = window.location.origin + window.location.pathname;
+            window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(baseUrl)}&response_type=code&scope=identify`;
+            return;
+        }
 
-        // On définit l'URL de retour (sans paramètres complexes pour éviter l'erreur 400 Discord)
-        const baseUrl = window.location.origin + window.location.pathname;
-        
-        // Redirection vers le flux OAuth2 de Discord
-        window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(baseUrl)}&response_type=code&scope=identify`;
-        return;
-    }
+        // B. SI CONNECTÉ MAIS PAS AUTORISÉ
+        if (!ALLOWED_REPORTERS.includes(discordId)) {
+            alert(`Accès refusé : ID ${discordId} non autorisé.`);
+            return;
+        }
 
-    // 3. SI CONNECTÉ MAIS PAS DANS LA LISTE AUTORISÉE
-    if (!ALLOWED_REPORTERS.includes(discordId)) {
-        alert(`Accès refusé : Votre compte Discord (ID: ${discordId}) n'est pas autorisé à envoyer des rapports de match.`);
-        return;
-    }
+        // C. ENVOI FINAL
+        const btn = document.getElementById('btn-submit');
+        btn.innerText = "ENREGISTREMENT...";
+        btn.disabled = true;
 
-    // 4. SI TOUT EST OK : PROCÉDURE D'ENVOI
-    const btn = document.getElementById('btn-submit');
-    btn.innerText = "ENREGISTREMENT EN COURS...";
-    btn.disabled = true;
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        data.home = homeName; data.away = awayName; data.gid = currentGid;
+        data.players = currentPlayersData;
+        data.reporter_id = discordId;
 
-    // Préparation du paquet de données
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData.entries());
-    
-    // Ajout des données globales et des joueurs fusionnés
-    data.home = homeName; 
-    data.away = awayName; 
-    data.gid = currentGid;
-    data.players = currentPlayersData; // Le tableau fusionné via fetchPlayersForTwoMatches
-    data.reporter_discord_id = discordId; // Pour historique dans votre Google Sheet
+        try {
+            await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+            localStorage.removeItem('report_backup');
+            alert("Match enregistré avec succès !");
+            window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
+        } catch (err) {
+            alert("Erreur d'envoi.");
+            btn.disabled = false;
+            btn.innerText = "Valider et enregistrer";
+        }
+    };
 
-    try {
-        // Envoi vers Google Apps Script
-        const response = await fetch(APPS_SCRIPT_URL, { 
-            method: 'POST', 
-            mode: 'no-cors', 
-            body: JSON.stringify(data) 
-        });
-
-        // Si l'envoi réussit, on nettoie la sauvegarde locale
-        localStorage.removeItem('report_backup');
-        
-        alert("Rapport de match et statistiques joueurs enregistrés avec succès !");
-        
-        // Redirection vers la page d'info du match
-        window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
-        
-    } catch (err) {
-        console.error("Erreur lors de l'envoi :", err);
-        alert("Une erreur réseau est survenue. Veuillez réessayer.");
-        btn.innerText = "Valider et enregistrer le match";
-        btn.disabled = false;
-    }
-};
     init();
 </script>
 
