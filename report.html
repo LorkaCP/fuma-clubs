@@ -463,10 +463,12 @@ const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}
 }
 
 // --- 5. ENVOI FINAL ---
+// --- 5. ENVOI FINAL ---
 document.getElementById('match-report-form').onsubmit = async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-submit');
-    
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw9sQLFYDXX9UDxbqtCymbPXTSPx3UWXE4A1I69DtJTce1FDr7XkTxpiFnDsLz63Pinnw/exec"; // URL Corrigée
+
     btn.innerText = "AUTHENTIFICATION DISCORD...";
     const token = await getDiscordAuth();
     
@@ -476,47 +478,47 @@ document.getElementById('match-report-form').onsubmit = async (e) => {
         return;
     }
 
-    // URL de votre Web App Google Script (la même pour GET et POST)
-    const APPS_SCRIPT_URL = "const authCheck = await fetch(`${APPS_SCRIPT_URL}?action=check_auth&token=${token}`);
     try {
-        // Étape 1 : Vérification des droits via le script
+        // Étape 1 : Vérification des droits
         const authCheck = await fetch(`${APPS_SCRIPT_URL}?action=check_auth&token=${token}`);
         const authResult = await authCheck.json();
 
         if (!authResult.authorized) {
-            alert("Accès refusé : Vous n'avez pas le rôle requis sur Discord.");
+            alert("Accès refusé : Vous n'avez pas le rôle requis.");
             btn.innerText = "Accès Refusé";
             return;
         }
 
-        // Étape 2 : Préparation des données
+        // Étape 2 : Préparation et envoi
         btn.innerText = "ENREGISTREMENT EN COURS...";
         btn.disabled = true;
 
         const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
+        const formObj = Object.fromEntries(formData.entries());
         
-        // Ajout des informations cruciales
-        data.action = "match"; 
-        data.home = homeName; 
-        data.away = awayName; 
-        data.gid = currentGid;
-        data.players = currentPlayersData; 
+        const payload = {
+            action: "match",
+            home: homeName,
+            away: awayName,
+            gid: currentGid,
+            players: currentPlayersData,
+            ...formObj
+        };
 
         await fetch(APPS_SCRIPT_URL, { 
             method: 'POST', 
-            mode: 'no-cors', // Nécessaire pour Google Apps Script via Fetch
-            body: JSON.stringify(data) 
+            mode: 'no-cors', 
+            body: JSON.stringify(payload) 
         });
-        alert("Match enregistré avec succès par " + authResult.user + " !");
-        // Redirection après succès
+
+        alert("Match enregistré avec succès !");
         window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
 
     } catch (err) {
         console.error("Erreur technique:", err);
-        alert("Une erreur est survenue lors de l'enregistrement.");
+        alert("Erreur lors de l'enregistrement.");
         btn.disabled = false;
-        btn.innerText = "Valider et enregistrer le match";
+        btn.innerText = "Valider";
     }
 };
       
