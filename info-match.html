@@ -309,47 +309,85 @@
 
     <div id="main-content" style="display:none;">
         
-       <div id="resume" class="tab-content active">
-    <div class="stats-container">
-        
-        <div class="stat-card-box">
-            <div class="stat-label">
-                <span id="val-possession-home">50%</span>
-                <span class="stat-title">POSSESSION</span>
-                <span id="val-possession-away">50%</span>
+        <div class="match-header">
+            <div class="team-block">
+                <img id="logo-home" src="" alt="">
+                <h1 id="name-home">HOME</h1>
+                <div id="strikers-home" class="strikers"></div>
             </div>
-            <div class="progress-container">
-                <div id="bar-possession-home" class="bar-home"></div>
-                <div id="bar-possession-away" class="bar-away"></div>
+            
+            <div class="score-block">
+                <div class="score-display">
+                    <span id="score-home">0</span>
+                    <span style="color: var(--fuma-gold)">:</span>
+                    <span id="score-away">0</span>
+                </div>
+                <div id="motm-container"></div>
+            </div>
+
+            <div class="team-block">
+                <img id="logo-away" src="" alt="">
+                <h1 id="name-away">AWAY</h1>
+                <div id="strikers-away" class="strikers"></div>
             </div>
         </div>
 
-        <div class="stat-card-box">
-            <div class="stat-label">
-                <span id="val-shots-home">0</span>
-                <span class="stat-title">SHOTS</span>
-                <span id="val-shots-away">0</span>
-            </div>
-            <div class="progress-container">
-                <div id="bar-shots-home" class="bar-home"></div>
-                <div id="bar-shots-away" class="bar-away"></div>
-            </div>
+        <div class="match-nav" id="match-nav">
+            <button class="tab-btn active" onclick="switchTab('resume')">SUMMARY</button>
+            <button class="tab-btn" onclick="switchTab('joueurs')">PLAYERS</button>
         </div>
 
-        <div class="stat-card-box">
-            <div class="stat-label">
-                <span id="val-passes-home">0 (0%)</span>
-                <span class="stat-title">PASSES</span>
-                <span id="val-passes-away">0 (0%)</span>
-            </div>
-            <div class="progress-container">
-                <div id="bar-passes-home" class="bar-home"></div>
-                <div id="bar-passes-away" class="bar-away"></div>
-            </div>
+        <<div class="stats-container">
+    <div class="match-stat-row"> <div class="stat-label">
+            <span id="val-possession-home">50%</span>
+            <span class="stat-title">POSSESSION</span>
+            <span id="val-possession-away">50%</span>
         </div>
-
+        <div class="progress-container">
+            <div id="bar-possession-home" class="bar-home"></div>
+            <div id="bar-possession-away" class="bar-away"></div>
+        </div>
     </div>
-</div>
+    </div>
+
+                <div class="match-stat-row">
+                    <div class="stat-label">
+                        <span id="val-shots-home">0</span>
+                        <span class="stat-title">SHOTS</span>
+                        <span id="val-shots-away">0</span>
+                    </div>
+                    <div class="progress-container">
+                        <div id="bar-shots-home" class="bar-home"></div>
+                        <div id="bar-shots-away" class="bar-away"></div>
+                    </div>
+                </div>
+
+                <div class="match-stat-row">
+                    <div class="stat-label">
+                        <span id="val-passes-home">0 (0%)</span>
+                        <span class="stat-title">PASSES</span>
+                        <span id="val-passes-away">0 (0%)</span>
+                    </div>
+                    <div class="progress-container">
+                        <div id="bar-passes-home" class="bar-home"></div>
+                        <div id="bar-passes-away" class="bar-away"></div>
+                    </div>
+                </div>
+
+                <div class="match-stat-row">
+                    <div class="stat-label">
+                        <span id="val-tackles-home">0/0</span>
+                        <span class="stat-title">SUCCESSFUL TACKLES</span>
+                        <span id="val-tackles-away">0/0</span>
+                    </div>
+                    <div class="progress-container">
+                        <div id="bar-tackles-home" class="bar-home"></div>
+                        <div id="bar-tackles-away" class="bar-away"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="joueurs" class="tab-content">
             <div class="players-grid">
                 <div class="team-players">
