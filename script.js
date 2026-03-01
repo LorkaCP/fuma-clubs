@@ -924,7 +924,36 @@ loadClubProfile();
     document.getElementById('filter-team')?.addEventListener('change', applyPlayerFilters);
     document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
+    // Bouton Logout
+document.getElementById('btn-logout')?.addEventListener('click', () => {
+    if (confirm("Are you sure you want to logout?")) {
+        logout(); // Utilise la fonction logout() déjà présente dans votre script
+    }
+});
+
+// Bouton Delete Profile
+document.getElementById('btn-delete-profile')?.addEventListener('click', async () => {
+    const user = getStoredUser();
+    if (!user) return;
+
+    if (confirm("WARNING: Are you sure you want to DELETE your profile? This action is permanent.")) {
+        try {
+            // Appel à l'API Google Script pour supprimer l'entrée
+            const response = await fetch(`${APP_SCRIPT_URL}&method=DELETE&id=${user.id}`, { 
+                method: 'POST' // Google Apps Script nécessite souvent POST pour simuler DELETE
+            });
+            
+            alert("Profile deleted successfully.");
+            logout(); // Déconnexion automatique après suppression
+        } catch (error) {
+            console.error("Error deleting profile:", error);
+            alert("Failed to delete profile. Please try again.");
+        }
+    }
+});
+
 }); // Fermeture unique du DOMContentLoaded
+
 
 
 
