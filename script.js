@@ -123,9 +123,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <a href="${discordServerLink}" target="_blank" style="color: #5865F2;">
                         <i class="fab fa-discord"></i> Discord
                     </a>
-                    <a href="${authUrl}" class="fuma-login-btn">
-    <i class="fab fa-discord"></i> CONNEXION
-</a> ```
+                    <a href="${authUrl}" id="btn-my-profile" class="fuma-login-btn">
+                        <i class="fab fa-discord"></i> CONNEXION
+                    </a>
                 </div>
             </div>
         `;
@@ -993,6 +993,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
