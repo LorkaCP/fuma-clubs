@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <a href="#">Rules</a>
                     <a href="${discordServerLink}" target="_blank" style="color: #5865F2;">
                         <i class="fab fa-discord"></i> Discord
+                        <a href="${profileLink}" class="profile-link">${profileText}</a>
                     </a>
                 </div>
             </div>
@@ -134,34 +135,66 @@ async function loadTeamsList() {
 }
 
     
-    async function handleProfilePage() {
-    // Vérifie si nous sommes bien sur la page profile.html
+   // --- LOGIQUE DE SESSION ---
+
+// Vérifie si un utilisateur est déjà stocké localement
+function getStoredUser() {
+    const user = localStorage.getItem('fuma_user');
+    return user ? JSON.parse(user) : null;
+}
+
+async function handleProfilePage() {
     if (!window.location.pathname.includes('profile.html')) return;
 
-    // 1. Charger la liste des clubs dans le menu déroulant
+    // 1. On charge d'abord la liste des équipes pour les menus déroulants
     await loadTeamsList();
 
-    // 2. Récupération des paramètres Discord dans l'URL (après redirection Auth)
+    // 2. On vérifie si on revient d'une authentification Discord (paramètres URL)
     const params = new URLSearchParams(window.location.search);
     const discordUsername = params.get('username');
     const discordId = params.get('id');
 
-    // 3. Si les infos Discord sont présentes, on pré-remplit le formulaire
-    if (discordUsername && discordUsername !== "undefined" && discordId && discordId !== "undefined") {
+    let currentUser = getStoredUser();
+
+    if (discordUsername && discordId) {
+        // Nouvel utilisateur vient de se connecter
+        currentUser = {
+            id: discordId,
+            username: decodeURIComponent(discordUsername)
+        };
+        // SAUVEGARDE PERSISTANTE
+        localStorage.setItem('fuma_user', JSON.stringify(currentUser));
+        
+        // Nettoyer l'URL pour éviter de re-déclencher la connexion au refresh
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    // 3. Gestion de l'affichage
+    const form = document.getElementById('profile-form');
+    const loginPrompt = document.getElementById('login-prompt'); // À ajouter dans profile.html
+
+    if (currentUser) {
+        if (loginPrompt) loginPrompt.style.display = 'none';
+        if (form) form.style.display = 'grid';
+
+        // On pré-remplit les champs masqués/identifiants
         const nameInput = document.getElementById('discord-name');
         const idInput = document.getElementById('id-discord');
-        
-        if (nameInput && idInput) {
-            nameInput.value = decodeURIComponent(discordUsername);
-            idInput.value = discordId;
-            
-            // On vérifie si ce joueur a déjà un profil enregistré
-            checkExistingProfile(discordId);
-            
-            // Nettoyage de l'URL pour la sécurité et l'esthétique
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
+        if (nameInput) nameInput.value = currentUser.username;
+        if (idInput) idInput.value = currentUser.id;
+
+        // On appelle votre fonction existante qui interroge le Google Script
+        checkExistingProfile(currentUser.id);
+    } else {
+        if (loginPrompt) loginPrompt.style.display = 'block';
+        if (form) form.style.display = 'none';
     }
+}
+
+// Fonction de déconnexion
+function logout() {
+    localStorage.removeItem('fuma_user');
+    window.location.href = 'index.html';
 }
 
     async function checkExistingProfile(discordId) {
@@ -893,6 +926,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
