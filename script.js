@@ -992,7 +992,25 @@ document.getElementById('btn-delete-profile')?.addEventListener('click', async (
     }
 });
 
+    // Gestion intelligente du bouton Register de la home
+const heroRegisterBtn = document.getElementById('hero-register-btn');
+if (heroRegisterBtn) {
+    heroRegisterBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const currentUser = getStoredUser();
+        
+        if (currentUser) {
+            // Si déjà connecté, go profil
+            window.location.href = 'profile.html';
+        } else {
+            // Si non connecté, go Discord Auth (défini en haut de votre script)
+            window.location.href = authUrl;
+        }
+    });
+}
+
 }); // Fermeture unique du DOMContentLoaded
+
 
 
 
