@@ -278,6 +278,17 @@ body, .fuma-wrapper {
     filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
 }
 
+.fuma-btn-logout {
+    background: #444;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
 .status-badge {
     background: rgba(212, 175, 55, 0.1);
     color: var(--fuma-primary);
@@ -850,6 +861,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
