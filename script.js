@@ -35,62 +35,57 @@ document.addEventListener('DOMContentLoaded', () => {
     const nav = document.getElementById('main-nav');
     if (!nav) return;
 
-    // Récupérer l'utilisateur pour adapter le menu
-    const currentUser = getStoredUser();
+    const discordServerLink = 'https://discord.gg/xPz9FBkdtm';
+    
+    // --- CORRECTION ICI ---
+    // On récupère l'utilisateur stocké pour savoir quoi afficher
+    const currentUser = getStoredUser(); 
+    
+    // Si l'utilisateur est connecté, on pointe vers son profil, sinon vers l'auth Discord
     const profileLink = currentUser ? `profile.html?id=${currentUser.id}` : authUrl;
     const profileText = currentUser ? `<i class="fas fa-user"></i> ${currentUser.username}` : "Login";
+    // -----------------------
 
-        const discordServerLink = 'https://discord.gg/xPz9FBkdtm';
-
-        nav.innerHTML = `
-            <div class="nav-container">
-                <a href="index.html" class="fuma-logo">FUMA<span>CLUBS</span></a>
-                
-                <div class="fuma-burger" id="burger-menu">
-                    <span></span><span></span><span></span>
-                </div>
-
-                <div class="nav-links" id="nav-links-container">
-                    <a href="index.html">Home</a>
-                    <a href="league.html">League</a>
-                    <a href="clubs.html">Clubs</a>
-                    <a href="players.html">Players</a>
-                    <a href="#">Rules</a>
-                    <a href="${discordServerLink}" target="_blank" style="color: #5865F2;">
-                        <i class="fab fa-discord"></i> Discord</a>
-                        <a href="${profileLink}" class="profile-link">${profileText}</a>
-                </div>
+    nav.innerHTML = `
+        <div class="nav-container">
+            <a href="index.html" class="fuma-logo">FUMA<span>CLUBS</span></a>
+            
+            <div class="fuma-burger" id="burger-menu">
+                <span></span><span></span><span></span>
             </div>
-        `;
 
-        const currentPage = window.location.pathname.split("/").pop() || 'index.html';
-        const allLinks = nav.querySelectorAll('.nav-links a');
+            <div class="nav-links" id="nav-links-container">
+                <a href="index.html">Home</a>
+                <a href="league.html">League</a>
+                <a href="clubs.html">Clubs</a>
+                <a href="players.html">Players</a>
+                <a href="#">Rules</a>
+                <a href="${discordServerLink}" target="_blank" style="color: #5865F2;">
+                    <i class="fab fa-discord"></i> Discord</a>
+                <a href="${profileLink}" class="profile-link">${profileText}</a>
+            </div>
+        </div>
+    `;
 
-        allLinks.forEach(link => {
-            const linkHref = link.getAttribute('href');
-            if (currentPage === linkHref) {
-                link.classList.add('active');
-            }
-        });
+    // ... reste de la fonction (gestion de la classe 'active' et du burger)
+    const currentPage = window.location.pathname.split("/").pop() || 'index.html';
+    const allLinks = nav.querySelectorAll('.nav-links a');
 
-        // Liaison du bouton profile si présent
-        const myProfileBtn = document.getElementById('btn-my-profile');
-        if (myProfileBtn) {
-            myProfileBtn.setAttribute('href', authUrl);
+    allLinks.forEach(link => {
+        if (currentPage === link.getAttribute('href')) {
+            link.classList.add('active');
         }
+    });
 
-        // Menu Burger
-        const burger = document.getElementById('burger-menu');
-        const linksContainer = document.getElementById('nav-links-container');
-        
-        if (burger && linksContainer) {
-            burger.onclick = function() {
-                burger.classList.toggle('active');
-                linksContainer.classList.toggle('active');
-            };
-        }
+    const burger = document.getElementById('burger-menu');
+    const linksContainer = document.getElementById('nav-links-container');
+    if (burger && linksContainer) {
+        burger.onclick = () => {
+            burger.classList.toggle('active');
+            linksContainer.classList.toggle('active');
+        };
     }
-
+}
 async function loadTeamsList() {
     const teamSelect = document.getElementById('team');
     if (!teamSelect) return;
@@ -926,6 +921,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
