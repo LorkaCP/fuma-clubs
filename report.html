@@ -482,6 +482,7 @@ document.getElementById('match-report-form').onsubmit = async (e) => {
         // Étape 1 : Vérification des droits
         const authCheck = await fetch(`${APPS_SCRIPT_URL}?action=check_auth&token=${token}`);
         const authResult = await authCheck.json();
+        console.log(authResult);
 
         if (!authResult.authorized) {
             alert("Accès refusé : Vous n'avez pas le rôle requis.");
