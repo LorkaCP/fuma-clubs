@@ -86,7 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 4. LOGIQUE PAGE PROFIL ---
 async function loadTeamsList() {
     const teamSelect = document.getElementById('team');
     if (!teamSelect) return;
@@ -97,23 +96,23 @@ async function loadTeamsList() {
         const lines = text.trim().split("\n");
         const headers = lines[0].split(",");
         
-        // Identification des index de colonnes
         const teamIdx = headers.indexOf('TEAMS');
         const activeIdx = headers.indexOf('ACTIVE');
+
+        if (teamIdx === -1) {
+            console.error("Colonne 'TEAMS' introuvable dans le CSV");
+            return;
+        }
 
         const teams = lines.slice(1)
             .map(line => {
                 const columns = parseCSVLine(line);
                 return {
                     name: columns[teamIdx],
-                    active: columns[activeIdx] ? columns[activeIdx].trim().toUpperCase() : ""
+                    active: activeIdx !== -1 && columns[activeIdx] ? columns[activeIdx].trim().toUpperCase() : "YES"
                 };
             })
             .filter(club => {
-                // On garde si : 
-                // 1. Le nom existe
-                // 2. Ce n'est pas un "Free Agent" (déjà en dur dans le HTML)
-                // 3. La colonne ACTIVE n'est pas égale à "NO"
                 return club.name && 
                        club.name.trim() !== "" && 
                        !club.name.toLowerCase().includes('free agent') && 
@@ -121,7 +120,9 @@ async function loadTeamsList() {
             })
             .sort((a, b) => a.name.localeCompare(b.name));
 
-        // Ajout des options filtrées au menu déroulant
+        // Nettoyage avant ajout (garde l'option par défaut "Free Agent" si elle est dans le HTML)
+        // teamSelect.innerHTML = '<option value="Free Agent">Free Agent</option>'; 
+
         teams.forEach(club => {
             const option = document.createElement('option');
             option.value = club.name;
@@ -133,111 +134,113 @@ async function loadTeamsList() {
     }
 }
 
-    
-    // Vérifie si un utilisateur est déjà stocké localement
+/**
+ * Gestion de la session et de l'affichage initial
+ */
 function getStoredUser() {
     const user = localStorage.getItem('fuma_user');
-    return user ? JSON.parse(user) : null;
+    try {
+        return user ? JSON.parse(user) : null;
+    } catch (e) {
+        return null;
+    }
 }
 
 async function handleProfilePage() {
     if (!window.location.pathname.includes('profile.html')) return;
 
-    // 1. On charge d'abord la liste des équipes pour les menus déroulants
-    await loadTeamsList();
-
-    // 2. On vérifie si on revient d'une authentification Discord (paramètres URL)
+    const form = document.getElementById('profile-form');
+    const loginPrompt = document.getElementById('login-prompt');
     const params = new URLSearchParams(window.location.search);
+    
+    // 1. Récupération des infos Discord (URL ou LocalStorage)
     const discordUsername = params.get('username');
     const discordId = params.get('id');
-
     let currentUser = getStoredUser();
 
     if (discordUsername && discordId) {
-        // Nouvel utilisateur vient de se connecter
         currentUser = {
             id: discordId,
             username: decodeURIComponent(discordUsername)
         };
-        // SAUVEGARDE PERSISTANTE
         localStorage.setItem('fuma_user', JSON.stringify(currentUser));
-        
-        // Nettoyer l'URL pour éviter de re-déclencher la connexion au refresh
+        // Nettoyer l'URL
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    // 3. Gestion de l'affichage
-    const form = document.getElementById('profile-form');
-    const loginPrompt = document.getElementById('login-prompt'); // À ajouter dans profile.html
-
+    // 2. Logique d'affichage
     if (currentUser) {
         if (loginPrompt) loginPrompt.style.display = 'none';
-        if (form) form.style.display = 'grid';
+        
+        // On charge les équipes AVANT de remplir le profil pour que la team soit sélectionnable
+        await loadTeamsList();
 
-        // On pré-remplit les champs masqués/identifiants
+        // Pré-remplissage technique
         const nameInput = document.getElementById('discord-name');
         const idInput = document.getElementById('id-discord');
         if (nameInput) nameInput.value = currentUser.username;
         if (idInput) idInput.value = currentUser.id;
 
-        // On appelle votre fonction existante qui interroge le Google Script
-        checkExistingProfile(currentUser.id);
+        // Récupération des données existantes sur le Google Sheet
+        await checkExistingProfile(currentUser.id);
     } else {
         if (loginPrompt) loginPrompt.style.display = 'block';
         if (form) form.style.display = 'none';
     }
 }
 
-// Fonction de déconnexion
-function logout() {
-    localStorage.removeItem('fuma_user');
-    window.location.href = 'index.html';
+async function checkExistingProfile(discordId) {
+    const loader = document.getElementById('fuma-loader') || document.getElementById('profile-loader');
+    const form = document.getElementById('profile-form');
+    const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+
+    if (loader) loader.style.display = 'flex';
+    if (form) form.style.display = 'none';
+
+    try {
+        // Construction propre de l'URL avec les paramètres
+        const fetchUrl = new URL(APP_SCRIPT_URL);
+        fetchUrl.searchParams.set('discord_id', discordId);
+        fetchUrl.searchParams.set('t', Date.now()); // Anti-cache
+
+        const response = await fetch(fetchUrl.toString());
+        if (!response.ok) throw new Error('Erreur réseau');
+        
+        const data = await response.json();
+
+        if (data && data.result === "success") {
+            const fill = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = (val !== undefined && val !== null) ? val : "";
+            };
+
+            fill('id-game', data.game_tag);
+            fill('country', data.country);
+            fill('avatar', data.avatar);
+            fill('team', data.current_team);
+            fill('main-archetype', data.main_archetype);
+            fill('main-position', data.main_position);
+
+            if (submitBtn) submitBtn.innerText = "Update Existing Profile";
+            
+            // Afficher le bouton supprimer si l'utilisateur existe
+            const deleteBtn = document.getElementById('delete-profile-btn');
+            if (deleteBtn) deleteBtn.style.display = 'block';
+        } else {
+            if (submitBtn) submitBtn.innerText = "Create My Profile";
+        }
+    } catch (e) {
+        console.error("Erreur checkExistingProfile:", e);
+    } finally {
+        if (loader) loader.style.display = 'none';
+        if (form) form.style.display = 'grid';
+    }
 }
 
-    async function checkExistingProfile(discordId) {
-        const loader = document.getElementById('fuma-loader');
-        const form = document.getElementById('profile-form');
-        const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
-
-        if (loader) loader.style.display = 'flex';
-        if (form) form.style.display = 'none';
-
-        try {
-            // Correction : on utilise & pour ajouter un paramètre supplémentaire
-const response = await fetch(`${APP_SCRIPT_URL}&discord_id=${discordId}&t=${Date.now()}`);
-            if (!response.ok) throw new Error('Erreur serveur');
-            
-            const data = await response.json();
-
-            if (data && data.result === "success") {
-                const fill = (id, val) => {
-                    const el = document.getElementById(id);
-                    if (el) el.value = (val !== undefined && val !== null) ? val : "";
-                };
-
-                fill('id-game', data.game_tag);
-                fill('country', data.country);
-                fill('avatar', data.avatar);
-                fill('team', data.current_team);
-                fill('main-archetype', data.main_archetype);
-                fill('main-position', data.main_position);
-
-                if (submitBtn) submitBtn.innerText = "Update Existing Profile";
-            } else {
-                if (submitBtn) submitBtn.innerText = "Create My Profile";
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setTimeout(() => {
-                if (loader) loader.style.display = 'none';
-                if (form) form.style.display = 'grid';
-            }, 300);
-        }
-    }
-
-    // --- 5. ENVOI DU FORMULAIRE ---
-    function setupFormSubmission() {
+/**
+ * Envoi des données vers le Google Sheet
+ */
+function setupFormSubmission() {
     const profileForm = document.getElementById('profile-form');
     if (!profileForm) return;
 
@@ -247,13 +250,10 @@ const response = await fetch(`${APP_SCRIPT_URL}&discord_id=${discordId}&t=${Date
         const submitBtn = profileForm.querySelector('button[type="submit"]');
         const originalBtnText = submitBtn.innerText;
         
-        // 1. État visuel de chargement
         submitBtn.disabled = true;
-        submitBtn.innerText = "Updating...";
+        submitBtn.innerText = "Sending...";
 
-        // 2. Préparation des données
         const avatarInput = document.getElementById('avatar')?.value.trim();
-        const DEFAULT_AVATAR = "https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png"; // Assurez-vous que cette variable est définie
         const finalAvatar = (avatarInput === "" || avatarInput.toLowerCase() === "none") ? DEFAULT_AVATAR : avatarInput;
 
         const formData = new URLSearchParams();
@@ -267,42 +267,40 @@ const response = await fetch(`${APP_SCRIPT_URL}&discord_id=${discordId}&t=${Date
         formData.append('main_position', document.getElementById('main-position')?.value || "");
 
         try {
-            // 3. Envoi à Google Apps Script
+            // Utilisation de POST pour l'envoi
             await fetch(APP_SCRIPT_URL, {
                 method: 'POST',
                 body: formData,
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                mode: 'no-cors'
+                headers: { 'Content-Type': 'application/x-form-urlencoded' },
+                mode: 'no-cors' // Mode nécessaire pour Google Apps Script sans configuration CORS complexe
             });
 
-            // 4. Succès : Mise à jour de l'interface
+            // Succès visuel
             const statusBox = document.getElementById('status-message');
             const statusText = document.getElementById('status-text');
 
             if (statusBox && statusText) {
-                // On affiche le message et on cache le formulaire
-                statusText.innerText = "Profile updated! Redirecting to players list in 3 seconds...";
+                statusText.innerText = "Profile saved! Redirecting...";
                 statusBox.style.display = 'block';
                 profileForm.style.display = 'none'; 
-                
-                // Remonte en haut de page pour que le message soit visible
                 window.scrollTo({ top: 0, behavior: 'smooth' });
 
-                // 5. Redirection automatique après 3 secondes
                 setTimeout(() => {
                     window.location.href = 'players.html';
-                }, 3000);
+                }, 2000);
             }
-
         } catch (error) {
             console.error("Submission error:", error);
-            
-            // En cas d'erreur, on avertit l'utilisateur et on réactive le bouton
-            alert("An error occurred during update. Please try again.");
+            alert("An error occurred. Please try again.");
             submitBtn.disabled = false;
             submitBtn.innerText = originalBtnText;
         }
     });
+}
+
+function logout() {
+    localStorage.removeItem('fuma_user');
+    window.location.href = 'index.html';
 }
     // --- 6. LOGIQUE LISTE DES CLUBS (clubs.html) ---
     async function fetchFumaClubs() {
@@ -923,6 +921,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
