@@ -31,121 +31,105 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('main-content').style.display = 'block';
 
             if (match) {
-                updateUI(match);
+                // On passe les noms et le gid à updateUI pour la redirection
+                updateUI(match, homeName, awayName, gid);
             }
         }).catch(err => console.error("Erreur de chargement Fixtures:", err));
 });
 
-function updateUI(m) {
+function updateUI(m, homeName, awayName, gid) {
     const scoreHome = m[9];
-    // Un match est considéré comme "joué" si le score n'est pas vide, pas 0 et pas une erreur #REF!
-    const isPlayed = scoreHome !== "" && scoreHome !== "#REF!" && scoreHome !== undefined && scoreHome !== "0";
+    // Un match est considéré comme "joué" si le score n'est pas vide, pas VS, pas 0 et pas une erreur #REF!
+    const isPlayed = scoreHome !== "" && scoreHome !== "#REF!" && scoreHome !== undefined && scoreHome !== "0" && scoreHome !== "VS";
 
-    // Récupération des éléments de structure
-    const resumeTab = document.getElementById('resume');
-    const joueursTab = document.getElementById('joueurs');
     const matchNav = document.getElementById('match-nav');
     const upcomingSection = document.getElementById('upcoming-section');
-    
-    // Récupération des éléments de score
     const elScoreHome = document.getElementById('score-home');
     const elScoreAway = document.getElementById('score-away');
 
-    // 1. Mise à jour des infos de base (toujours visibles)
+    // Mise à jour des infos de base
     document.getElementById('name-home').innerText = m[6];
     document.getElementById('name-away').innerText = m[7];
     document.getElementById('logo-home').src = m[3] || '';
     document.getElementById('logo-away').src = m[4] || '';
 
-    // Nettoyage systématique des classes de score au début
     elScoreHome.classList.remove('score-loser');
     elScoreAway.classList.remove('score-loser');
 
     if (!isPlayed) {
-      // --- MODE MATCH NON JOUÉ (ATTENTE) ---
-if (!m[9] || m[9] === "" || m[9] === "VS") {
-    if (matchNav) matchNav.style.display = 'none';
-    if (upcomingSection) upcomingSection.style.display = 'block';
+        // --- MODE MATCH NON JOUÉ (ATTENTE) ---
+        if (matchNav) matchNav.style.display = 'none';
+        if (upcomingSection) upcomingSection.style.display = 'block';
 
-    // CONFIGURATION DU BOUTON DE RAPPORT AVEC VÉRIFICATION
-    const btnReport = document.getElementById('btn-send-report');
-    if (btnReport) {
-        btnReport.onclick = async () => {
-            const discordId = prompt("Veuillez entrer votre ID Discord pour valider l'accès au rapport :");
-            
-            if (!discordId) return;
+        const btnReport = document.getElementById('btn-send-report');
+        if (btnReport) {
+            btnReport.onclick = async () => {
+                const discordId = prompt("Veuillez entrer votre ID Discord pour valider l'accès au rapport :");
+                if (!discordId) return;
 
-            // Feedback visuel
-            btnReport.innerText = "VÉRIFICATION...";
-            btnReport.disabled = true;
+                btnReport.innerText = "VÉRIFICATION...";
+                btnReport.disabled = true;
 
-            try {
-                // REMPLACEZ PAR VOTRE URL DÉPLOYÉE
-                const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztCVEmtqHMv_KaR_XHYozJxrU8f6OshDxkMYuLomW8jDmO-dH9_A5femqte4gqYJYKFQ/exec"; 
-                const response = await fetch(`${SCRIPT_URL}?action=checkReporter&discord_id=${discordId}`);
-                const data = await response.json();
+                try {
+                    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztCVEmtqHMv_KaR_XHYozJxrU8f6OshDxkMYuLomW8jDmO-dH9_A5femqte4gqYJYKFQ/exec"; 
+                    const response = await fetch(`${SCRIPT_URL}?action=checkReporter&discord_id=${discordId}`);
+                    const data = await response.json();
 
-                if (data.authorized) {
-                    // Si autorisé, redirection avec les paramètres existants + l'auth
-                    window.location.href = `report.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${gid}&auth=${discordId}`;
-                } else {
-                    alert("Accès refusé : Votre ID Discord n'est pas autorisé à envoyer des rapports.");
+                    if (data.authorized) {
+                        window.location.href = `report.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${gid}&auth=${discordId}`;
+                    } else {
+                        alert("Accès refusé : Votre ID Discord n'est pas autorisé à envoyer des rapports.");
+                        btnReport.innerHTML = '<i class="fas fa-plus-circle"></i> SEND REPORT';
+                        btnReport.disabled = false;
+                    }
+                } catch (error) {
+                    console.error("Erreur de vérification:", error);
+                    alert("Erreur lors de la vérification de l'ID.");
                     btnReport.innerHTML = '<i class="fas fa-plus-circle"></i> SEND REPORT';
                     btnReport.disabled = false;
                 }
-            } catch (error) {
-                console.error("Erreur de vérification:", error);
-                alert("Erreur lors de la vérification de l'ID. Vérifiez votre connexion.");
-                btnReport.innerHTML = '<i class="fas fa-plus-circle"></i> SEND REPORT';
-                btnReport.disabled = false;
-            }
-        };
+            };
+        }
+    } else {
+        // --- MODE MATCH JOUÉ ---
+        if (matchNav) matchNav.style.display = 'flex';
+        if (upcomingSection) upcomingSection.style.display = 'none';
+        
+        switchTab('resume');
+
+        elScoreHome.innerText = m[9];
+        elScoreAway.innerText = m[10];
+
+        const sH = parseInt(m[9]) || 0;
+        const sA = parseInt(m[10]) || 0;
+        if (sH < sA) elScoreHome.classList.add('score-loser');
+        else if (sA < sH) elScoreAway.classList.add('score-loser');
+
+        document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
+        document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
+
+        updateBar('possession', m[13], m[14], true);
+        updateBar('shots', m[15], m[16], false);
+        
+        const pH = document.getElementById('val-passes-home');
+        const pA = document.getElementById('val-passes-away');
+        if(pH) pH.innerText = `${m[17] || 0} (${m[19] || 0}%)`;
+        if(pA) pA.innerText = `${m[18] || 0} (${m[20] || 0}%)`;
+        updateBar('passes', m[19], m[20], true, true);
+
+        const tH = document.getElementById('val-tackles-home');
+        const tA = document.getElementById('val-tackles-away');
+        if(tH) tH.innerText = `${m[23] || 0}/${m[21] || 0}`;
+        if(tA) tA.innerText = `${m[24] || 0}/${m[22] || 0}`;
+        updateBar('tackles', m[23], m[24], false, true);
+
+        const motmCont = document.getElementById('motm-container');
+        if (motmCont && m[27] && m[27] !== '0' && m[27] !== '#REF!') {
+            motmCont.innerHTML = `<div class="motm-badge"><i class="fas fa-star"></i> MOTM: ${m[27]}</div>`;
+        }
+        
+        loadPlayerStats(m[8], m[6], m[7]);
     }
-} else {
-    // --- MODE MATCH JOUÉ (On garde tout ton code actuel ici) ---
-    if (matchNav) matchNav.style.display = 'flex';
-    if (upcomingSection) upcomingSection.style.display = 'none';
-    
-    switchTab('resume');
-
-    elScoreHome.innerText = m[9];
-    elScoreAway.innerText = m[10];
-
-    const sH = parseInt(m[9]) || 0;
-    const sA = parseInt(m[10]) || 0;
-    if (sH < sA) {
-        elScoreHome.classList.add('score-loser');
-    } else if (sA < sH) {
-        elScoreAway.classList.add('score-loser');
-    }
-
-    document.getElementById('strikers-home').innerHTML = formatStrikers(m[11]);
-    document.getElementById('strikers-away').innerHTML = formatStrikers(m[12]);
-
-    updateBar('possession', m[13], m[14], true);
-    updateBar('shots', m[15], m[16], false);
-    
-    const pH = document.getElementById('val-passes-home');
-    const pA = document.getElementById('val-passes-away');
-    if(pH) pH.innerText = `${m[17] || 0} (${m[19] || 0}%)`;
-    if(pA) pA.innerText = `${m[18] || 0} (${m[20] || 0}%)`;
-    updateBar('passes', m[19], m[20], true, true);
-
-    const tH = document.getElementById('val-tackles-home');
-    const tA = document.getElementById('val-tackles-away');
-    if(tH) tH.innerText = `${m[23] || 0}/${m[21] || 0}`;
-    if(tA) tA.innerText = `${m[24] || 0}/${m[22] || 0}`;
-    updateBar('tackles', m[23], m[24], false, true);
-
-    const motmCont = document.getElementById('motm-container');
-    if (motmCont && m[27] && m[27] !== '0' && m[27] !== '#REF!') {
-        motmCont.innerHTML = `<div class="motm-badge"><i class="fas fa-star"></i> MOTM: ${m[27]}</div>`;
-    } else if (motmCont) {
-        motmCont.innerHTML = "";
-    }
-
-    loadPlayerStats(m[8], m[6], m[7]);
-}
 }
 async function loadPlayerStats(matchId, homeName, awayName) {
     const PLAYER_GID = "2074996595";
