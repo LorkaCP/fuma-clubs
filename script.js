@@ -225,8 +225,10 @@ async function checkExistingProfile(discordId) {
             if (submitBtn) submitBtn.innerText = "Update Existing Profile";
             
             // Afficher le bouton supprimer si l'utilisateur existe
-            const deleteBtn = document.getElementById('delete-profile-btn');
-            if (deleteBtn) deleteBtn.style.display = 'block';
+           const deleteBtn = document.getElementById('btn-delete-profile'); 
+if (deleteBtn) {
+    deleteBtn.style.display = 'block'; // Ou 'inline-block' selon ton design
+}
         } else {
             if (submitBtn) submitBtn.innerText = "Create My Profile";
         }
@@ -966,6 +968,7 @@ document.getElementById('btn-delete-profile')?.addEventListener('click', async (
 });
 
 }); // Fermeture unique du DOMContentLoaded
+
 
 
 
