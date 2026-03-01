@@ -10,45 +10,37 @@
         
     <style>
         :root {
-            --fuma-gold: #d4af37;
-            --fuma-bg: #0b0b0b;
-            --fuma-card: #1a1a1a;
-            --fuma-text: #ffffff;
-            --fuma-text-dim: #aaaaaa;
-        }
-
-        body {
-            background-color: var(--fuma-bg);
-            color: var(--fuma-text);
-            font-family: 'Poppins', sans-serif;
-            margin: 0;
-            overflow-x: hidden;
-        }
-
-        /* --- HEADER & SCORE --- */
-       /* --- HEADER & SCORE --- */
-.fuma-hero, .fuma-footer, .fuma-nav .nav-container {
-    max-width: 1000px; /* Ou 1000px selon votre préférence */
-    margin: 0 auto;
+    --fuma-gold: #d4af37;
+    --fuma-bg: #0b0b0b;
+    --fuma-card: #1a1a1a;
+    --fuma-text: #ffffff;
+    --fuma-text-dim: #aaaaaa;
+    --fuma-border: 1px solid rgba(212, 175, 55, 0.2);
 }
-        
-.fuma-wrapper {
+
+body {
+    background-color: var(--fuma-bg);
+    color: var(--fuma-text);
     font-family: 'Poppins', sans-serif;
-    background-color: var(--fuma-bg-dark);
-    color: var(--fuma-text-main);
-    line-height: 1.7;
-    padding: 0;
     margin: 0;
-    overflow-x: hidden;
+    line-height: 1.6;
 }
-        
-        .match-header {
+
+/* --- LAYOUT --- */
+.fuma-wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding-bottom: 50px;
+}
+
+/* --- HEADER & SCORE --- */
+.match-header {
     display: flex;
-    justify-content: center; /* Centre le bloc entier */
-    align-items: flex-start; /* Aligne les blocs équipes et score par le haut */
+    justify-content: center;
+    align-items: flex-start;
     padding: 40px 20px;
     background: linear-gradient(180deg, #1a1a1a 0%, #000000 100%);
-    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+    border-bottom: var(--fuma-border);
     gap: 20px;
 }
 
@@ -57,7 +49,7 @@
     flex-direction: column;
     align-items: center; 
     width: 35%; 
-    min-height: 180px; /* Force une hauteur minimum pour stabiliser l'ensemble */
+    text-align: center;
 }
 
 .team-block img { 
@@ -65,8 +57,6 @@
     height: 80px; 
     object-fit: contain; 
     margin-bottom: 15px;
-    /* Assure que même si l'image est petite, elle occupe le même espace */
-    display: block;
 }
 
 .team-block h1 { 
@@ -74,179 +64,72 @@
     margin: 0; 
     color: var(--fuma-gold); 
     text-transform: uppercase;
-    text-align: center;
-    line-height: 1.2;
 }
 
-.score-block { 
-    flex: 1; /* Prend l'espace central de manière égale */
-    text-align: center; 
-    padding-top: 10px; /* Ajuste la hauteur du score par rapport aux logos */
+.score-display {
+    font-size: 3.5rem;
+    font-weight: 800;
+    letter-spacing: 5px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
 }
 
-        .score-block { text-align: center; }
-        .score-display {
-            font-size: 3.5rem;
-            font-weight: 800;
-            letter-spacing: 5px;
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
+.score-loser { opacity: 0.4; font-weight: 400; }
 
-        .score-loser {
-    opacity: 0.4; /* Grise le score */
-    font-weight: 400; /* Optionnel : rend l'écriture moins grasse */
+.strikers { 
+    font-size: 0.75rem; 
+    color: var(--fuma-text-dim); 
+    margin-top: 10px; 
 }
 
-        .strikers { font-size: 0.75rem; color: var(--fuma-text-dim); margin-top: 10px; line-height: 1.4; }
-        .motm-badge {
-            background: var(--fuma-gold);
-            color: #000;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 800;
-            margin-top: 15px;
-            display: inline-block;
-            text-transform: uppercase;
-        }
-
-        /* --- NAVIGATION --- */
-        .match-nav {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 25px 0;
-        }
-
-        .tab-btn {
-            background: none;
-            border: 1px solid #333;
-            color: var(--fuma-text-dim);
-            padding: 10px 30px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border-radius: 4px;
-        }
-
-        .tab-btn.active {
-            background: var(--fuma-gold);
-            color: #000;
-            border-color: var(--fuma-gold);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
-        }
-
-        /* --- CONTENU --- */
-        .tab-content { display: none; padding: 0 20px 50px; }
-        .tab-content.active { display: block; animation: fadeIn 0.5s ease; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* --- STATS RESUME --- */
-        .stats-container { max-width: 700px; margin: 0 auto; background: var(--fuma-card); padding: 30px; border-radius: 12px; }
-        .stat-row { margin-bottom: 30px; }
-        .stat-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            color: var(--fuma-text-dim);
-        }
-        .stat-title { color: var(--fuma-gold); letter-spacing: 1px; }
-
-        .progress-container {
-            display: flex;
-            height: 10px;
-            background: #000;
-            border-radius: 5px;
-            overflow: hidden;
-            border: 1px solid #222;
-        }
-
-        .bar-home { background: var(--fuma-gold); width: 50%; transition: width 1s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
-        .bar-away { background: #ffffff; width: 50%; transition: width 1s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
-
-        /* --- GRILLE JOUEURS --- */
-        .players-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-
-        .team-players { background: var(--fuma-card); border-radius: 10px; padding: 15px; }
-        .team-title-stats { 
-            color: var(--fuma-gold); 
-            text-align: center; 
-            margin-bottom: 15px; 
-            font-size: 1rem;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
-        }
-
-  /* --- TABLEAU DES JOUEURS OPTIMISÉ --- */
-.player-header, .player-row {
-    display: grid;
-    grid-template-columns: 3.5fr 0.8fr 0.6fr 0.6fr 0.7fr 0.6fr; 
-    align-items: center;
-    gap: 2px;
-    padding: 10px 5px;
-    /* --- AJUSTEMENTS ICI --- */
-    font-size: 0.72rem; /* Réduit de 0.75 à 0.7 */
-    font-weight: 400;  /* Écriture plus fine par défaut */
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+.motm-badge {
+    background: var(--fuma-gold);
+    color: #000;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    margin-top: 15px;
+    display: inline-block;
+    text-transform: uppercase;
 }
 
-/* On aligne à gauche uniquement la première colonne (Nom) */
-.player-header span:first-child, 
-.player-row div:first-child {
-    text-align: left;
-    padding-left: 5px;
-}
-
-/* On centre toutes les autres colonnes (de la 2ème à la 6ème) */
-.player-header span:not(:first-child),
-.player-row div:not(:first-child) {
-    text-align: center;
+/* --- NAVIGATION TABS --- */
+.match-nav {
     display: flex;
     justify-content: center;
-    align-items: center;
+    gap: 10px;
+    margin: 25px 0;
 }
 
-/* Sécurité pour le nom s'il est trop long */
-.player-row div:first-child {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.p-note {
-    width: 28px;
-    height: 20px;
-    line-height: 20px;
+.tab-btn {
+    background: none;
+    border: 1px solid #333;
+    color: var(--fuma-text-dim);
+    padding: 10px 30px;
+    cursor: pointer;
+    font-weight: 600;
     border-radius: 4px;
-    text-align: center;
-    font-weight: bold;
-    color: #fff;
-    margin: 0 auto;
+    transition: 0.3s;
 }
 
+.tab-btn.active {
+    background: var(--fuma-gold);
+    color: #000;
+    border-color: var(--fuma-gold);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
 
-        /* --- MODERN TEAM STATS --- */
+/* --- STATS TEAM --- */
 .fuma-stats-container {
-    background: var(--fuma-bg-card);
-    border: var(--fuma-border);
+    background: var(--fuma-card);
     border-radius: 12px;
     padding: 30px 20px;
-    margin-top: 25px;
+    margin: 20px;
 }
 
-.fuma-stat-group {
-    margin-bottom: 25px;
-}
+.fuma-stat-group { margin-bottom: 25px; }
 
 .fuma-stat-labels {
     display: flex;
@@ -255,119 +138,80 @@
     margin-bottom: 10px;
 }
 
-.stat-value {
-    font-weight: 800;
-    font-size: 1.1rem;
-    color: var(--fuma-text-main);
-    min-width: 60px;
-}
-
-#val-possession-home, #val-shots-home, #val-passes-home, #val-tackles-home {
-    text-align: left;
-}
-
-#val-possession-away, #val-shots-away, #val-passes-away, #val-tackles-away {
-    text-align: right;
-}
+.stat-value { font-weight: 800; font-size: 1.1rem; }
 
 .fuma-progress-wrapper {
     display: flex;
-    height: 6px;
+    height: 8px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 10px;
     overflow: hidden;
-    gap: 4px; /* Séparation centrale élégante */
 }
 
-.fuma-bar-home {
-    height: 100%;
-    background: var(--fuma-primary); /* Doré FUMA */
-    width: 50%;
-    transition: width 1s cubic-bezier(0.17, 0.67, 0.83, 0.67);
-    border-radius: 0 4px 4px 0;
+.fuma-bar-home { background: var(--fuma-gold); transition: width 1s ease; }
+.fuma-bar-away { background: var(--fuma-text-dim); transition: width 1s ease; }
+
+/* --- PLAYERS GRID & ROWS --- */
+.players-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
 }
 
-.fuma-bar-away {
-    height: 100%;
-    background: var(--fuma-text-dim); /* Gris FUMA pour l'adversaire */
-    width: 50%;
-    transition: width 1s cubic-bezier(0.17, 0.67, 0.83, 0.67);
-    border-radius: 4px 0 0 4px;
+.team-players { background: var(--fuma-card); border-radius: 10px; padding: 15px; }
+
+.player-header, .player-row {
+    display: grid;
+    grid-template-columns: 3.5fr 0.8fr 0.6fr 0.6fr 0.7fr 0.6fr; 
+    font-size: 0.72rem;
+    padding: 10px 5px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    align-items: center;
 }
 
-/* Version Mobile */
-@media (max-width: 600px) {
-    .stat-value { font-size: 0.9rem; }
-    .fuma-selector-label { font-size: 0.6rem; }
+.player-header { font-weight: 600; color: var(--fuma-gold); }
+
+.p-note {
+    background: #333;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    text-align: center;
 }
-        /* --- LOADER --- */
-        #loader-container { text-align: center; padding-top: 150px; height: 100vh; background: #000; }
-        .loader {
-            border: 3px solid #1a1a1a;
-            border-top: 3px solid var(--fuma-gold);
-            border-radius: 50%;
-            width: 50px; height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Mobile */
-        @media (max-width: 768px) {
-            .players-grid { grid-template-columns: 1fr; }
-            .score-display { font-size: 2.2rem; }
-            .match-header { flex-direction: column; gap: 20px; }
-            .team-block { width: 100%; }
-        }
+/* --- UPCOMING MATCH SECTION (Nouveau) --- */
+#upcoming-section {
+    background: var(--fuma-card);
+    margin: 20px;
+    border-radius: 12px;
+    border: 1px dashed var(--fuma-gold);
+}
 
-/* --- OPTIMISATION DU HEADER MOBILE --- */
-@media (max-width: 600px) {
-    .match-header {
-        display: flex !important;
-        flex-direction: row !important; /* Force l'alignement horizontal */
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px 10px !important;
-        gap: 5px !important;
-    }
+/* --- LOADER --- */
+#loader-container { 
+    text-align: center; 
+    padding-top: 100px; 
+    height: 60vh; 
+}
 
-    .team-block {
-        width: 30% !important;
-        min-height: auto !important;
-    }
+.loader {
+    border: 3px solid #1a1a1a;
+    border-top: 3px solid var(--fuma-gold);
+    border-radius: 50%;
+    width: 40px; height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
 
-    .team-block img {
-        width: 50px !important;
-        height: 50px !important;
-        margin-bottom: 8px;
-    }
+@keyframes spin { 100% { transform: rotate(360deg); } }
 
-    .team-block h1 {
-        font-size: 0.75rem !important;
-        white-space: normal;
-        max-width: 80px;
-    }
-
-    .score-block {
-        flex: 1;
-        padding-top: 0;
-    }
-
-    .score-display {
-        font-size: 1.8rem !important; /* Score plus compact */
-        gap: 8px;
-        letter-spacing: 2px;
-    }
-
-    .strikers {
-        display: none; /* Masqués sur mobile pour gagner de l'espace, ou passez en font-size ultra réduit */
-    }
-
-    .motm-badge {
-        font-size: 0.55rem !important;
-        padding: 3px 8px !important;
-        white-space: nowrap;
-    }
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+    .players-grid { grid-template-columns: 1fr; }
+    .match-header { padding: 20px 10px; }
+    .team-block img { width: 50px; height: 50px; }
+    .score-display { font-size: 2rem; }
+    .team-block h1 { font-size: 0.8rem; }
 }
         
     </style>
