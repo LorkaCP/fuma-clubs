@@ -3,6 +3,11 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+
+   if (typeof injectNavigation === 'function') {
+        injectNavigation();
+    }
+
     const params = new URLSearchParams(window.location.search);
     const gid = params.get('gid'); 
     const homeName = params.get('home');
@@ -289,10 +294,4 @@ function switchTab(tabId) {
 
 
 
-document.addEventListener('DOMContentLoaded', () => {
-    // La fonction est déjà appelée à la fin de script.js, 
-    // mais assurez-vous que l'élément <nav> existe avant.
-    if (typeof injectNavigation === 'function') {
-        injectNavigation();
-    }
-});
+
