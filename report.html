@@ -13,13 +13,13 @@
         .submit-btn { width: 100%; padding: 20px; background: #d4af37; color: #000; border: none; font-weight: 800; margin-top: 30px; cursor: pointer; border-radius: 5px; }
     </style>
 </head>
-<div id="auth-modal">
-    <div class="modal-content">
-        <h2 style="color:#d4af37;">ACCÈS RÉSERVÉ AUX MANAGERS</h2>
-        <p style="color:#eee;">Désolé, votre ID Discord n'est pas enregistré dans la base des managers autorisés (Colonne N).</p>
-        <a href="https://discord.gg/votre-lien" target="_blank" class="discord-btn">
-            <i class="fab fa-discord"></i> DEMANDER L'ACCÈS SUR DISCORD
-        </a>
+<div id="auth-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; display:flex; align-items:center; justify-content:center;">
+    <div style="background:#1a1a1a; padding:30px; border-radius:15px; border:2px solid #d4af37; text-align:center; width:90%; max-width:400px;">
+        <h2 style="color:#d4af37; margin-bottom:15px;">VÉRIFICATION MANAGER</h2>
+        <p style="color:#ccc; font-size:0.9rem; margin-bottom:20px;">Entrez votre ID Discord pour soumettre le rapport :</p>
+        <input type="text" id="manual-discord-id" placeholder="Ex: 282123456789..." style="margin-bottom:20px; text-align:center;">
+        <button onclick="retryAuth()" style="background:#d4af37; color:#000; border:none; padding:12px 20px; border-radius:5px; font-weight:800; cursor:pointer; width:100%;">VÉRIFIER MES DROITS</button>
+        <p style="margin-top:15px;"><a href="https://discord.gg/votrelien" target="_blank" style="color:#7289da; font-size:0.8rem;">Besoin d'aide ? Contactez le staff</a></p>
     </div>
 </div>
     
@@ -515,7 +515,21 @@ function showAuthModal() {
         btn.disabled = false;
         btn.innerText = "Valider et enregistrer le match";
     }
+
+        function retryAuth() {
+    const id = document.getElementById('manual-discord-id').value.trim();
+    if (id) {
+        // On recharge la page en ajoutant le sender_id à l'URL existante
+        const url = new URL(window.location.href);
+        url.searchParams.set('sender_id', id);
+        window.location.href = url.href;
+    } else {
+        alert("Veuillez entrer un ID valide.");
+    }
+}
 };
+
+      
 
 
       
