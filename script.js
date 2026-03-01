@@ -727,7 +727,7 @@ function renderPlayers(list) {
                 <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
                     <div style="text-align: center;">
                         <span style="display: block; font-weight: bold; font-size: 0.9rem;">${p.goals}</span>
-                        <span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Buts</span>
+                        <span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Goals</span>
                     </div>
                     <div style="text-align: center;">
                         <span style="display: block; font-weight: bold; font-size: 0.9rem;">${p.assists}</span>
@@ -735,7 +735,7 @@ function renderPlayers(list) {
                     </div>
                     <div style="text-align: center;">
                         <span style="display: block; font-weight: bold; font-size: 0.9rem;">${p.gp}</span>
-                        <span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Matchs</span>
+                        <span style="font-size: 0.6rem; color: var(--fuma-text-dim); text-transform: uppercase;">Matches</span>
                     </div>
                 </div>
             </div>
@@ -1010,6 +1010,7 @@ if (heroRegisterBtn) {
 }
 
 }); // Fermeture unique du DOMContentLoaded
+
 
 
 
