@@ -81,7 +81,7 @@ if (!m[9] || m[9] === "" || m[9] === "VS") {
 
             try {
                 // REMPLACEZ PAR VOTRE URL DÉPLOYÉE
-                const SCRIPT_URL = "VOTRE_URL_APPS_SCRIPT"; 
+                const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztCVEmtqHMv_KaR_XHYozJxrU8f6OshDxkMYuLomW8jDmO-dH9_A5femqte4gqYJYKFQ/exec"; 
                 const response = await fetch(`${SCRIPT_URL}?action=checkReporter&discord_id=${discordId}`);
                 const data = await response.json();
 
