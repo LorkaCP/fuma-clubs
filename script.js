@@ -1,17 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
     let allClubs = [];
-    let allPlayers = []; 
+    let allPlayers = []; // Stockage pour la recherche de joueurs
     
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
     const PLAYERS_SHEET_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=';
-    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyiLD_coE7vYHv9XSeXpdyeAQNOpPV-B_w-go6GnAUPORwqPumSDqBztGKGH09IWdmXDQ/exec?action=profile';
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkvEq_gPVk6ooIg0twQy9HnpbzoKetSOiKIpoOlHDYCmcMQmobi5w99krpm-fKEwRFHw/exec?action=profile';
     const CLIENT_ID = '1473807551329079408'; 
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
-    
-    // Note : Utilisation de response_type=token pour le mode sans serveur
-    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=identify%20guilds`;
-    const DISCORD_API_URL = "https://discord.com/api/users/@me";
+    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
 
     // Avatars par défaut
     const DEFAULT_AVATAR = "https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png";
@@ -33,72 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return result.map(v => v.replace(/^"|"$/g, '').trim());
     };
 
-
-// --- 2. SYSTÈME DE CONNEXION DISCORD ---
-
-    function checkLogin() {
-        // 1. On regarde si on vient d'être redirigé par Discord avec un token
-        const fragment = new URLSearchParams(window.location.hash.slice(1));
-        let token = fragment.get('access_token');
-
-        if (!token) {
-            // 2. Sinon on regarde si on a déjà un token enregistré
-            token = localStorage.getItem('discord_token');
-        } else {
-            // 3. Si on vient de le recevoir, on le sauvegarde
-            localStorage.setItem('discord_token', token);
-            // On nettoie l'URL (enlève le token de la barre d'adresse)
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        if (token) {
-            fetchUserProfile(token);
-        }
-    }
-
-    async function fetchUserProfile(token) {
-        try {
-            const response = await fetch(DISCORD_API_URL, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            
-            if (response.status === 401) {
-                logout();
-                return;
-            }
-
-            const user = await response.json();
-            updateUI(user);
-        } catch (error) {
-            console.error("Erreur profil Discord:", error);
-        }
-    }
-
-    function updateUI(user) {
-        const navLinks = document.getElementById('nav-links-container');
-        if (!navLinks || !user) return;
-
-        // On remplace le bouton "CONNEXION" par le profil de l'utilisateur
-        const loginBtn = navLinks.querySelector('.fuma-login-btn');
-        if (loginBtn) {
-            loginBtn.outerHTML = `
-                <div id="discord-profile" class="nav-profile-item" style="display: flex; align-items: center; gap: 10px; padding: 5px 15px; background: rgba(255,255,255,0.05); border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.3);">
-                    <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" 
-                         style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid #d4af37;">
-                    <span style="font-size: 0.85rem; color: #fff; font-weight: 600;">${user.username}</span>
-                    <i class="fas fa-sign-out-alt" onclick="logout()" style="cursor:pointer; color: #ff5757; font-size: 0.8rem; margin-left: 5px;" title="Déconnexion"></i>
-                </div>
-            `;
-        }
-    }
-
-    // Rendre logout accessible globalement pour le onclick
-    window.logout = function() {
-        localStorage.removeItem('discord_token');
-        window.location.reload();
-    };
-
-    
     // --- 3. INJECTION DU MENU ---
     function injectNavigation() {
         const nav = document.getElementById('main-nav');
@@ -122,9 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <a href="#">Rules</a>
                     <a href="${discordServerLink}" target="_blank" style="color: #5865F2;">
                         <i class="fab fa-discord"></i> Discord
-                    </a>
-                    <a href="${authUrl}" id="btn-my-profile" class="fuma-login-btn">
-                        <i class="fab fa-discord"></i> CONNEXION
                     </a>
                 </div>
             </div>
@@ -158,8 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
-    
     // --- 4. LOGIQUE PAGE PROFIL ---
 async function loadTeamsList() {
     const teamSelect = document.getElementById('team');
@@ -239,82 +165,79 @@ async function loadTeamsList() {
 }
 
     async function checkExistingProfile(discordId) {
-    const loader = document.getElementById('fuma-loader');
-    const form = document.getElementById('profile-form');
-    const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
-    const deleteBtn = document.getElementById('btn-delete-profile'); // Récupération du bouton de suppression
+        const loader = document.getElementById('fuma-loader');
+        const form = document.getElementById('profile-form');
+        const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
 
-    if (loader) loader.style.display = 'flex';
-    if (form) form.style.display = 'none';
+        if (loader) loader.style.display = 'flex';
+        if (form) form.style.display = 'none';
 
-    try {
-        // Appel au Google Apps Script avec l'ID Discord et un paramètre de temps pour éviter le cache [cite: 24]
-        const response = await fetch(`${APP_SCRIPT_URL}&discord_id=${discordId}&t=${Date.now()}`);
-        if (!response.ok) throw new Error('Erreur serveur');
-        
-        const data = await response.json();
+        try {
+            // Correction : on utilise & pour ajouter un paramètre supplémentaire
+const response = await fetch(`${APP_SCRIPT_URL}&discord_id=${discordId}&t=${Date.now()}`);
+            if (!response.ok) throw new Error('Erreur serveur');
+            
+            const data = await response.json();
 
-        // Si le profil existe dans la base de données [cite: 26, 27, 28]
-        if (data && data.result === "success") {
-            const fill = (id, val) => {
-                const el = document.getElementById(id);
-                if (el) el.value = (val !== undefined && val !== null) ? val : "";
-            };
+            if (data && data.result === "success") {
+                const fill = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = (val !== undefined && val !== null) ? val : "";
+                };
 
-            // Remplissage automatique des champs avec les données existantes [cite: 27]
-            fill('id-game', data.game_tag);
-            fill('country', data.country);
-            fill('avatar', data.avatar);
-            fill('team', data.current_team);
-            fill('main-archetype', data.main_archetype);
-            fill('main-position', data.main_position);
+                fill('id-game', data.game_tag);
+                fill('country', data.country);
+                fill('avatar', data.avatar);
+                fill('team', data.current_team);
+                fill('main-archetype', data.main_archetype);
+                fill('main-position', data.main_position);
 
-            // Mise à jour de l'interface : on affiche le bouton Supprimer et on change le texte du bouton Valider
-            if (submitBtn) submitBtn.innerText = "Update Existing Profile";
-            if (deleteBtn) deleteBtn.style.display = 'block'; 
-        } else {
-            // Si aucun profil n'est trouvé [cite: 29]
-            if (submitBtn) submitBtn.innerText = "Create My Profile";
-            if (deleteBtn) deleteBtn.style.display = 'none';
+                if (submitBtn) submitBtn.innerText = "Update Existing Profile";
+            } else {
+                if (submitBtn) submitBtn.innerText = "Create My Profile";
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setTimeout(() => {
+                if (loader) loader.style.display = 'none';
+                if (form) form.style.display = 'grid';
+            }, 300);
         }
-    } catch (e) {
-        console.error("Erreur lors de la vérification du profil :", e);
-    } finally {
-        // Masquage du loader et affichage du formulaire
-        setTimeout(() => {
-            if (loader) loader.style.display = 'none';
-            if (form) form.style.display = 'grid';
-        }, 300);
     }
-}
 
     // --- 5. ENVOI DU FORMULAIRE ---
     function setupFormSubmission() {
     const profileForm = document.getElementById('profile-form');
     if (!profileForm) return;
 
-    // 1. GESTION DU BOUTON "VALIDER / METTRE À JOUR" (Soumission du formulaire)
     profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const submitBtn = profileForm.querySelector('button[type="submit"]');
         const originalBtnText = submitBtn.innerText;
         
+        // 1. État visuel de chargement
         submitBtn.disabled = true;
-        submitBtn.innerText = "Processing...";
+        submitBtn.innerText = "Updating...";
+
+        // 2. Préparation des données
+        const avatarInput = document.getElementById('avatar')?.value.trim();
+        const DEFAULT_AVATAR = "https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png"; // Assurez-vous que cette variable est définie
+        const finalAvatar = (avatarInput === "" || avatarInput.toLowerCase() === "none") ? DEFAULT_AVATAR : avatarInput;
 
         const formData = new URLSearchParams();
-        // On récupère toutes les valeurs des champs
         formData.append('game_tag', document.getElementById('id-game')?.value || "");
         formData.append('discord_id', document.getElementById('id-discord')?.value || "");
         formData.append('discord_name', document.getElementById('discord-name')?.value || "");
         formData.append('country', document.getElementById('country')?.value || "");
-        formData.append('avatar', document.getElementById('avatar')?.value || DEFAULT_AVATAR);
+        formData.append('avatar', finalAvatar);
         formData.append('current_team', document.getElementById('team')?.value || "Free Agent");
         formData.append('main_archetype', document.getElementById('main-archetype')?.value || "");
         formData.append('main_position', document.getElementById('main-position')?.value || "");
 
         try {
+            // 3. Envoi à Google Apps Script
             await fetch(APP_SCRIPT_URL, {
                 method: 'POST',
                 body: formData,
@@ -322,51 +245,34 @@ async function loadTeamsList() {
                 mode: 'no-cors'
             });
 
-            alert("Success! Profile saved.");
-            window.location.href = 'players.html';
+            // 4. Succès : Mise à jour de l'interface
+            const statusBox = document.getElementById('status-message');
+            const statusText = document.getElementById('status-text');
+
+            if (statusBox && statusText) {
+                // On affiche le message et on cache le formulaire
+                statusText.innerText = "Profile updated! Redirecting to players list in 3 seconds...";
+                statusBox.style.display = 'block';
+                profileForm.style.display = 'none'; 
+                
+                // Remonte en haut de page pour que le message soit visible
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                // 5. Redirection automatique après 3 secondes
+                setTimeout(() => {
+                    window.location.href = 'players.html';
+                }, 3000);
+            }
+
         } catch (error) {
-            console.error("Error:", error);
-            alert("An error occurred.");
+            console.error("Submission error:", error);
+            
+            // En cas d'erreur, on avertit l'utilisateur et on réactive le bouton
+            alert("An error occurred during update. Please try again.");
             submitBtn.disabled = false;
             submitBtn.innerText = originalBtnText;
         }
     });
-
-    // 2. GESTION DU BOUTON "SUPPRIMER MON PROFIL" (Action spécifique)
-    const deleteBtn = document.getElementById('btn-delete-profile');
-    if (deleteBtn) {
-        deleteBtn.addEventListener('click', async () => {
-            const discordId = document.getElementById('id-discord')?.value;
-            
-            if (!discordId) return;
-
-            if (confirm("⚠️ Are you sure? This will permanently delete your profile.")) {
-                deleteBtn.disabled = true;
-                deleteBtn.innerText = "Deleting...";
-
-                const deleteData = new URLSearchParams();
-                deleteData.append('action', 'delete'); // C'est ici qu'on dit au script de supprimer
-                deleteData.append('discord_id', discordId);
-
-                try {
-                    await fetch(APP_SCRIPT_URL, {
-                        method: 'POST',
-                        body: deleteData,
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        mode: 'no-cors'
-                    });
-
-                    alert("Profile deleted.");
-                    window.location.href = 'index.html';
-                } catch (error) {
-                    console.error("Delete error:", error);
-                    alert("Error during deletion.");
-                    deleteBtn.disabled = false;
-                    deleteBtn.innerText = "Supprimer mon profil";
-                }
-            }
-        });
-    }
 }
     // --- 6. LOGIQUE LISTE DES CLUBS (clubs.html) ---
     async function fetchFumaClubs() {
@@ -963,52 +869,30 @@ function renderDetailedProfile(info, stats) {
 
     
 // --- INITIALISATION FINALE ---
+injectNavigation();
+handleProfilePage(); // Garde celle-ci pour le profil utilisateur
+loadPublicPlayerProfile(); // AJOUTE CELLE-CI pour la fiche détaillée player.html
+setupFormSubmission();
+fetchFumaClubs();
+loadClubProfile();
 
-// --- INITIALISATION FINALE ---
-
-// 1. D'abord on injecte le menu (le squelette HTML)
-injectNavigation(); 
-
-// 2. Immédiatement après, on vérifie la connexion 
-// (Pour que le bouton "Connexion" soit remplacé par le profil AVANT que l'utilisateur ne le voie)
-checkLogin(); 
-
-// 3. Logiques de remplissage de pages (ne s'exécutent que si les éléments ID existent)
-handleProfilePage();       // Page profile.html
-loadPublicPlayerProfile(); // Page player.html
-loadClubProfile();         // Page club.html
-fetchFumaClubs();          // Page index.html / clubs.html
-setupFormSubmission();     // Formulaires
-
-// 4. Initialisation spécifique à la page Players
+// 1. Initialisation spécifique à la page Players (Chargement des données)
 const playerSeasonFilter = document.getElementById('filter-season');
 if (playerSeasonFilter) {
+    // Charge la saison par défaut au démarrage
     fetchFumaPlayers(playerSeasonFilter.value); 
+    
+    // Ecouteur pour changer de saison (recharge toutes les données)
     playerSeasonFilter.addEventListener('change', (e) => fetchFumaPlayers(e.target.value));
 }
 
-// 5. Ecouteurs pour les filtres de recherche
+// 2. Ecouteurs pour les filtres (Recherche, Team et Position)
+// On les place ici pour qu'ils soient actifs dès que la page est prête
 document.getElementById('search-player')?.addEventListener('input', applyPlayerFilters);
 document.getElementById('filter-team')?.addEventListener('change', applyPlayerFilters);
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
