@@ -3,8 +3,6 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-
-
     const params = new URLSearchParams(window.location.search);
     const gid = params.get('gid'); 
     const homeName = params.get('home');
@@ -288,7 +286,3 @@ function switchTab(tabId) {
     const targetContent = document.getElementById(tabId);
     if(targetContent) targetContent.style.display = 'block';
 }
-
-
-
-
