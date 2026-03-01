@@ -60,9 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a href="clubs.html">Clubs</a>
                 <a href="players.html">Players</a>
                 <a href="#">Rules</a>
-                <a href="${discordServerLink}" target="_blank" style="color: #5865F2;">
-                    <i class="fab fa-discord"></i> Discord</a>
                 <a href="${profileLink}" class="profile-link">${profileText}</a>
+                <a href="${discordServerLink}" target="_blank" style="color: #5865F2;">
+                    <i class="fab fa-discord"></i></a>
             </div>
         </div>
     `;
@@ -921,6 +921,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
