@@ -506,10 +506,10 @@ document.getElementById('match-report-form').onsubmit = async (e) => {
         };
 
         await fetch(APPS_SCRIPT_URL, { 
-            method: 'POST', 
-            mode: 'no-cors', 
-            body: JSON.stringify(payload) 
-        });
+    method: 'POST',
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+});
 
         alert("Match enregistré avec succès !");
         window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
