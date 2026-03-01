@@ -11,132 +11,214 @@
     <style>
        
   /* --- LAYOUT --- */
-/* Conteneur principal */
 .fuma-wrapper {
-    background: radial-gradient(circle at 50% 0%, #1e2126 0%, var(--fuma-bg-dark) 70%);
+    max-width: 1000px;
+    margin: 0 auto;
+    padding-bottom: 50px;
 }
 
-/* Header du match (Score & Équipes) */
+/* --- HEADER & SCORE --- */
 .match-header {
-    background: rgba(20, 22, 25, 0.8) !important;
-    backdrop-filter: blur(10px);
-    border-bottom: 2px solid var(--fuma-primary) !important;
-    border-radius: 0 0 20px 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 20px;
+    background: #000000 ;
+    border-bottom: var(--fuma-border);
+    gap: 20px;
 }
 
-.team-block h1 {
-    color: var(--fuma-primary) !important;
-    font-weight: 800;
-    letter-spacing: 1px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+.team-block { 
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    width: 35%; 
+    text-align: center;
 }
 
-/* Score */
-.score-display {
-    color: var(--fuma-text-main);
-    font-family: 'Poppins', sans-serif;
+.team-block img { 
+    width: 80px; 
+    height: 80px; 
+    object-fit: contain; 
+    margin-bottom: 15px;
 }
 
-.score-display span[style*="color: var(--fuma-gold)"] {
-    color: var(--fuma-primary) !important; /* Force l'usage de la variable */
-    animation: pulse 2s infinite;
-}
-
-/* Navigation par onglets */
-.match-nav {
-    background: var(--fuma-bg-card);
-    padding: 10px;
-    border-radius: 50px;
-    display: inline-flex;
-    margin: 0 auto 30px;
-    border: var(--fuma-border);
-}
-
-.tab-btn {
-    border: none !important;
-    border-radius: 40px !important;
-    color: var(--fuma-text-dim) !important;
-    font-size: 0.8rem;
-    padding: 12px 25px !important;
-    transition: all 0.3s ease !important;
-}
-
-.tab-btn.active {
-    background: var(--fuma-primary) !important;
-    color: #000 !important;
-    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
-}
-
-/* Statistiques d'équipe */
-.fuma-stats-container {
-    background: var(--fuma-bg-card) !important;
-    border: var(--fuma-border) !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-}
-
-.fuma-selector-label {
-    color: var(--fuma-primary) !important;
-    font-size: 0.7rem;
-    font-weight: 700;
+.team-block h1 { 
+    font-size: 1.2rem; 
+    margin: 0; 
+    color: var(--fuma-gold); 
     text-transform: uppercase;
 }
 
-.fuma-progress-wrapper {
-    background: rgba(255, 255, 255, 0.05) !important;
-    height: 6px !important;
-    border-radius: 3px !important;
+.score-display {
+    font-size: 3.5rem;
+    font-weight: 800;
+    letter-spacing: 5px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
 }
 
-.fuma-bar-home {
-    background: linear-gradient(90deg, #b8932d, var(--fuma-primary)) !important;
+.score-loser { opacity: 0.4; font-weight: 400; }
+
+.strikers { 
+    font-size: 0.75rem; 
+    color: var(--fuma-text-dim); 
+    margin-top: 10px; 
 }
 
-/* Tableaux des joueurs */
-.team-players {
-    background: var(--fuma-bg-card) !important;
-    border: var(--fuma-border) !important;
-}
-
-.player-header {
-    background: rgba(212, 175, 55, 0.05);
-    color: var(--fuma-primary);
-    font-weight: 700;
-    border-bottom: 1px solid var(--fuma-primary) !important;
-}
-
-.player-row {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
-    transition: background 0.2s;
-}
-
-.player-row:hover {
-    background: rgba(255, 255, 255, 0.02);
-}
-
-/* Pastilles de note (Ratings) */
-.p-note {
-    border-radius: 4px !important;
-    background: #2a2a2a !important;
-    border: 1px solid rgba(255,255,255,0.1);
-}
-
-/* Badge MOTM */
 .motm-badge {
-    background: var(--fuma-primary) !important;
-    color: #000 !important;
-    font-size: 0.6rem !important;
-    letter-spacing: 1px;
-    box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+    background: var(--fuma-gold);
+    color: #000;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    margin-top: 15px;
+    display: inline-block;
+    text-transform: uppercase;
 }
 
-/* Animations */
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
+/* --- NAVIGATION TABS --- */
+.match-nav {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 25px 0;
 }
+
+.tab-btn {
+    background: none;
+    border: 1px solid #333;
+    color: var(--fuma-text-dim);
+    padding: 10px 30px;
+    cursor: pointer;
+    font-weight: 600;
+    border-radius: 4px;
+    transition: 0.3s;
+}
+
+.tab-btn.active {
+    background: var(--fuma-gold);
+    color: #000;
+    border-color: var(--fuma-gold);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+
+/* --- STATS TEAM --- */
+.fuma-stats-container {
+    background: var(--fuma-card);
+    border-radius: 12px;
+    padding: 30px 20px;
+    margin: 20px;
+}
+
+.fuma-stat-group { margin-bottom: 25px; }
+
+.fuma-stat-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.stat-value { font-weight: 800; font-size: 1.1rem; }
+
+.fuma-progress-wrapper {
+    display: flex;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.fuma-bar-home { background: var(--fuma-gold); transition: width 1s ease; }
+.fuma-bar-away { background: var(--fuma-text-dim); transition: width 1s ease; }
+
+/* --- PLAYERS GRID & ROWS --- */
+.players-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.team-players { background: var(--fuma-card); border-radius: 10px; padding: 15px; }
+
+/* --- TABLEAU DES JOUEURS AJUSTÉ --- */
+.player-header, .player-row {
+    display: grid;
+    /* Réduction du RTG (2ème colonne) à 0.5fr au lieu de 0.8fr */
+    grid-template-columns: 3.5fr 0.5fr 0.6fr 0.6fr 0.7fr 0.6fr; 
+    align-items: center;
+    gap: 2px;
+    padding: 8px 5px;
+    font-size: 0.72rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* On garde le nom aligné à gauche */
+.player-header span:first-child, 
+.player-row div:first-child {
+    text-align: left;
+    padding-left: 5px;
+}
+
+/* ON CENTRE TOUTES LES STATS (RTG, GLS, AST, PAS, TKL) */
+.player-header span:not(:first-child),
+.player-row div:not(:first-child) {
+    text-align: center;
+    display: flex;
+    justify-content: center; /* Centrage horizontal */
+    align-items: center;     /* Centrage vertical */
+}
+
+/* Style de la pastille de note (Rating) plus compacte */
+.p-note {
+    min-width: 24px; /* Largeur réduite */
+    height: 18px;
+    line-height: 18px;
+    border-radius: 3px;
+    text-align: center;
+    font-weight: 800;
+    color: #fff;
+    background: #333; /* Couleur par défaut si non définie par JS */
+    font-size: 0.65rem;
+}
+/* --- UPCOMING MATCH SECTION (Nouveau) --- */
+#upcoming-section {
+    background: var(--fuma-card);
+    margin: 20px;
+    border-radius: 12px;
+    border: 1px dashed var(--fuma-gold);
+}
+
+/* --- LOADER --- */
+#loader-container { 
+    text-align: center; 
+    padding-top: 100px; 
+    height: 60vh; 
+}
+
+.loader {
+    border: 3px solid #1a1a1a;
+    border-top: 3px solid var(--fuma-gold);
+    border-radius: 50%;
+    width: 40px; height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+    .players-grid { grid-template-columns: 1fr; }
+    .match-header { padding: 20px 10px; }
+    .team-block img { width: 50px; height: 50px; }
+    .score-display { font-size: 2rem; }
+    .team-block h1 { font-size: 0.8rem; }
+}
+        
     </style>
 </head>
 <body>
