@@ -32,15 +32,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. INJECTION DU MENU ---
    function injectNavigation() {
-    const nav = document.getElementById('main-nav');
+    const nav = document.querySelector('.fuma-nav');
     if (!nav) return;
 
-    const discordServerLink = 'https://discord.gg/xPz9FBkdtm';
-    
-    // --- FIX: Définition des variables avant usage ---
     const currentUser = getStoredUser();
+    
+    // Si connecté : Affiche l'icône utilisateur + Nom
+    // Si déconnecté : Affiche l'icône Discord + "LOGIN"
     const profileLink = currentUser ? `profile.html?id=${currentUser.id}` : authUrl;
-    const profileText = currentUser ? `<i class="fas fa-user"></i> ${currentUser.username}` : "Login";
+    const profileContent = currentUser 
+        ? `<i class="fas fa-user-circle"></i> ${currentUser.username.toUpperCase()}` 
+        : `<i class="fab fa-discord"></i> LOGIN`;
 
     nav.innerHTML = `
         <div class="nav-container">
@@ -986,6 +988,7 @@ document.getElementById('btn-delete-profile')?.addEventListener('click', async (
 });
 
 }); // Fermeture unique du DOMContentLoaded
+
 
 
 
