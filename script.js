@@ -924,32 +924,35 @@ loadClubProfile();
     document.getElementById('filter-team')?.addEventListener('change', applyPlayerFilters);
     document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
-    // Bouton Logout
+ // 1. Gestion de la déconnexion
 document.getElementById('btn-logout')?.addEventListener('click', () => {
     if (confirm("Are you sure you want to logout?")) {
-        logout(); // Utilise la fonction logout() déjà présente dans votre script
+        localStorage.removeItem('fuma_user');
+        window.location.href = 'index.html';
     }
 });
 
-// --- LOGIQUE DE SUPPRESSION ---
+// 2. Gestion de la suppression (ID corrigé)
 document.getElementById('btn-delete-profile')?.addEventListener('click', async () => {
     const user = getStoredUser();
     if (!user) return;
 
     if (confirm("WARNING: Are you sure you want to DELETE your profile? This action is permanent.")) {
         try {
-            // Remplace l'URL par ton URL Google Script si nécessaire
+            // On utilise l'URL de ton API définie en haut du script
             await fetch(`${APP_SCRIPT_URL}&method=DELETE&id=${user.id}`, { method: 'POST' });
-            alert("Profile deleted.");
+            alert("Profile deleted successfully.");
             localStorage.removeItem('fuma_user');
             window.location.href = 'index.html';
-        } catch (e) {
-            alert("Error during deletion.");
+        } catch (error) {
+            console.error("Delete error:", error);
+            alert("Error while deleting profile.");
         }
     }
 });
 
 }); // Fermeture unique du DOMContentLoaded
+
 
 
 
