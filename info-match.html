@@ -9,14 +9,16 @@
     <link rel="stylesheet" href="style.css">
         
     <style>
-        :root {
-    --fuma-gold: #d4af37;
-    --fuma-bg: #0b0b0b;
-    --fuma-card: #1a1a1a;
-    --fuma-text: #ffffff;
-    --fuma-text-dim: #aaaaaa;
-    --fuma-border: 1px solid rgba(212, 175, 55, 0.2);
+       
+   :root {
+    --fuma-primary: #d4af37; 
+    --fuma-bg-dark: #000000;      
+    --fuma-bg-card: #141619;      
+    --fuma-text-main: #f5f5f7;    
+    --fuma-text-dim: #a1a1a6;     
+    --fuma-border: 1px solid rgba(255, 255, 255, 0.05);
 }
+
 
         html, body {
     background-color: #0b0b0b !important; /* Force le fond noir sur toute la page */
@@ -247,7 +249,7 @@
     <div class="fuma-wrapper">
     <nav class="fuma-nav" id="main-nav"></nav>
     
-    <div style="padding: 20px 20px 0 20px;">
+   <div style="margin-top: 35px;">
         <button id="btn-back-fixtures" style="background: none; border: 1px solid var(--fuma-text-dim); color: var(--fuma-text-dim); padding: 8px 15px; border-radius: 5px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 0.8rem; transition: 0.3s;">
             <i class="fas fa-arrow-left"></i> BACK TO FIXTURES
         </button>
