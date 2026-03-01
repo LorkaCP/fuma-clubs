@@ -294,7 +294,7 @@ body, .fuma-wrapper {
 }
 
 .club-name {
-    font-size: 0.6rem;
+    font-size: 0.1rem;
   }
 
 /* Base commune pour tous les boutons */
@@ -934,6 +934,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
