@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a href="index.html">Home</a>
                 <a href="league.html">League</a>
                 <a href="#">Rules</a>
-                <a href="index.html">Clubs</a>
+                <a href="clubs.html">Clubs</a>
                 <a href="players.html">Players</a>
                 <a href="${profileLink}" class="profile-link">
                     ${profileContent}
@@ -993,6 +993,7 @@ document.getElementById('btn-delete-profile')?.addEventListener('click', async (
 });
 
 }); // Fermeture unique du DOMContentLoaded
+
 
 
 
