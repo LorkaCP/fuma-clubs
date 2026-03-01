@@ -182,79 +182,109 @@
     font-size: 0.7rem;
 }
     </style>
-  <script>
-document.addEventListener('DOMContentLoaded', async () => {
-    // --- SÉCURITÉ : VÉRIFICATION DE CONNEXION ET DE DROITS ---
-    const user = JSON.parse(localStorage.getItem('fuma_user'));
-    const params = new URLSearchParams(window.location.search);
-    const homeName = params.get('home') || "";
-    const awayName = params.get('away') || "";
-    const currentGid = params.get('gid');
+ <script>
+    // --- VARIABLES GLOBALES (Accessibles par toutes les fonctions) ---
+    let currentPlayersData = [];
+    let homeName = "";
+    let awayName = "";
+    let currentGid = "";
 
-    if (!user) {
-        alert("You must be logged in to access this page.");
-        window.location.href = 'index.html';
-        return;
-    }
-
-    // URL de la base de données pour vérifier les managers
-    const TEAMS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv";
-
-    try {
-        const res = await fetch(TEAMS_URL);
-        const csv = await res.text();
-        const teams = parseCSV(csv); // Assure-toi que parseCSV est bien présent dans ce fichier aussi
-
-        const homeData = teams.find(t => t[0] === homeName);
-        const awayData = teams.find(t => t[0] === awayName);
-
-        const idReporterHome = homeData ? homeData[13]?.trim() : null; // Colonne N
-        const idReporterAway = awayData ? awayData[13]?.trim() : null;
-
-        // Vérification stricte de l'ID Discord
-        const canAccess = user.id && (
-            user.id.toString() === String(idReporterHome) || 
-            user.id.toString() === String(idReporterAway)
-        );
-
-        if (!canAccess) {
-            alert("Security Error: You are not the manager of either team in this match.");
-            window.location.href = 'index.html';
-            return;
-        }
-    } catch (err) {
-        console.error("Security check failed:", err);
-        alert("Error verifying permissions. Please try again.");
-        window.location.href = 'index.html';
-        return;
-    }
-          
-    // --- 1. CONFIGURATION ---
-    
-      
-      const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=1610453677&single=true&output=csv";
+    const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=1610453677&single=true&output=csv";
     const PLAYERS_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=420142588&single=true&output=csv";
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQFhl8ATNUe7hcnYxKqhRtFrJTsgS6gxaHexmt2U3Z3KfG2pCqcGike7gsnfuHQeNT8w/exec?action=match";
-      let currentPlayersData = []; // Pour stocker les données fusionnées
 
     const CLUB_ALIASES = {
         "fuma y pasa": "f y pasa",
         "croser fc": "croser fc",
         "fuma clubs a": "fuma clubs a",
-        
     };
 
-    const params = new URLSearchParams(window.location.search);
-    const homeName = params.get('home') || "";
-    const awayName = params.get('away') || "";
-    const currentGid = params.get('gid');
+    // --- LE CŒUR DU SCRIPT ---
+    document.addEventListener('DOMContentLoaded', async () => {
+        const params = new URLSearchParams(window.location.search);
+        
+        // On remplit les variables globales déclarées plus haut (pas de "const" ici !)
+        homeName = params.get('home') || "";
+        awayName = params.get('away') || "";
+        currentGid = params.get('gid');
 
-    document.getElementById('name-home').innerText = homeName;
-    document.getElementById('name-away').innerText = awayName;
+        // Affichage immédiat des noms dans l'interface
+        document.getElementById('name-home').innerText = homeName;
+        document.getElementById('name-away').innerText = awayName;
 
+        // 1. VÉRIFICATION DE CONNEXION
+        const user = JSON.parse(localStorage.getItem('fuma_user'));
+        if (!user) {
+            alert("You must be logged in to access this page.");
+            window.location.href = 'index.html';
+            return;
+        }
 
+        // 2. VÉRIFICATION DES DROITS MANAGER
+        const TEAMS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv";
 
-      
+        try {
+            const res = await fetch(TEAMS_URL);
+            const csv = await res.text();
+            const teams = parseCSV(csv);
+
+            const homeData = teams.find(t => t[0] === homeName);
+            const awayData = teams.find(t => t[0] === awayName);
+
+            const idReporterHome = homeData ? homeData[13]?.trim() : null;
+            const idReporterAway = awayData ? awayData[13]?.trim() : null;
+
+            const canAccess = user.id && (
+                user.id.toString() === String(idReporterHome) || 
+                user.id.toString() === String(idReporterAway)
+            );
+
+            if (!canAccess) {
+                alert("Security Error: You are not the manager of either team.");
+                window.location.href = 'index.html';
+                return;
+            }
+        } catch (err) {
+            console.error("Security check failed:", err);
+            window.location.href = 'index.html';
+            return;
+        }
+
+        // 3. INITIALISATION DES DONNÉES (Seulement si la sécurité a réussi)
+        // C'est ici que l'affichage des listes se déclenche
+        init();
+
+        document.getElementById('match-report-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    btn.innerText = "ENREGISTREMENT...";
+    btn.disabled = true;
+
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+    
+    data.home = homeName; 
+    data.away = awayName; 
+    data.gid = currentGid;
+    // On ajoute le tableau des joueurs fusionnés
+    data.players = currentPlayersData; 
+
+    try {
+        await fetch(APPS_SCRIPT_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify(data) 
+        });
+        alert("Rapport et statistiques joueurs enregistrés !");
+        window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
+    } catch (e) {
+        alert("Erreur lors de l'envoi");
+        btn.disabled = false;
+        btn.innerText = "Valider et enregistrer le match";
+    }
+};
+
+        
     // --- 2. NORMALISATION ---
     function normalizeName(name) {
         if (!name) return "";
@@ -476,37 +506,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 }
 
-    // --- 5. ENVOI FINAL ---
-    document.getElementById('match-report-form').onsubmit = async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('btn-submit');
-    btn.innerText = "ENREGISTREMENT...";
-    btn.disabled = true;
-
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData.entries());
+  
     
-    data.home = homeName; 
-    data.away = awayName; 
-    data.gid = currentGid;
-    // On ajoute le tableau des joueurs fusionnés
-    data.players = currentPlayersData; 
-
-    try {
-        await fetch(APPS_SCRIPT_URL, { 
-            method: 'POST', 
-            mode: 'no-cors', 
-            body: JSON.stringify(data) 
-        });
-        alert("Rapport et statistiques joueurs enregistrés !");
-        window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
-    } catch (e) {
-        alert("Erreur lors de l'envoi");
-        btn.disabled = false;
-        btn.innerText = "Valider et enregistrer le match";
-    }
-};
-
 // 2. FONCTIONS UTILITAIRES (À placer en dehors, tout en bas)
 function parseCSV(t) {
     return t.split('\n').map(l => {
