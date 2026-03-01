@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     // ... reste de la fonction (gestion de la classe 'active' et du burger)
-    const currentPage = window.location.pathname.split("/").pop() || 'index.html';
+   const currentPage = window.location.pathname.split("/").pop() || 'index.html';
     const allLinks = nav.querySelectorAll('.nav-links a');
 
     allLinks.forEach(link => {
@@ -929,6 +929,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
