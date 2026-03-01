@@ -248,10 +248,16 @@ async function loadPlayerStats(matchId, homeName, awayName) {
             const passReussies = parseInt(p[11]) || 0;
             const taclesReussis = parseInt(p[14]) || 0;
 
+            // Création du lien vers le profil (on encode le nom pour gérer les espaces et caractères spéciaux)
+            const playerProfileUrl = `player.html?id=${encodeURIComponent(name)}`;
+
             const row = `
                 <div class="player-row">
                     <div style="font-size: 0.75rem; display: flex; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                        ${name} ${posBadge}
+                        <a href="${playerProfileUrl}" style="text-decoration: none; color: inherit; hover: color: var(--fuma-gold);">
+                            ${name}
+                        </a> 
+                        ${posBadge}
                     </div>
                     <div class="p-note" style="background:${getNoteColor(note)}">${note}</div>
                     <div>${goals > 0 ? goals+'⚽' : '-'}</div>
