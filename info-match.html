@@ -228,6 +228,73 @@
     color: #fff;
     margin: 0 auto;
 }
+
+
+        /* --- MODERN TEAM STATS --- */
+.fuma-stats-container {
+    background: var(--fuma-bg-card);
+    border: var(--fuma-border);
+    border-radius: 12px;
+    padding: 30px 20px;
+    margin-top: 25px;
+}
+
+.fuma-stat-group {
+    margin-bottom: 25px;
+}
+
+.fuma-stat-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.stat-value {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--fuma-text-main);
+    min-width: 60px;
+}
+
+#val-possession-home, #val-shots-home, #val-passes-home, #val-tackles-home {
+    text-align: left;
+}
+
+#val-possession-away, #val-shots-away, #val-passes-away, #val-tackles-away {
+    text-align: right;
+}
+
+.fuma-progress-wrapper {
+    display: flex;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    overflow: hidden;
+    gap: 4px; /* Séparation centrale élégante */
+}
+
+.fuma-bar-home {
+    height: 100%;
+    background: var(--fuma-primary); /* Doré FUMA */
+    width: 50%;
+    transition: width 1s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+    border-radius: 0 4px 4px 0;
+}
+
+.fuma-bar-away {
+    height: 100%;
+    background: var(--fuma-text-dim); /* Gris FUMA pour l'adversaire */
+    width: 50%;
+    transition: width 1s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+    border-radius: 4px 0 0 4px;
+}
+
+/* Version Mobile */
+@media (max-width: 600px) {
+    .stat-value { font-size: 0.9rem; }
+    .fuma-selector-label { font-size: 0.6rem; }
+}
         /* --- LOADER --- */
         #loader-container { text-align: center; padding-top: 150px; height: 100vh; background: #000; }
         .loader {
@@ -345,57 +412,64 @@
             <button class="tab-btn" onclick="switchTab('joueurs')">PLAYERS</button>
         </div>
 
-        <div id="resume" class="tab-content active">
-            <div class="stats-container">
-                <div class="stat-row">
-                    <div class="stat-label">
-                        <span id="val-possession-home">50%</span>
-                        <span class="stat-title">POSSESSION</span>
-                        <span id="val-possession-away">50%</span>
-                    </div>
-                    <div class="progress-container">
-                        <div id="bar-possession-home" class="bar-home"></div>
-                        <div id="bar-possession-away" class="bar-away"></div>
-                    </div>
-                </div>
+        <div id="resume" class="tab-content">
+    <div id="strikers-container" class="strikers-wrapper">
+        <div id="strikers-home" class="strikers-list"></div>
+        <div id="strikers-away" class="strikers-list"></div>
+    </div>
 
-                <div class="stat-row">
-                    <div class="stat-label">
-                        <span id="val-shots-home">0</span>
-                        <span class="stat-title">SHOTS</span>
-                        <span id="val-shots-away">0</span>
-                    </div>
-                    <div class="progress-container">
-                        <div id="bar-shots-home" class="bar-home"></div>
-                        <div id="bar-shots-away" class="bar-away"></div>
-                    </div>
-                </div>
-
-                <div class="stat-row">
-                    <div class="stat-label">
-                        <span id="val-passes-home">0 (0%)</span>
-                        <span class="stat-title">PASSES</span>
-                        <span id="val-passes-away">0 (0%)</span>
-                    </div>
-                    <div class="progress-container">
-                        <div id="bar-passes-home" class="bar-home"></div>
-                        <div id="bar-passes-away" class="bar-away"></div>
-                    </div>
-                </div>
-
-                <div class="stat-row">
-                    <div class="stat-label">
-                        <span id="val-tackles-home">0/0</span>
-                        <span class="stat-title">SUCCESSFUL TACKLES</span>
-                        <span id="val-tackles-away">0/0</span>
-                    </div>
-                    <div class="progress-container">
-                        <div id="bar-tackles-home" class="bar-home"></div>
-                        <div id="bar-tackles-away" class="bar-away"></div>
-                    </div>
-                </div>
+    <div class="fuma-stats-container">
+        <h3 class="fuma-sidebar-title" style="text-align: center; margin-bottom: 25px;">Team Statistics</h3>
+        
+        <div class="fuma-stat-group">
+            <div class="fuma-stat-labels">
+                <span id="val-possession-home" class="stat-value">0%</span>
+                <span class="fuma-selector-label">Possession</span>
+                <span id="val-possession-away" class="stat-value">0%</span>
+            </div>
+            <div class="fuma-progress-wrapper">
+                <div id="bar-possession-home" class="fuma-bar-home"></div>
+                <div id="bar-possession-away" class="fuma-bar-away"></div>
             </div>
         </div>
+
+        <div class="fuma-stat-group">
+            <div class="fuma-stat-labels">
+                <span id="val-shots-home" class="stat-value">0</span>
+                <span class="fuma-selector-label">Shots</span>
+                <span id="val-shots-away" class="stat-value">0</span>
+            </div>
+            <div class="fuma-progress-wrapper">
+                <div id="bar-shots-home" class="fuma-bar-home"></div>
+                <div id="bar-shots-away" class="fuma-bar-away"></div>
+            </div>
+        </div>
+
+        <div class="fuma-stat-group">
+            <div class="fuma-stat-labels">
+                <span id="val-passes-home" class="stat-value">0 (0%)</span>
+                <span class="fuma-selector-label">Pass Accuracy</span>
+                <span id="val-passes-away" class="stat-value">0 (0%)</span>
+            </div>
+            <div class="fuma-progress-wrapper">
+                <div id="bar-passes-home" class="fuma-bar-home"></div>
+                <div id="bar-passes-away" class="fuma-bar-away"></div>
+            </div>
+        </div>
+
+        <div class="fuma-stat-group">
+            <div class="fuma-stat-labels">
+                <span id="val-tackles-home" class="stat-value">0/0</span>
+                <span class="fuma-selector-label">Tackles</span>
+                <span id="val-tackles-away" class="stat-value">0/0</span>
+            </div>
+            <div class="fuma-progress-wrapper">
+                <div id="bar-tackles-home" class="fuma-bar-home"></div>
+                <div id="bar-tackles-away" class="fuma-bar-away"></div>
+            </div>
+        </div>
+    </div>
+</div>
 
         <div id="joueurs" class="tab-content">
             <div class="players-grid">
