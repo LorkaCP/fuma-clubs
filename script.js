@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyiLD_coE7vYHv9XSeXpdyeAQNOpPV-B_w-go6GnAUPORwqPumSDqBztGKGH09IWdmXDQ/exec?action=profile';
     const CLIENT_ID = '1473807551329079408'; 
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
-    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
+    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=identify%20guilds`;
+const DISCORD_API_URL = "https://discord.com/api/users/@me";
 
     // Avatars par défaut
     const DEFAULT_AVATAR = "https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png";
@@ -86,6 +87,72 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+function checkLogin() {
+    // 1. Récupérer le token depuis l'URL (après redirection)
+    const fragment = new URLSearchParams(window.location.hash.slice(1));
+    let token = fragment.get('access_token');
+
+    if (!token) {
+        token = localStorage.getItem('discord_token');
+    } else {
+        localStorage.setItem('discord_token', token);
+        // Nettoyer l'URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (token) {
+        fetchUserProfile(token);
+    }
+}
+
+async function fetchUserProfile(token) {
+    try {
+        const response = await fetch(DISCORD_API_URL, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (response.status === 401) {
+            logout();
+            return;
+        }
+
+        const user = await response.json();
+        updateUI(user);
+    } catch (error) {
+        console.error("Erreur profil Discord:", error);
+    }
+}
+
+function updateUI(user) {
+    // On cherche l'endroit où tu veux afficher le profil (ex: dans ton main-nav)
+    const navLinks = document.getElementById('nav-links-container');
+    if (!navLinks || !user) return;
+
+    // On crée ou on remplace l'élément de profil
+    let profileDiv = document.getElementById('discord-profile');
+    if (!profileDiv) {
+        profileDiv = document.createElement('div');
+        profileDiv.id = 'discord-profile';
+        profileDiv.className = 'nav-profile-item'; // Ajoute du CSS pour le style
+        navLinks.appendChild(profileDiv);
+    }
+
+    profileDiv.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px; padding: 5px 15px; background: rgba(255,255,255,0.05); border-radius: 20px;">
+            <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" 
+                 style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid #d4af37;">
+            <span style="font-size: 0.85rem; color: #fff;">${user.username}</span>
+            <i class="fas fa-sign-out-alt" onclick="logout()" style="cursor:pointer; color: #ff5757; font-size: 0.8rem;"></i>
+        </div>
+    `;
+}
+
+// Rendre logout accessible partout
+window.logout = function() {
+    localStorage.removeItem('discord_token');
+    window.location.href = 'index.html'; // Redirige vers l'accueil proprement
+};
+    
     // --- 4. LOGIQUE PAGE PROFIL ---
 async function loadTeamsList() {
     const teamSelect = document.getElementById('team');
@@ -895,6 +962,7 @@ loadPublicPlayerProfile(); // AJOUTE CELLE-CI pour la fiche détaillée player.h
 setupFormSubmission();
 fetchFumaClubs();
 loadClubProfile();
+    checkLogin();
 
 // 1. Initialisation spécifique à la page Players (Chargement des données)
 const playerSeasonFilter = document.getElementById('filter-season');
@@ -913,6 +981,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
