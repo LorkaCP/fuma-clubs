@@ -132,7 +132,7 @@
 
         /* --- STATS RESUME --- */
         .stats-container { max-width: 700px; margin: 0 auto; background: var(--fuma-card); padding: 30px; border-radius: 12px; }
-        .stat-row { margin-bottom: 30px; }
+        .match-stat-row { margin-bottom: 30px; }
         .stat-label {
             display: flex;
             justify-content: space-between;
@@ -337,21 +337,20 @@
             <button class="tab-btn" onclick="switchTab('joueurs')">PLAYERS</button>
         </div>
 
-        <div id="resume" class="tab-content active">
-            <div class="stats-container">
-                <div class="stat-row">
-                    <div class="stat-label">
-                        <span id="val-possession-home">50%</span>
-                        <span class="stat-title">POSSESSION</span>
-                        <span id="val-possession-away">50%</span>
-                    </div>
-                    <div class="progress-container">
-                        <div id="bar-possession-home" class="bar-home"></div>
-                        <div id="bar-possession-away" class="bar-away"></div>
-                    </div>
-                </div>
+        <<div class="stats-container">
+    <div class="match-stat-row"> <div class="stat-label">
+            <span id="val-possession-home">50%</span>
+            <span class="stat-title">POSSESSION</span>
+            <span id="val-possession-away">50%</span>
+        </div>
+        <div class="progress-container">
+            <div id="bar-possession-home" class="bar-home"></div>
+            <div id="bar-possession-away" class="bar-away"></div>
+        </div>
+    </div>
+    </div>
 
-                <div class="stat-row">
+                <div class="match-stat-row">
                     <div class="stat-label">
                         <span id="val-shots-home">0</span>
                         <span class="stat-title">SHOTS</span>
@@ -363,7 +362,7 @@
                     </div>
                 </div>
 
-                <div class="stat-row">
+                <div class="match-stat-row">
                     <div class="stat-label">
                         <span id="val-passes-home">0 (0%)</span>
                         <span class="stat-title">PASSES</span>
@@ -375,7 +374,7 @@
                     </div>
                 </div>
 
-                <div class="stat-row">
+                <div class="match-stat-row">
                     <div class="stat-label">
                         <span id="val-tackles-home">0/0</span>
                         <span class="stat-title">SUCCESSFUL TACKLES</span>
