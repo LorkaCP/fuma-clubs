@@ -31,39 +31,32 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- 3. INJECTION DU MENU ---
-    function injectNavigation() {
+   function injectNavigation() {
     const nav = document.getElementById('main-nav');
     if (!nav) return;
 
     const discordServerLink = 'https://discord.gg/xPz9FBkdtm';
     
-    // --- CORRECTION ICI ---
-    // On récupère l'utilisateur stocké pour savoir quoi afficher
-    const currentUser = getStoredUser(); 
-    
-    // Si l'utilisateur est connecté, on pointe vers son profil, sinon vers l'auth Discord
+    // --- FIX: Définition des variables avant usage ---
+    const currentUser = getStoredUser();
     const profileLink = currentUser ? `profile.html?id=${currentUser.id}` : authUrl;
     const profileText = currentUser ? `<i class="fas fa-user"></i> ${currentUser.username}` : "Login";
-    // -----------------------
 
     nav.innerHTML = `
         <div class="nav-container">
             <a href="index.html" class="fuma-logo">FUMA<span>CLUBS</span></a>
-            
             <div class="fuma-burger" id="burger-menu">
                 <span></span><span></span><span></span>
             </div>
-
             <div class="nav-links" id="nav-links-container">
                 <a href="index.html">Home</a>
                 <a href="league.html">League</a>
                 <a href="clubs.html">Clubs</a>
                 <a href="players.html">Players</a>
                 <a href="#">Rules</a>
-                <a href="${profileHref}" class="profile-link">${profileLabel}</a>
-                ${user ? '<a href="javascript:void(0)" onclick="logout()" style="opacity:0.6; font-size:0.7rem; margin-left:10px;">Logout</a>' : ''}
                 <a href="${discordServerLink}" target="_blank" style="color: #5865F2;">
-                    <i class="fab fa-discord"></i></a>
+                    <i class="fab fa-discord"></i> Discord</a>
+                <a href="${profileLink}" class="profile-link">${profileText}</a>
             </div>
         </div>
     `;
@@ -929,6 +922,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
