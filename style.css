@@ -278,6 +278,75 @@ body, .fuma-wrapper {
     filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
 }
 
+
+/* Conteneur pour aligner les boutons proprement */
+.form-actions-container {
+    display: grid;
+    grid-template-columns: 1fr; /* Un par ligne sur mobile */
+    gap: 12px;
+    margin-top: 30px;
+}
+
+@media (min-width: 768px) {
+    .form-actions-container {
+        grid-template-columns: 2fr 1fr 1fr; /* Update prend plus de place */
+    }
+}
+
+/* Base commune pour tous les boutons */
+.fuma-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    width: 100%;
+}
+
+/* BOUTON PRINCIPAL (Update) - Or/Noir */
+.fuma-btn-primary {
+    background: var(--fuma-primary);
+    color: #000;
+}
+.fuma-btn-primary:hover {
+    background: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+}
+
+/* BOUTON LOGOUT - Contour blanc/discret */
+.fuma-btn-outline {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+.fuma-btn-outline:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #fff;
+}
+
+/* BOUTON DELETE - Rouge danger */
+.fuma-btn-danger {
+    background: rgba(244, 67, 54, 0.1);
+    border-color: #f44336;
+    color: #f44336;
+}
+.fuma-btn-danger:hover {
+    background: #f44336;
+    color: #fff;
+    box-shadow: 0 5px 15px rgba(244, 67, 54, 0.3);
+}
+
+
 .fuma-btn-logout {
     background: #444;
     color: white;
@@ -861,6 +930,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
