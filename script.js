@@ -60,7 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a href="clubs.html">Clubs</a>
                 <a href="players.html">Players</a>
                 <a href="#">Rules</a>
-                <a href="${profileLink}" class="profile-link">${profileText}</a>
+                <a href="${profileHref}" class="profile-link">${profileLabel}</a>
+                ${user ? '<a href="javascript:void(0)" onclick="logout()" style="opacity:0.6; font-size:0.7rem; margin-left:10px;">Logout</a>' : ''}
                 <a href="${discordServerLink}" target="_blank" style="color: #5865F2;">
                     <i class="fab fa-discord"></i></a>
             </div>
@@ -146,6 +147,13 @@ function getStoredUser() {
     }
 }
 
+function logout() {
+    if (confirm("Are you sure you want to logout?")) {
+        localStorage.removeItem('fuma_user');
+        window.location.href = 'index.html';
+    }
+}
+    
 async function handleProfilePage() {
     if (!window.location.pathname.includes('profile.html')) return;
 
@@ -921,6 +929,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
