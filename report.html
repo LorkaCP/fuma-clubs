@@ -196,6 +196,15 @@
         
     };
 
+      const params = new URLSearchParams(window.location.search);
+    const auth = params.get('auth');
+
+    if (!auth) {
+        alert("Accès non autorisé. Vous devez passer par le Match Center.");
+        window.location.href = "index.html"; // Rediriger vers l'accueil
+        return;
+    }
+
     const params = new URLSearchParams(window.location.search);
     const homeName = params.get('home') || "";
     const awayName = params.get('away') || "";
