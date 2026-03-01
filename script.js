@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
     const PLAYERS_SHEET_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=';
-    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQFhl8ATNUe7hcnYxKqhRtFrJTsgS6gxaHexmt2U3Z3KfG2pCqcGike7gsnfuHQeNT8w/exec?action=profile';
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkvEq_gPVk6ooIg0twQy9HnpbzoKetSOiKIpoOlHDYCmcMQmobi5w99krpm-fKEwRFHw/exec?action=profile';
     const CLIENT_ID = '1473807551329079408'; 
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
     const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
@@ -52,9 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <a href="players.html">Players</a>
                     <a href="#">Rules</a>
                     <a href="${discordServerLink}" target="_blank" style="color: #5865F2;">
-                        <i class="fab fa-discord"></i> Discord
+                        <i class="fab fa-discord"></i> Discord</a>
                         <a href="${profileLink}" class="profile-link">${profileText}</a>
-                    </a>
                 </div>
             </div>
         `;
@@ -135,9 +134,7 @@ async function loadTeamsList() {
 }
 
     
-   // --- LOGIQUE DE SESSION ---
-
-// Vérifie si un utilisateur est déjà stocké localement
+    // Vérifie si un utilisateur est déjà stocké localement
 function getStoredUser() {
     const user = localStorage.getItem('fuma_user');
     return user ? JSON.parse(user) : null;
@@ -926,8 +923,6 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
-
-
 
 
 
