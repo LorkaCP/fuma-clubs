@@ -37,13 +37,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const currentUser = getStoredUser();
     
-    // Si connecté : Affiche l'icône utilisateur + Nom
-    // Si déconnecté : Affiche l'icône Discord + "LOGIN"
+    // Définition du lien (Profil ou Auth Discord)
     const profileLink = currentUser ? `profile.html?id=${currentUser.id}` : authUrl;
+    
+    // Définition du contenu (Icône + Texte)
     const profileContent = currentUser 
         ? `<i class="fas fa-user-circle"></i> ${currentUser.username.toUpperCase()}` 
         : `<i class="fab fa-discord"></i> LOGIN`;
 
+    // Injection du HTML
     nav.innerHTML = `
         <div class="nav-container">
             <a href="index.html" class="fuma-logo">FUMA<span>CLUBS</span></a>
@@ -54,25 +56,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a href="index.html">Home</a>
                 <a href="league.html">League</a>
                 <a href="#">Rules</a>
-                <a href="clubs.html">Clubs</a>
+                <a href="index.html">Clubs</a>
                 <a href="players.html">Players</a>
-                <a href="${profileLink}" class="profile-link">${profileText}</a>
-                <a href="${discordServerLink}" target="_blank" style="color: #5865F2;">
-                    <i class="fab fa-discord"></i></a>
+                <a href="${profileLink}" class="profile-link">
+                    ${profileContent}
+                </a>
             </div>
         </div>
     `;
 
-    // ... reste de la fonction (gestion de la classe 'active' et du burger)
-   const currentPage = window.location.pathname.split("/").pop() || 'index.html';
+    // Gestion de la classe 'active' pour les liens
+    const currentPage = window.location.pathname.split("/").pop() || 'index.html';
     const allLinks = nav.querySelectorAll('.nav-links a');
 
     allLinks.forEach(link => {
-        if (currentPage === link.getAttribute('href')) {
+        const href = link.getAttribute('href');
+        // On vérifie si le href correspond à la page actuelle ou si c'est le profil
+        if (currentPage === href || (href && href.startsWith('profile.html') && currentPage === 'profile.html')) {
             link.classList.add('active');
         }
     });
 
+    // Gestion du menu Burger
     const burger = document.getElementById('burger-menu');
     const linksContainer = document.getElementById('nav-links-container');
     if (burger && linksContainer) {
@@ -988,6 +993,7 @@ document.getElementById('btn-delete-profile')?.addEventListener('click', async (
 });
 
 }); // Fermeture unique du DOMContentLoaded
+
 
 
 
