@@ -32,8 +32,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. INJECTION DU MENU ---
     function injectNavigation() {
-        const nav = document.getElementById('main-nav');
-        if (!nav) return;
+    const nav = document.getElementById('main-nav');
+    if (!nav) return;
+
+    // Récupérer l'utilisateur pour adapter le menu
+    const currentUser = getStoredUser();
+    const profileLink = currentUser ? `profile.html?id=${currentUser.id}` : authUrl;
+    const profileText = currentUser ? `<i class="fas fa-user"></i> ${currentUser.username}` : "Login";
 
         const discordServerLink = 'https://discord.gg/xPz9FBkdtm';
 
@@ -921,6 +926,7 @@ document.getElementById('filter-team')?.addEventListener('change', applyPlayerFi
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
