@@ -1,5 +1,5 @@
 /**
- * FUMA CLUBS - LOGIC OPTIMISÉE (Version Finale avec masquage automatique)
+ * FUMA CLUBS - LOGIC OPTIMISÉE (Version Finale)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
