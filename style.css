@@ -293,10 +293,6 @@ body, .fuma-wrapper {
     }
 }
 
-.club-name {
-    font-size: 0.1rem;
-  }
-
 /* Base commune pour tous les boutons */
 .fuma-btn {
     display: inline-flex;
@@ -862,6 +858,20 @@ select option {
 }
 
 @media (max-width: 600px) {
+    #fuma-js-players .club-card {
+        padding: 15px 10px;
+    }
+    
+    /* Si ton JS injecte le nom dans un span ou une div spécifique */
+    #fuma-js-players .club-card span, 
+    #fuma-js-players .club-card p {
+        font-size: 0.65rem;
+        line-height: 1.2;
+        display: block;
+    }
+}
+
+@media (max-width: 600px) {
     .fuma-form-row { flex-direction: column; gap: 0; }
     .fuma-container { padding: 0 15px 40px; }
     .fuma-profile-grid { display: flex; flex-direction: column; }
@@ -934,6 +944,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
