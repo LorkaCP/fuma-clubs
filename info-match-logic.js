@@ -286,3 +286,13 @@ function switchTab(tabId) {
     const targetContent = document.getElementById(tabId);
     if(targetContent) targetContent.style.display = 'block';
 }
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    // La fonction est déjà appelée à la fin de script.js, 
+    // mais assurez-vous que l'élément <nav> existe avant.
+    if (typeof injectNavigation === 'function') {
+        injectNavigation();
+    }
+});
