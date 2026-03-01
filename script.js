@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     let allClubs = [];
-    let allPlayers = []; // Stockage pour la recherche de joueurs
+    let allPlayers = []; 
     
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
@@ -8,8 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyiLD_coE7vYHv9XSeXpdyeAQNOpPV-B_w-go6GnAUPORwqPumSDqBztGKGH09IWdmXDQ/exec?action=profile';
     const CLIENT_ID = '1473807551329079408'; 
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs-official.vercel.app/api/auth/callback');
+    
+    // Note : Utilisation de response_type=token pour le mode sans serveur
     const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=identify%20guilds`;
-const DISCORD_API_URL = "https://discord.com/api/users/@me";
+    const DISCORD_API_URL = "https://discord.com/api/users/@me";
 
     // Avatars par défaut
     const DEFAULT_AVATAR = "https://i.ibb.co/4wPqLKzf/profile-picture-icon-png-people-person-profile-4.png";
@@ -31,6 +33,72 @@ const DISCORD_API_URL = "https://discord.com/api/users/@me";
         return result.map(v => v.replace(/^"|"$/g, '').trim());
     };
 
+
+// --- 2. SYSTÈME DE CONNEXION DISCORD ---
+
+    function checkLogin() {
+        // 1. On regarde si on vient d'être redirigé par Discord avec un token
+        const fragment = new URLSearchParams(window.location.hash.slice(1));
+        let token = fragment.get('access_token');
+
+        if (!token) {
+            // 2. Sinon on regarde si on a déjà un token enregistré
+            token = localStorage.getItem('discord_token');
+        } else {
+            // 3. Si on vient de le recevoir, on le sauvegarde
+            localStorage.setItem('discord_token', token);
+            // On nettoie l'URL (enlève le token de la barre d'adresse)
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        if (token) {
+            fetchUserProfile(token);
+        }
+    }
+
+    async function fetchUserProfile(token) {
+        try {
+            const response = await fetch(DISCORD_API_URL, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            if (response.status === 401) {
+                logout();
+                return;
+            }
+
+            const user = await response.json();
+            updateUI(user);
+        } catch (error) {
+            console.error("Erreur profil Discord:", error);
+        }
+    }
+
+    function updateUI(user) {
+        const navLinks = document.getElementById('nav-links-container');
+        if (!navLinks || !user) return;
+
+        // On remplace le bouton "CONNEXION" par le profil de l'utilisateur
+        const loginBtn = navLinks.querySelector('.fuma-login-btn');
+        if (loginBtn) {
+            loginBtn.outerHTML = `
+                <div id="discord-profile" class="nav-profile-item" style="display: flex; align-items: center; gap: 10px; padding: 5px 15px; background: rgba(255,255,255,0.05); border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.3);">
+                    <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" 
+                         style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid #d4af37;">
+                    <span style="font-size: 0.85rem; color: #fff; font-weight: 600;">${user.username}</span>
+                    <i class="fas fa-sign-out-alt" onclick="logout()" style="cursor:pointer; color: #ff5757; font-size: 0.8rem; margin-left: 5px;" title="Déconnexion"></i>
+                </div>
+            `;
+        }
+    }
+
+    // Rendre logout accessible globalement pour le onclick
+    window.logout = function() {
+        localStorage.removeItem('discord_token');
+        window.location.reload();
+    };
+
+    
     // --- 3. INJECTION DU MENU ---
     function injectNavigation() {
         const nav = document.getElementById('main-nav');
@@ -56,7 +124,7 @@ const DISCORD_API_URL = "https://discord.com/api/users/@me";
                         <i class="fab fa-discord"></i> Discord
                     </a>
                     <a href="${authUrl}" class="fuma-login-btn">
-        <i class="fab fa-discord"></i> CONNEXION
+        <i class="fab fa-discord"></i> CONNEXION</a>
                 </div>
             </div>
         `;
@@ -89,71 +157,7 @@ const DISCORD_API_URL = "https://discord.com/api/users/@me";
         }
     }
 
-function checkLogin() {
-    // 1. Récupérer le token depuis l'URL (après redirection)
-    const fragment = new URLSearchParams(window.location.hash.slice(1));
-    let token = fragment.get('access_token');
 
-    if (!token) {
-        token = localStorage.getItem('discord_token');
-    } else {
-        localStorage.setItem('discord_token', token);
-        // Nettoyer l'URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
-    if (token) {
-        fetchUserProfile(token);
-    }
-}
-
-async function fetchUserProfile(token) {
-    try {
-        const response = await fetch(DISCORD_API_URL, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        if (response.status === 401) {
-            logout();
-            return;
-        }
-
-        const user = await response.json();
-        updateUI(user);
-    } catch (error) {
-        console.error("Erreur profil Discord:", error);
-    }
-}
-
-function updateUI(user) {
-    // On cherche l'endroit où tu veux afficher le profil (ex: dans ton main-nav)
-    const navLinks = document.getElementById('nav-links-container');
-    if (!navLinks || !user) return;
-
-    // On crée ou on remplace l'élément de profil
-    let profileDiv = document.getElementById('discord-profile');
-    if (!profileDiv) {
-        profileDiv = document.createElement('div');
-        profileDiv.id = 'discord-profile';
-        profileDiv.className = 'nav-profile-item'; // Ajoute du CSS pour le style
-        navLinks.appendChild(profileDiv);
-    }
-
-    profileDiv.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 10px; padding: 5px 15px; background: rgba(255,255,255,0.05); border-radius: 20px;">
-            <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" 
-                 style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid #d4af37;">
-            <span style="font-size: 0.85rem; color: #fff;">${user.username}</span>
-            <i class="fas fa-sign-out-alt" onclick="logout()" style="cursor:pointer; color: #ff5757; font-size: 0.8rem;"></i>
-        </div>
-    `;
-}
-
-// Rendre logout accessible partout
-window.logout = function() {
-    localStorage.removeItem('discord_token');
-    window.location.href = 'index.html'; // Redirige vers l'accueil proprement
-};
     
     // --- 4. LOGIQUE PAGE PROFIL ---
 async function loadTeamsList() {
@@ -958,31 +962,37 @@ function renderDetailedProfile(info, stats) {
 
     
 // --- INITIALISATION FINALE ---
-injectNavigation();
-handleProfilePage(); // Garde celle-ci pour le profil utilisateur
-loadPublicPlayerProfile(); // AJOUTE CELLE-CI pour la fiche détaillée player.html
-setupFormSubmission();
-fetchFumaClubs();
-loadClubProfile();
-    checkLogin();
 
-// 1. Initialisation spécifique à la page Players (Chargement des données)
+// 1. D'abord on injecte le menu (le squelette HTML du haut de page)
+injectNavigation(); 
+
+// 2. Immédiatement après, on vérifie la connexion 
+// (Cela permet de remplacer le bouton "Connexion" par l'avatar avant que l'utilisateur ne le voie)
+checkLogin(); 
+
+// 3. Ensuite, on gère les logiques spécifiques aux pages
+handleProfilePage();       // Pour la page d'édition de profil
+loadPublicPlayerProfile(); // Pour la fiche détaillée player.html
+loadClubProfile();         // Pour la fiche club.html
+fetchFumaClubs();          // Pour la liste des clubs sur index.html ou clubs.html
+
+// 4. On active les formulaires
+setupFormSubmission();
+
+// 5. Logique spécifique à la page Players (Filtres et stats)
 const playerSeasonFilter = document.getElementById('filter-season');
 if (playerSeasonFilter) {
-    // Charge la saison par défaut au démarrage
     fetchFumaPlayers(playerSeasonFilter.value); 
-    
-    // Ecouteur pour changer de saison (recharge toutes les données)
     playerSeasonFilter.addEventListener('change', (e) => fetchFumaPlayers(e.target.value));
 }
 
-// 2. Ecouteurs pour les filtres (Recherche, Team et Position)
-// On les place ici pour qu'ils soient actifs dès que la page est prête
+// 6. Ecouteurs de filtres (Search, Team, Position)
 document.getElementById('search-player')?.addEventListener('input', applyPlayerFilters);
 document.getElementById('filter-team')?.addEventListener('change', applyPlayerFilters);
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
 }); // Fermeture correcte du DOMContentLoaded
+
 
 
 
