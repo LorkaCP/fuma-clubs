@@ -36,7 +36,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }).catch(err => console.error("Erreur de chargement Fixtures:", err));
 });
 
-function updateUI(m) {
+/**
+ * MISE À JOUR DE L'INTERFACE (COMPLÈTE AVEC DROITS MANAGER)
+ */
+async function updateUI(m) {
+    // 1. Récupération de l'utilisateur connecté (depuis localStorage)
+    const storedUser = JSON.parse(localStorage.getItem('fuma_user'));
+    const currentUserId = storedUser ? storedUser.id : null;
+
     const scoreHome = m[9];
     // Un match est considéré comme "joué" si le score n'est pas vide, pas 0 et pas une erreur #REF!
     const isPlayed = scoreHome !== "" && scoreHome !== "#REF!" && scoreHome !== undefined && scoreHome !== "0";
@@ -51,7 +58,7 @@ function updateUI(m) {
     const elScoreHome = document.getElementById('score-home');
     const elScoreAway = document.getElementById('score-away');
 
-    // 1. Mise à jour des infos de base (toujours visibles)
+    // --- MISE À JOUR DES INFOS DE BASE (TOUJOURS VISIBLES) ---
     document.getElementById('name-home').innerText = m[6];
     document.getElementById('name-away').innerText = m[7];
     document.getElementById('logo-home').src = m[3] || '';
@@ -63,33 +70,75 @@ function updateUI(m) {
 
     if (!isPlayed) {
         // --- MODE MATCH NON JOUÉ ---
+        
         // Masquer la navigation et les onglets de statistiques
         if (resumeTab) resumeTab.style.display = 'none';
         if (joueursTab) joueursTab.style.display = 'none';
         if (matchNav) matchNav.style.display = 'none';
         
-        // Afficher la section d'attente avec le bouton rapport
+        // Afficher la section d'attente
         if (upcomingSection) upcomingSection.style.display = 'block';
 
         // Afficher un score neutre
         elScoreHome.innerText = "-";
         elScoreAway.innerText = "-";
         
-        // Configuration du bouton de rapport
         const btnReport = document.getElementById('btn-send-report');
         if (btnReport) {
-            btnReport.onclick = () => {
-                const p = new URLSearchParams(window.location.search);
-                window.location.href = `report.html?home=${encodeURIComponent(p.get('home'))}&away=${encodeURIComponent(p.get('away'))}&gid=${p.get('gid')}`;
-            };
+            // URL de la TEAMS_DATABASE pour vérifier les IDs Managers (Colonne N)
+            const TEAMS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv";
+
+            try {
+                const res = await fetch(TEAMS_URL);
+                const csv = await res.text();
+                const teams = parseCSV(csv);
+
+                // On cherche les lignes des deux équipes
+                const homeData = teams.find(t => t[0] === m[6]);
+                const awayData = teams.find(t => t[0] === m[7]);
+
+                // ID du reporter (Index 13 = Colonne N)
+                const idReporterHome = homeData ? homeData[13]?.trim() : null;
+                const idReporterAway = awayData ? awayData[13]?.trim() : null;
+
+                // VÉRIFICATION : Est-ce l'utilisateur est le manager d'une des deux équipes ?
+                const canReport = currentUserId && (
+                    currentUserId.toString() === String(idReporterHome) || 
+                    currentUserId.toString() === String(idReporterAway)
+                );
+
+                if (canReport) {
+                    btnReport.style.display = 'inline-block';
+                    btnReport.onclick = () => {
+                        const p = new URLSearchParams(window.location.search);
+                        window.location.href = `report.html?home=${encodeURIComponent(p.get('home'))}&away=${encodeURIComponent(p.get('away'))}&gid=${p.get('gid')}`;
+                    };
+                } else {
+                    // Masquer le bouton et afficher le message de verrouillage
+                    btnReport.style.display = 'none';
+                    const existingMsg = document.getElementById('lock-msg');
+                    if (!existingMsg) {
+                        const msg = document.createElement('p');
+                        msg.id = 'lock-msg';
+                        msg.innerHTML = "<i class='fas fa-lock'></i> Only Team Managers can report this match.";
+                        msg.style.fontSize = "0.85rem";
+                        msg.style.marginTop = "15px";
+                        msg.style.color = "var(--fuma-text-dim)";
+                        btnReport.parentNode.appendChild(msg);
+                    }
+                }
+            } catch (err) {
+                console.error("Erreur vérification manager:", err);
+                btnReport.style.display = 'none';
+            }
         }
     } else {
-        // --- MODE MATCH JOUÉ ---
-        // Afficher la navigation et masquer la section d'attente
+        // --- MODE MATCH JOUÉ (REPRISE INTÉGRALE DE TA LOGIQUE) ---
+        
         if (matchNav) matchNav.style.display = 'flex';
         if (upcomingSection) upcomingSection.style.display = 'none';
         
-        // Activer l'onglet Résumé par défaut pour l'affichage
+        // Activer l'onglet Résumé par défaut
         switchTab('resume');
 
         // Affichage des scores
@@ -132,7 +181,7 @@ function updateUI(m) {
         if (motmCont && m[27] && m[27] !== '0' && m[27] !== '#REF!') {
             motmCont.innerHTML = `<div class="motm-badge"><i class="fas fa-star"></i> MOTM: ${m[27]}</div>`;
         } else if (motmCont) {
-            motmCont.innerHTML = ""; // Vide le container si pas de MOTM
+            motmCont.innerHTML = ""; 
         }
 
         // Chargement des statistiques individuelles des joueurs
