@@ -963,30 +963,30 @@ function renderDetailedProfile(info, stats) {
     
 // --- INITIALISATION FINALE ---
 
-// 1. D'abord on injecte le menu (le squelette HTML du haut de page)
+// --- INITIALISATION FINALE ---
+
+// 1. D'abord on injecte le menu (le squelette HTML)
 injectNavigation(); 
 
 // 2. Immédiatement après, on vérifie la connexion 
-// (Cela permet de remplacer le bouton "Connexion" par l'avatar avant que l'utilisateur ne le voie)
+// (Pour que le bouton "Connexion" soit remplacé par le profil AVANT que l'utilisateur ne le voie)
 checkLogin(); 
 
-// 3. Ensuite, on gère les logiques spécifiques aux pages
-handleProfilePage();       // Pour la page d'édition de profil
-loadPublicPlayerProfile(); // Pour la fiche détaillée player.html
-loadClubProfile();         // Pour la fiche club.html
-fetchFumaClubs();          // Pour la liste des clubs sur index.html ou clubs.html
+// 3. Logiques de remplissage de pages (ne s'exécutent que si les éléments ID existent)
+handleProfilePage();       // Page profile.html
+loadPublicPlayerProfile(); // Page player.html
+loadClubProfile();         // Page club.html
+fetchFumaClubs();          // Page index.html / clubs.html
+setupFormSubmission();     // Formulaires
 
-// 4. On active les formulaires
-setupFormSubmission();
-
-// 5. Logique spécifique à la page Players (Filtres et stats)
+// 4. Initialisation spécifique à la page Players
 const playerSeasonFilter = document.getElementById('filter-season');
 if (playerSeasonFilter) {
     fetchFumaPlayers(playerSeasonFilter.value); 
     playerSeasonFilter.addEventListener('change', (e) => fetchFumaPlayers(e.target.value));
 }
 
-// 6. Ecouteurs de filtres (Search, Team, Position)
+// 5. Ecouteurs pour les filtres de recherche
 document.getElementById('search-player')?.addEventListener('input', applyPlayerFilters);
 document.getElementById('filter-team')?.addEventListener('change', applyPlayerFilters);
 document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
