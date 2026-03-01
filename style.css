@@ -761,9 +761,42 @@ select option {
 
 .back-to-top.visible { opacity: 1; visibility: visible; }
 
+.fuma-footer {
+    padding: 40px 0 20px;
+    text-align: center;
+    border-top: var(--fuma-border);
+    margin-top: 50px;
+}
+
+.fuma-social-links {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin-bottom: 20px;
+}
+
+.social-icon {
+    color: var(--fuma-text-dim);
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.social-icon:hover {
+    color: var(--fuma-primary);
+    transform: translateY(-3px);
+    filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.4));
+}
+
+/* On réutilise ta classe fuma-credits existante mais on ajuste un peu */
 .fuma-credits {
-    text-align: center; padding: 60px 0 20px; color: var(--fuma-text-dim);
-    font-size: 0.7rem; letter-spacing: 2px; opacity: 0.5;
+    text-align: center;
+    padding: 10px 0;
+    color: var(--fuma-text-dim);
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    opacity: 0.6;
+    text-transform: uppercase;
 }
 
 /* --- RÉGLAGE SPÉCIFIQUE POUR LES CLUBS (Écart large) --- */
@@ -944,6 +977,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
