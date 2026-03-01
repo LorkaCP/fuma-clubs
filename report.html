@@ -183,8 +183,56 @@
 }
     </style>
   <script>
+document.addEventListener('DOMContentLoaded', async () => {
+    // --- SÉCURITÉ : VÉRIFICATION DE CONNEXION ET DE DROITS ---
+    const user = JSON.parse(localStorage.getItem('fuma_user'));
+    const params = new URLSearchParams(window.location.search);
+    const homeName = params.get('home') || "";
+    const awayName = params.get('away') || "";
+    const currentGid = params.get('gid');
+
+    if (!user) {
+        alert("You must be logged in to access this page.");
+        window.location.href = 'index.html';
+        return;
+    }
+
+    // URL de la base de données pour vérifier les managers
+    const TEAMS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv";
+
+    try {
+        const res = await fetch(TEAMS_URL);
+        const csv = await res.text();
+        const teams = parseCSV(csv); // Assure-toi que parseCSV est bien présent dans ce fichier aussi
+
+        const homeData = teams.find(t => t[0] === homeName);
+        const awayData = teams.find(t => t[0] === awayName);
+
+        const idReporterHome = homeData ? homeData[13]?.trim() : null; // Colonne N
+        const idReporterAway = awayData ? awayData[13]?.trim() : null;
+
+        // Vérification stricte de l'ID Discord
+        const canAccess = user.id && (
+            user.id.toString() === String(idReporterHome) || 
+            user.id.toString() === String(idReporterAway)
+        );
+
+        if (!canAccess) {
+            alert("Security Error: You are not the manager of either team in this match.");
+            window.location.href = 'index.html';
+            return;
+        }
+    } catch (err) {
+        console.error("Security check failed:", err);
+        alert("Error verifying permissions. Please try again.");
+        window.location.href = 'index.html';
+        return;
+    }
+          
     // --- 1. CONFIGURATION ---
-    const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=1610453677&single=true&output=csv";
+    
+      
+      const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=1610453677&single=true&output=csv";
     const PLAYERS_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=420142588&single=true&output=csv";
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQFhl8ATNUe7hcnYxKqhRtFrJTsgS6gxaHexmt2U3Z3KfG2pCqcGike7gsnfuHQeNT8w/exec?action=match";
       let currentPlayersData = []; // Pour stocker les données fusionnées
@@ -204,6 +252,9 @@
     document.getElementById('name-home').innerText = homeName;
     document.getElementById('name-away').innerText = awayName;
 
+
+
+      
     // --- 2. NORMALISATION ---
     function normalizeName(name) {
         if (!name) return "";
@@ -456,7 +507,19 @@
     }
 };
 
-
+// 2. FONCTIONS UTILITAIRES (À placer en dehors, tout en bas)
+function parseCSV(t) {
+    return t.split('\n').map(l => {
+        let res = [], cur = '', q = false;
+        for (let c of l) {
+            if (c === '"') q = !q;
+            else if (c === ',' && !q) { res.push(cur.trim()); cur = ''; }
+            else cur += c;
+        }
+        res.push(cur.trim());
+        return res;
+    });
+}
       
     init();
 </script>
