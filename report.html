@@ -13,6 +13,16 @@
         .submit-btn { width: 100%; padding: 20px; background: #d4af37; color: #000; border: none; font-weight: 800; margin-top: 30px; cursor: pointer; border-radius: 5px; }
     </style>
 </head>
+<div id="auth-modal">
+    <div class="modal-content">
+        <h2 style="color:#d4af37;">ACCÈS RÉSERVÉ AUX MANAGERS</h2>
+        <p style="color:#eee;">Désolé, votre ID Discord n'est pas enregistré dans la base des managers autorisés (Colonne N).</p>
+        <a href="https://discord.gg/votre-lien" target="_blank" class="discord-btn">
+            <i class="fab fa-discord"></i> DEMANDER L'ACCÈS SUR DISCORD
+        </a>
+    </div>
+</div>
+    
 <body>
     <div class="fuma-container">
         <header style="text-align: center; padding: 30px 0;">
@@ -128,6 +138,21 @@
     </div>
 
     <style>
+#auth-modal {
+    display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+    background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;
+}
+.modal-content {
+    background:#151515; padding:40px; border-radius:15px; border:2px solid #d4af37;
+    text-align:center; max-width:450px; font-family: 'Poppins', sans-serif;
+}
+.discord-btn {
+    display:inline-block; background:#7289da; color:#fff; padding:15px 30px; 
+    border-radius:8px; text-decoration:none; font-weight:800; margin-top:20px;
+}
+
+
+        
         label {
             display: block;
             margin-top: 15px;
@@ -217,33 +242,69 @@
 
     // --- 3. RECHERCHE DES MATCHS ---
     async function init() {
-        const statusEl = document.getElementById('loading-status');
-        try {
-            const response = await fetch(GLOBAL_DATA_URL);
-            const data = await response.text();
-            const rows = data.split('\n').map(r => r.split(','));
-            
-            const normHome = normalizeName(homeName);
-            const normAway = normalizeName(awayName);
+    const statusEl = document.getElementById('loading-status');
+    const params = new URLSearchParams(window.location.search);
+    const senderId = params.get('sender_id'); // On récupère l'ID Discord dans l'URL
 
-            const matches = rows.filter(r => {
-                const rHome = normalizeName(r[1]);
-                const rAway = normalizeName(r[2]);
-                return (rHome === normHome && rAway === normAway) || 
-                       (rHome === normAway && rAway === normHome);
-            });
-
-            if (matches.length > 0) {
-                statusEl.innerHTML = `<i class="fas fa-check"></i> ${matches.length} mi-temps trouvées`;
-                displayMatchSelector(matches);
-            } else {
-                statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Aucun match trouvé.';
-            }
-        } catch (err) {
-            statusEl.innerHTML = "Erreur de chargement.";
-            console.error(err);
-        }
+    // --- 1. VÉRIFICATION DE SÉCURITÉ (MANAGER) ---
+    if (!senderId) {
+        console.error("Aucun ID Discord fourni");
+        showAuthModal();
+        return;
     }
+
+    try {
+        statusEl.innerText = "Vérification des autorisations...";
+        // On appelle ton Apps Script avec l'action check_reporter
+        const authResponse = await fetch(`${APPS_SCRIPT_URL}&action=check_reporter&discord_id=${senderId}`);
+        const authResult = await authResponse.json();
+
+        if (authResult.result !== "authorized") {
+            showAuthModal(); // Affiche le pop-up si l'ID n'est pas en colonne N
+            return;
+        }
+        
+        // --- 2. CHARGEMENT DES DONNÉES DE MATCH (TON CODE EXISTANT) ---
+        statusEl.innerText = "Chargement des données du match...";
+        const response = await fetch(GLOBAL_DATA_URL);
+        const data = await response.text();
+        const rows = data.split('\n').map(r => r.split(','));
+        
+        const normHome = normalizeName(homeName);
+        const normAway = normalizeName(awayName);
+
+        const matches = rows.filter(r => {
+            const rHome = normalizeName(r[1] || "");
+            const rAway = normalizeName(r[2] || "");
+            return (rHome === normHome && rAway === normAway) || 
+                   (rHome === normAway && rAway === normHome);
+        });
+
+        if (matches.length > 0) {
+            const match = matches[0];
+            currentGid = match[0];
+            statusEl.innerText = `Match trouvé (ID: ${currentGid}). Chargement des joueurs...`;
+            await loadPlayersData();
+        } else {
+            statusEl.innerText = "Match introuvable dans la base de données.";
+        }
+
+    } catch (err) {
+        console.error("Erreur Init:", err);
+        statusEl.innerText = "Erreur lors du chargement. Vérifiez votre connexion.";
+    }
+}
+
+// Fonction utilitaire pour afficher le pop-up de blocage
+function showAuthModal() {
+    const modal = document.getElementById('auth-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Empêche de scroller derrière
+    } else {
+        alert("Accès refusé. Seuls les managers autorisés peuvent accéder à cette page.");
+    }
+}
 
     function displayMatchSelector(matches) {
         const container = document.getElementById('match-selector-container');
