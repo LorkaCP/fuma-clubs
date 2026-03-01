@@ -4,9 +4,6 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-   if (typeof injectNavigation === 'function') {
-        injectNavigation();
-    }
 
     const params = new URLSearchParams(window.location.search);
     const gid = params.get('gid'); 
