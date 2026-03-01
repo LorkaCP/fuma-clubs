@@ -905,23 +905,27 @@ setupFormSubmission();
 fetchFumaClubs();
 loadClubProfile();
 
-// 1. Initialisation spécifique à la page Players (Chargement des données)
-const playerSeasonFilter = document.getElementById('filter-season');
-if (playerSeasonFilter) {
-    // Charge la saison par défaut au démarrage
-    fetchFumaPlayers(playerSeasonFilter.value); 
-    
-    // Ecouteur pour changer de saison (recharge toutes les données)
-    playerSeasonFilter.addEventListener('change', (e) => fetchFumaPlayers(e.target.value));
-}
+// --- INITIALISATION FINALE ---
+    injectNavigation();
+    handleProfilePage(); 
+    loadPublicPlayerProfile(); 
+    setupFormSubmission();
+    fetchFumaClubs();
+    loadClubProfile();
 
-// 2. Ecouteurs pour les filtres (Recherche, Team et Position)
-// On les place ici pour qu'ils soient actifs dès que la page est prête
-document.getElementById('search-player')?.addEventListener('input', applyPlayerFilters);
-document.getElementById('filter-team')?.addEventListener('change', applyPlayerFilters);
-document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
+    // Gestion des filtres de la page Players
+    const playerSeasonFilter = document.getElementById('filter-season');
+    if (playerSeasonFilter) {
+        fetchFumaPlayers(playerSeasonFilter.value); 
+        playerSeasonFilter.addEventListener('change', (e) => fetchFumaPlayers(e.target.value));
+    }
 
-}); // Fermeture correcte du DOMContentLoaded
+    document.getElementById('search-player')?.addEventListener('input', applyPlayerFilters);
+    document.getElementById('filter-team')?.addEventListener('change', applyPlayerFilters);
+    document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
+
+}); // Fermeture unique du DOMContentLoaded
+
 
 
 
