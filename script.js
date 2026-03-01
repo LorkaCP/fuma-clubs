@@ -926,6 +926,24 @@ loadClubProfile();
     document.getElementById('filter-team')?.addEventListener('change', applyPlayerFilters);
     document.getElementById('filter-position')?.addEventListener('change', applyPlayerFilters);
 
+// Gestion du bouton "MY PROFILE" sur la page players.html
+const btnMyProfile = document.getElementById('btn-my-profile');
+if (btnMyProfile) {
+    btnMyProfile.addEventListener('click', (e) => {
+        const currentUser = getStoredUser(); // Utilise votre fonction existante
+        
+        if (currentUser) {
+            // Si l'utilisateur est connecté, on va vers son profil
+            window.location.href = 'profile.html';
+        } else {
+            // Si non connecté, on déclenche l'authentification Discord
+            e.preventDefault();
+            window.location.href = authUrl; // Utilise votre variable authUrl définie en haut du script
+        }
+    });
+}
+
+    
  // 1. Gestion de la déconnexion
 document.getElementById('btn-logout')?.addEventListener('click', () => {
     if (confirm("Are you sure you want to logout?")) {
@@ -968,6 +986,7 @@ document.getElementById('btn-delete-profile')?.addEventListener('click', async (
 });
 
 }); // Fermeture unique du DOMContentLoaded
+
 
 
 
