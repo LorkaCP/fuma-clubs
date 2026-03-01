@@ -186,7 +186,7 @@
     // --- 1. CONFIGURATION ---
     const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=1610453677&single=true&output=csv";
     const PLAYERS_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=420142588&single=true&output=csv";
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUeyB6bhhwgXhsw0kYP6l_kf_xBWaObiWvMioTil2dPN7-gU18R7qSw0IvPYhJ5Lld/exec?action=match";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkvEq_gPVk6ooIg0twQy9HnpbzoKetSOiKIpoOlHDYCmcMQmobi5w99krpm-fKEwRFHw/exec?action=match";
       let currentPlayersData = []; // Pour stocker les données fusionnées
 
     const CLUB_ALIASES = {
@@ -203,43 +203,6 @@
 
     document.getElementById('name-home').innerText = homeName;
     document.getElementById('name-away').innerText = awayName;
-
-
-
-      // Variable pour stocker le token une fois récupéré
-let discordAccessToken = null;
-
-async function getDiscordAuth() {
-    if (discordAccessToken) return discordAccessToken;
-
-    return new Promise((resolve) => {
-        const CLIENT_ID = '1473807551329079408'; 
-        // ON FORCE L'URL SANS PARAMÈTRES :
-        const REDIRECT_URI = window.location.origin + window.location.pathname; 
-        
-        // Remplacez : scope=identify%20guilds.members.read
-const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=identify`;
-        
-        const width = 500, height = 700;
-        const left = (window.innerWidth / 2) - (width / 2);
-        const authWindow = window.open(authUrl, "DiscordAuth", `width=${width},height=${height},left=${left}`);
-
-        const timer = setInterval(async () => {
-            try {
-                if (authWindow.location.hash) {
-                    const params = new URLSearchParams(authWindow.location.hash.slice(1));
-                    discordAccessToken = params.get('access_token');
-                    if (discordAccessToken) {
-                        clearInterval(timer);
-                        authWindow.close();
-                        resolve(discordAccessToken);
-                    }
-                }
-            } catch (e) { /* Erreur cross-origin normale pendant le login */ }
-            if (authWindow.closed) clearInterval(timer);
-        }, 500);
-    });
-}
 
     // --- 2. NORMALISATION ---
     function normalizeName(name) {
@@ -462,66 +425,38 @@ const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}
     });
 }
 
-// --- 5. ENVOI FINAL ---
-// --- 5. ENVOI FINAL ---
-document.getElementById('match-report-form').onsubmit = async (e) => {
+    // --- 5. ENVOI FINAL ---
+    document.getElementById('match-report-form').onsubmit = async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-submit');
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw9sQLFYDXX9UDxbqtCymbPXTSPx3UWXE4A1I69DtJTce1FDr7XkTxpiFnDsLz63Pinnw/exec"; // URL Corrigée
+    btn.innerText = "ENREGISTREMENT...";
+    btn.disabled = true;
 
-    btn.innerText = "AUTHENTIFICATION DISCORD...";
-    const token = await getDiscordAuth();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
     
-    if (!token) {
-        alert("Authentification annulée ou échouée.");
-        btn.innerText = "Valider et enregistrer le match";
-        return;
-    }
+    data.home = homeName; 
+    data.away = awayName; 
+    data.gid = currentGid;
+    // On ajoute le tableau des joueurs fusionnés
+    data.players = currentPlayersData; 
 
     try {
-        // Étape 1 : Vérification des droits
-        const authCheck = await fetch(`${APPS_SCRIPT_URL}?action=check_auth&token=${token}`);
-        const authResult = await authCheck.json();
-        console.log(authResult);
-
-        if (!authResult.authorized) {
-            alert("Accès refusé : Vous n'avez pas le rôle requis.");
-            btn.innerText = "Accès Refusé";
-            return;
-        }
-
-        // Étape 2 : Préparation et envoi
-        btn.innerText = "ENREGISTREMENT EN COURS...";
-        btn.disabled = true;
-
-        const formData = new FormData(e.target);
-        const formObj = Object.fromEntries(formData.entries());
-        
-        const payload = {
-            action: "match",
-            home: homeName,
-            away: awayName,
-            gid: currentGid,
-            players: currentPlayersData,
-            ...formObj
-        };
-
         await fetch(APPS_SCRIPT_URL, { 
-    method: 'POST',
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-});
-
-        alert("Match enregistré avec succès !");
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify(data) 
+        });
+        alert("Rapport et statistiques joueurs enregistrés !");
         window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
-
-    } catch (err) {
-        console.error("Erreur technique:", err);
-        alert("Erreur lors de l'enregistrement.");
+    } catch (e) {
+        alert("Erreur lors de l'envoi");
         btn.disabled = false;
-        btn.innerText = "Valider";
+        btn.innerText = "Valider et enregistrer le match";
     }
 };
+
+
       
     init();
 </script>
