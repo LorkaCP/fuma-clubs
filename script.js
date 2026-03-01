@@ -931,28 +931,26 @@ document.getElementById('btn-logout')?.addEventListener('click', () => {
     }
 });
 
-// Bouton Delete Profile
+// --- LOGIQUE DE SUPPRESSION ---
 document.getElementById('btn-delete-profile')?.addEventListener('click', async () => {
     const user = getStoredUser();
     if (!user) return;
 
     if (confirm("WARNING: Are you sure you want to DELETE your profile? This action is permanent.")) {
         try {
-            // Appel à l'API Google Script pour supprimer l'entrée
-            const response = await fetch(`${APP_SCRIPT_URL}&method=DELETE&id=${user.id}`, { 
-                method: 'POST' // Google Apps Script nécessite souvent POST pour simuler DELETE
-            });
-            
-            alert("Profile deleted successfully.");
-            logout(); // Déconnexion automatique après suppression
-        } catch (error) {
-            console.error("Error deleting profile:", error);
-            alert("Failed to delete profile. Please try again.");
+            // Remplace l'URL par ton URL Google Script si nécessaire
+            await fetch(`${APP_SCRIPT_URL}&method=DELETE&id=${user.id}`, { method: 'POST' });
+            alert("Profile deleted.");
+            localStorage.removeItem('fuma_user');
+            window.location.href = 'index.html';
+        } catch (e) {
+            alert("Error during deletion.");
         }
     }
 });
 
 }); // Fermeture unique du DOMContentLoaded
+
 
 
 
