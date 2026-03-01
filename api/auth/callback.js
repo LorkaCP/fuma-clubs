@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     const MY_GUILD_ID = '882539898953949204'; // FUMA Server ID
     const clientID = process.env.DISCORD_CLIENT_ID;
     const clientSecret = process.env.DISCORD_CLIENT_SECRET;
-    const redirectUri = 'https://fuma-clubs-official.vercel.app/api/auth/callback';
+    const redirectUri = 'https://fuma-clubs.com/api/auth/callback';
 
     try {
         // 1. EXCHANGE CODE FOR ACCESS TOKEN
