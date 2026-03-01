@@ -293,6 +293,10 @@ body, .fuma-wrapper {
     }
 }
 
+.club-name {
+    font-size: 0.6rem;
+  }
+
 /* Base commune pour tous les boutons */
 .fuma-btn {
     display: inline-flex;
@@ -930,6 +934,7 @@ select option {
         font-size: 2rem; /* Taille réduite pour mobile */
     }
 }
+
 
 
 
