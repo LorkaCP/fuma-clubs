@@ -934,24 +934,39 @@ document.getElementById('btn-logout')?.addEventListener('click', () => {
 
 // 2. Gestion de la suppression (ID corrigé)
 document.getElementById('btn-delete-profile')?.addEventListener('click', async () => {
-    const user = getStoredUser();
+    const user = getStoredUser(); // Récupère l'utilisateur connecté
     if (!user) return;
 
     if (confirm("WARNING: Are you sure you want to DELETE your profile? This action is permanent.")) {
         try {
-            // On utilise l'URL de ton API définie en haut du script
-            await fetch(`${APP_SCRIPT_URL}&method=DELETE&id=${user.id}`, { method: 'POST' });
-            alert("Profile deleted successfully.");
+            // On prépare les données exactement comme le App Script les attend
+            const formData = new URLSearchParams();
+            formData.append('action', 'delete');
+            formData.append('discord_id', user.id); // On envoie l'ID Discord
+
+            const response = await fetch(APP_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Important pour Google Apps Script
+                body: formData
+            });
+
+            // Note: Avec 'no-cors', on ne peut pas lire la réponse JSON, 
+            // on assume que ça a marché si aucune erreur n'est levée.
+            alert("Request sent. Your profile will be deleted.");
+            
+            // Déconnexion locale
             localStorage.removeItem('fuma_user');
             window.location.href = 'index.html';
+            
         } catch (error) {
             console.error("Delete error:", error);
-            alert("Error while deleting profile.");
+            alert("Failed to connect to the server.");
         }
     }
 });
 
 }); // Fermeture unique du DOMContentLoaded
+
 
 
 
