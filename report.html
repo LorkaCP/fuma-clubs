@@ -186,7 +186,7 @@
     // --- 1. CONFIGURATION ---
     const GLOBAL_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=1610453677&single=true&output=csv";
     const PLAYERS_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmb8QyRSXiEG9O7vApX3Xy1elzQ5NpB5DYLMmwdJcyhhB4uMmrRlPWmrZVR4W8AlzKxqpavcLYGEK8/pub?gid=420142588&single=true&output=csv";
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwizjNMfI80SmreCtYDAzGgD6PO9ZG3_jaYSnH3i8DU4mTfmNfJG8Dl_JP2vYVPa67enw/exec?action=match";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOJMb1cm_v8SV28CUTI5GOKciJNRtB9VDNG_UDQt64rN04VZpolxLq6391F8Gb29T_Fg/exec?action=match";
       let currentPlayersData = []; // Pour stocker les données fusionnées
 
     const CLUB_ALIASES = {
@@ -215,7 +215,7 @@ async function getDiscordAuth() {
     return new Promise((resolve) => {
         const CLIENT_ID = '1473807551329079408'; 
         // ON FORCE L'URL SANS PARAMÈTRES :
-        const REDIRECT_URI = "https://fuma-clubs-official.vercel.app/report.html"; 
+        const REDIRECT_URI = window.location.origin + window.location.pathname; 
         
         // Remplacez : scope=identify%20guilds.members.read
 const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=identify`;
