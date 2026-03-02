@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadTeamsList() {
     const teamSelect = document.getElementById('team');
     if (!teamSelect) return;
-
+teamSelect.innerHTML = '<option value="Free Agent">Free Agent</option>';
     try {
         const resp = await fetch(SHEET_URL);
         const text = await resp.text();
@@ -1010,6 +1010,7 @@ if (heroRegisterBtn) {
 }
 
 }); // Fermeture unique du DOMContentLoaded
+
 
 
 
