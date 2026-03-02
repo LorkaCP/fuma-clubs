@@ -914,13 +914,6 @@ setupFormSubmission();
 fetchFumaClubs();
 loadClubProfile();
 
-// --- INITIALISATION FINALE ---
-    injectNavigation();
-    handleProfilePage(); 
-    loadPublicPlayerProfile(); 
-    setupFormSubmission();
-    fetchFumaClubs();
-    loadClubProfile();
 
     // Gestion des filtres de la page Players
     const playerSeasonFilter = document.getElementById('filter-season');
@@ -1010,6 +1003,7 @@ if (heroRegisterBtn) {
 }
 
 }); // Fermeture unique du DOMContentLoaded
+
 
 
 
