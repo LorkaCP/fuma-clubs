@@ -90,10 +90,12 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadTeamsList() {
     const teamSelect = document.getElementById('team');
     if (!teamSelect) return;
-teamSelect.innerHTML = '<option value="Free Agent">Free Agent</option>';
+
     try {
         const resp = await fetch(SHEET_URL);
         const text = await resp.text();
+teamSelect.innerHTML = '<option value="Free Agent">Free Agent</option>';
+        
         const lines = text.trim().split("\n");
         const headers = lines[0].split(",");
         
@@ -1003,6 +1005,7 @@ if (heroRegisterBtn) {
 }
 
 }); // Fermeture unique du DOMContentLoaded
+
 
 
 
