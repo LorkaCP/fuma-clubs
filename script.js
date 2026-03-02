@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="nav-links" id="nav-links-container">
                 <a href="index.html">Home</a>
                 <a href="league.html">League</a>
-                <a href="#">Rules</a>
+                <a href="rules.html">Rules</a>
                 <a href="clubs.html">Clubs</a>
                 <a href="players.html">Players</a>
                 <a href="${profileLink}" class="profile-link" style="color: #5865F2">
@@ -1005,6 +1005,7 @@ if (heroRegisterBtn) {
 }
 
 }); // Fermeture unique du DOMContentLoaded
+
 
 
 
