@@ -14,15 +14,15 @@
     </style>
 </head>
 <body>
-    <div class="fuma-container">
+<div class="fuma-container">
         <header style="text-align: center; padding: 30px 0;">
             <h1 style="color: var(--fuma-primary); font-weight: 800; letter-spacing: 2px; margin: 0;">DATA REPORT SYSTEM</h1>
-            <p style="color: var(--fuma-text-dim); font-size: 0.9rem;">Enregistrement des statistiques officielles FUMA</p>
+            <p style="color: var(--fuma-text-dim); font-size: 0.9rem;">Recording official FUMA statistics</p>
         </header>
 
         <div id="import-section" style="max-width: 800px; margin: 0 auto 30px auto; padding: 0 20px;">
             <div id="loading-status" style="text-align: center; margin-bottom: 10px; font-weight: 600;">
-                <i class="fas fa-spinner fa-spin"></i> Recherche de matchs existants...
+                <i class="fas fa-spinner fa-spin"></i> Searching for existing matches...
             </div>
             <div id="match-selector-container">
                 </div>
@@ -35,79 +35,79 @@
                 <div class="report-card" style="background: #151515; border: 1px solid #333; border-radius: 15px; padding: 20px;">
                     <h2 id="name-home" style="color: var(--fuma-primary); text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px;">HOME</h2>
                     
-                    <label>Score Final</label>
+                    <label>Final Score</label>
                     <input type="number" name="sh" id="in-sh" placeholder="0" required>
 
-                    <label>Buteurs (Noms / Minutes)</label>
-                    <input type="text" name="stH" id="in-stH" placeholder="ex: Messi 12', 45'">
+                    <label>Goalscorers (Names / Minutes)</label>
+                    <input type="text" name="stH" id="in-stH" placeholder="e.g., Messi 12', 45'">
 
                     <label>Possession %</label>
                     <input type="number" name="posH" id="in-posH" placeholder="50">
 
-                    <label>Tirs Totaux</label>
+                    <label>Total Shots</label>
                     <input type="number" name="shoH" id="in-shoH" placeholder="0">
 
-                    <label>Passes Tentées</label>
+                    <label>Passes Attempted</label>
                     <input type="number" name="pasAttH" id="in-pasAttH" placeholder="0">
 
-                    <label>Précision des Passes %</label>
+                    <label>Pass Accuracy %</label>
                     <input type="number" name="accH" id="in-accH" placeholder="0">
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div>
-                            <label>Tacles réussis</label>
+                            <label>Successful Tackles</label>
                             <input type="number" name="tacMadH" id="in-tacMadH" placeholder="0">
                         </div>
                         <div>
-                            <label>Tacles tentés</label>
+                            <label>Tackles Attempted</label>
                             <input type="number" name="tacAttH" id="in-tacAttH" placeholder="0">
                         </div>
                     </div>
 
-                    <label>Cartons Rouges</label>
+                    <label>Red Cards</label>
                     <input type="number" name="redH" id="in-redH" value="0">
                 </div>
 
                 <div class="report-card" style="background: #151515; border: 1px solid #333; border-radius: 15px; padding: 20px;">
                     <h2 id="name-away" style="color: var(--fuma-primary); text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px;">AWAY</h2>
                     
-                    <label>Score Final</label>
+                    <label>Final Score</label>
                     <input type="number" name="sa" id="in-sa" placeholder="0" required>
 
-                    <label>Buteurs (Noms / Minutes)</label>
-                    <input type="text" name="stA" id="in-stA" placeholder="ex: Haaland 88'">
+                    <label>Goalscorers (Names / Minutes)</label>
+                    <input type="text" name="stA" id="in-stA" placeholder="e.g., Haaland 88'">
 
                     <label>Possession %</label>
                     <input type="number" name="posA" id="in-posA" placeholder="50">
 
-                    <label>Tirs Totaux</label>
+                    <label>Total Shots</label>
                     <input type="number" name="shoA" id="in-shoA" placeholder="0">
 
-                    <label>Passes Tentées</label>
+                    <label>Passes Attempted</label>
                     <input type="number" name="pasAttA" id="in-pasAttA" placeholder="0">
 
-                    <label>Précision des Passes %</label>
+                    <label>Pass Accuracy %</label>
                     <input type="number" name="accA" id="in-accA" placeholder="0">
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div>
-                            <label>Tacles réussis</label>
+                            <label>Successful Tackles</label>
                             <input type="number" name="tacMadA" id="in-tacMadA" placeholder="0">
                         </div>
                         <div>
-                            <label>Tacles tentés</label>
+                            <label>Tackles Attempted</label>
                             <input type="number" name="tacAttA" id="in-tacAttA" placeholder="0">
                         </div>
                     </div>
 
-                    <label>Cartons Rouges</label>
+                    <label>Red Cards</label>
                     <input type="number" name="redA" id="in-redA" value="0">
                 </div>
             </div>
 
             <div style="padding: 20px;">
                 <div style="background: #1a1a1a; padding: 20px; border-radius: 15px; border: 1px solid var(--fuma-primary);">
-                    <label style="margin-top: 0;">MAN OF THE MATCH (NOM COMPLET)</label>
+                    <label style="margin-top: 0;">MAN OF THE MATCH</label>
                     <input type="text" name="motm" id="in-motm" placeholder="Nom du joueur">
                 </div>
             </div>
@@ -120,7 +120,7 @@
             <div style="padding: 0 20px;">
                 <button type="submit" id="btn-submit" class="submit-button" 
                         style="width: 100%; padding: 20px; background: var(--fuma-primary); color: #000; border: none; border-radius: 10px; font-weight: 800; font-size: 1.1rem; cursor: pointer; text-transform: uppercase; transition: 0.3s;">
-                    <i class="fas fa-cloud-upload-alt"></i> Valider et enregistrer le match
+                    <i class="fas fa-cloud-upload-alt"></i> Save and Submit the Report.
                 </button>
             </div>
 
@@ -273,12 +273,12 @@
                     mode: 'no-cors', 
                     body: JSON.stringify(data) 
                 });
-                alert("Rapport enregistré !");
+                alert("Data Saved !");
                 window.location.href = `info-match.html?home=${encodeURIComponent(homeName)}&away=${encodeURIComponent(awayName)}&gid=${currentGid}`;
             } catch (e) {
-                alert("Erreur lors de l'envoi");
+                alert("Error");
                 btn.disabled = false;
-                btn.innerText = "Valider et enregistrer le match";
+                btn.innerText = "Save and Submit the Report";
             }
         };
     });
@@ -312,13 +312,13 @@
             });
 
             if (matches.length > 0) {
-                statusEl.innerHTML = `<i class="fas fa-check"></i> ${matches.length} mi-temps trouvées`;
+                statusEl.innerHTML = `<i class="fas fa-check"></i> ${matches.length} Matches found`;
                 displayMatchSelector(matches);
             } else {
-                statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Aucun match trouvé.';
+                statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> No match found.';
             }
         } catch (err) {
-            statusEl.innerHTML = "Erreur de chargement.";
+            statusEl.innerHTML = "Error.";
             console.error(err);
         }
     }
@@ -486,12 +486,12 @@
                     ${p[1]} <span style="color: #888; font-size: 0.7rem;">[${p[3] || 'N/A'}]</span> ${p[16] == 1 ? '⭐' : ''}
                 </span>
                 <div class="stats-grid">
-                    <div class="stat-item">Note: <strong>${p[5]}</strong></div>
-                    <div class="stat-item">Buts: ${p[6]}</div>
+                    <div class="stat-item">Rating: <strong>${p[5]}</strong></div>
+                    <div class="stat-item">Goals: ${p[6]}</div>
                     <div class="stat-item">Assists: ${p[7]}</div>
-                    <div class="stat-item">Tirs: ${p[8]}</div>
+                    <div class="stat-item">Shots: ${p[8]}</div>
                     <div class="stat-item">Passes: ${p[10]}/${p[9]} (${p[11]}%)</div>
-                    <div class="stat-item">Tacles: ${p[13]}/${p[12]} (${p[14]}%)</div>
+                    <div class="stat-item">Tackles: ${p[13]}/${p[12]} (${p[14]}%)</div>
                 </div>
             </div>`;
 
