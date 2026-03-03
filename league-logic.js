@@ -10,11 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
             "D1": { fixtures: "414200945" },
             "D2": { fixtures: "2124517897" },
             "stats_gid": "2074996595"
-        },
-        "S2": {
-            "D1": { fixtures: "2013965123" },
-            "stats_gid": "1996803561"
         }
+        //Ici pour mettre prochaines saisons et divisions. mets, une "," après l'accolade.
     };
 
     const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=";
