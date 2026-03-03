@@ -71,21 +71,20 @@ async function updateUI(m) {
     if (!isPlayed) {
         // --- MODE MATCH NON JOUÉ ---
         
-        // Masquer la navigation et les onglets de statistiques
         if (resumeTab) resumeTab.style.display = 'none';
         if (joueursTab) joueursTab.style.display = 'none';
         if (matchNav) matchNav.style.display = 'none';
-        
-        // Afficher la section d'attente
         if (upcomingSection) upcomingSection.style.display = 'block';
 
-        // Afficher un score neutre
         elScoreHome.innerText = "-";
         elScoreAway.innerText = "-";
         
         const btnReport = document.getElementById('btn-send-report');
+        
         if (btnReport) {
-            // URL de la TEAMS_DATABASE pour vérifier les IDs Managers (Colonne N)
+            // ÉTAPE CLÉ : On cache le bouton immédiatement avant de faire le fetch
+            btnReport.style.display = 'none'; 
+
             const TEAMS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv";
 
             try {
@@ -93,29 +92,27 @@ async function updateUI(m) {
                 const csv = await res.text();
                 const teams = parseCSV(csv);
 
-                // On cherche les lignes des deux équipes
                 const homeData = teams.find(t => t[0] === m[6]);
                 const awayData = teams.find(t => t[0] === m[7]);
 
-                // ID du reporter (Index 13 = Colonne N)
                 const idReporterHome = homeData ? homeData[13]?.trim() : null;
                 const idReporterAway = awayData ? awayData[13]?.trim() : null;
 
-                // VÉRIFICATION : Est-ce l'utilisateur est le manager d'une des deux équipes ?
                 const canReport = currentUserId && (
                     currentUserId.toString() === String(idReporterHome) || 
                     currentUserId.toString() === String(idReporterAway)
                 );
 
                 if (canReport) {
+                    // On ne l'affiche QUE si l'utilisateur a les droits
                     btnReport.style.display = 'inline-block';
                     btnReport.onclick = () => {
                         const p = new URLSearchParams(window.location.search);
                         window.location.href = `report.html?home=${encodeURIComponent(p.get('home'))}&away=${encodeURIComponent(p.get('away'))}&gid=${p.get('gid')}`;
                     };
                 } else {
-                    // Masquer le bouton et afficher le message de verrouillage
-                    btnReport.style.display = 'none';
+                    // L'utilisateur n'est pas capitaine : on affiche le message de verrouillage
+                    // Le bouton reste display: 'none'
                     const existingMsg = document.getElementById('lock-msg');
                     if (!existingMsg) {
                         const msg = document.createElement('p');
