@@ -292,6 +292,33 @@
             font-size: 0.8rem;
         }
 
+        /* On réduit l'espacement des onglets pour mobile */
+    .league-tabs {
+        gap: 5px;
+        padding: 0 10px;
+    }
+
+    .tab-btn {
+        padding: 12px 20px; /* Plus large pour être facilement cliquable */
+        flex: 1; /* Les boutons prennent toute la largeur disponible */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 12px; /* Optionnel: look plus moderne sur mobile */
+    }
+
+    /* Cache le texte des boutons uniquement sur mobile */
+    .tab-btn span {
+        display: none;
+    }
+
+    /* Agrandit légèrement les icônes pour le tactile */
+    .tab-btn i {
+        font-size: 1.2rem;
+        margin: 0;
+    }
+
+
         .team-name {
             max-width: 100px;
         }
