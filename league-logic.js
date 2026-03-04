@@ -61,14 +61,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Gère la visibilité du selecteur de journée
     window.updateStatsUI = function(currentTab) {
-        const mSel = document.getElementById('matchday-select');
-        if (mSel) {
-            // On cache si c'est 'stats' OU si c'est 'ranking'
-            // Note: vous devrez peut-être ajuster l'appel dans league.html pour passer le nom de l'onglet
-            const shouldHide = (currentTab === true || currentTab === 'stats' || currentTab === 'ranking');
-            mSel.style.display = shouldHide ? 'none' : 'block';
-        }
-    };
+    const mSel = document.getElementById('matchday-select');
+    if (mSel) {
+        const container = mSel.closest('.selector-wrapper') || mSel;
+        // On vérifie si l'onglet actuel est stats ou ranking
+        const shouldHide = (currentTab === true || currentTab === 'stats' || currentTab === 'ranking');
+        container.style.display = shouldHide ? 'none' : 'flex';
+    }
+};
 
     async function fetchAndProcess(gid) {
         const fixturesList = document.getElementById('fixtures-list');
