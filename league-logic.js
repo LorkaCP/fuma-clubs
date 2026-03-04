@@ -157,14 +157,24 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 function renderRankingByPos(players, posCode, containerId, c) {
+    // 1. Définition des couleurs selon la position
+    const posColors = {
+        'goalkeeper': '#ffae00', // Orange
+        'defender': '#ffeb3b',   // Jaune
+        'midfielder': '#4dff88', // Vert
+        'forward': '#4da3ff'     // Bleu
+    };
+
+    const currentColor = posColors[posCode] || 'var(--fuma-primary)';
+
+    // 2. Filtrage (Correction : utilise MAIN_POSITION du CSV)
     const filteredByPos = players.filter(p => {
-        // Correction de la colonne (MAIN_POSITION) et de la casse
         const playerPos = p[c.position] ? p[c.position].toLowerCase() : "";
         return playerPos.includes(posCode.toLowerCase()); 
     });
 
-    // On passe "20" comme dernier argument pour le ranking
-    renderTopList(filteredByPos, c.rating, containerId, c, 'Rating', true, 20);
+    // 3. Rendu avec limite à 20 et couleur personnalisée
+    renderTopList(filteredByPos, c.rating, containerId, c, 'Rating', true, 10, currentColor);
 }
 
     
