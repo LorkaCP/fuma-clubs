@@ -423,43 +423,56 @@
 <script src="script.js"></script>
 <script src="league-logic.js"></script>
 <script>
-   function openTab(evt, tabName) {
+function openTab(evt, tabName) {
+    // 1. Gestion des classes actives pour le contenu
     let content = document.getElementsByClassName("league-content");
     for (let i = 0; i < content.length; i++) {
         content[i].classList.remove("active");
     }
+
+    // 2. Gestion des classes actives pour les boutons
     let tabs = document.getElementsByClassName("tab-btn");
     for (let i = 0; i < tabs.length; i++) {
         tabs[i].classList.remove("active");
     }
     
-    document.getElementById(tabName).classList.add("active");
+    // 3. Activation de l'onglet cible
+    const targetContent = document.getElementById(tabName);
+    if (targetContent) targetContent.classList.add("active");
     
-    // Si l'événement existe (clic manuel), on active le bouton cliqué
     if (evt) {
         evt.currentTarget.classList.add("active");
     } else {
-        // Sinon (chargement auto), on cherche le bouton par son attribut onclick
-        const targetBtn = Array.from(tabs).find(btn => btn.getAttribute('onclick').includes(tabName));
+        const targetBtn = Array.from(tabs).find(btn => btn.getAttribute('onclick')?.includes(tabName));
         if (targetBtn) targetBtn.classList.add("active");
     }
 
+    // --- LOGIQUE POUR CACHER/AFFICHER LE SELECTEUR MATCHDAY ---
+    // On cherche le sélecteur ET son label (le parent) pour tout cacher proprement
+    const matchdaySelect = document.getElementById('matchday-select');
+    if (matchdaySelect) {
+        const container = matchdaySelect.closest('.selector-wrapper') || matchdaySelect;
+        // On cache si on est sur 'stats' OU 'ranking'
+        if (tabName === 'stats' || tabName === 'ranking') {
+            container.style.display = 'none';
+        } else {
+            container.style.display = 'flex';
+        }
+    }
+
+    // 4. Mise à jour des stats si la fonction existe
     if (typeof updateStatsUI === "function") {
         updateStatsUI(tabName === 'stats');
     }
 }
 
-// --- NOUVELLE LOGIQUE AU CHARGEMENT ---
+// --- LOGIQUE AU CHARGEMENT INITIAL ---
 window.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
-    const tab = params.get('tab');
+    const tab = params.get('tab') || 'standings'; // 'standings' par défaut
 
-    if (tab === 'fixtures') {
-        openTab(null, 'fixtures');
-    } else if (tab === 'stats') {
-        openTab(null, 'stats');
-    }
-    // Par défaut, 'standings' est déjà actif dans le HTML
+    // On appelle openTab pour appliquer la logique de masquage dès le départ
+    openTab(null, tab);
 });
 </script>
 </body>
