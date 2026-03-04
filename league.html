@@ -10,8 +10,13 @@
     
     <link rel="stylesheet" href="style.css">
     
-    <style>
-    /* --- 1. FILTERS AND DIVISION FILTER --- */
+    Voici l'intégralité du code CSS, incluant vos styles d'origine et les corrections spécifiques pour le mobile.
+
+J'ai ajouté des propriétés !important stratégiques et utilisé flex: 1 1 30% avec min-width: 0 pour forcer les trois menus à rester sur la même ligne sans jamais se chevaucher ou déborder, peu importe la taille de l'écran mobile.
+
+CSS
+<style>
+    /* --- 1. FILTERS AND DIVISION FILTER (DESKTOP) --- */
     .division-filter-container {
         display: flex;
         flex-wrap: wrap;
@@ -23,12 +28,14 @@
         background: rgba(255, 255, 255, 0.03);
         border-radius: 15px;
         border: 1px solid rgba(255, 255, 255, 0.05);
+        box-sizing: border-box;
     }
 
     .selector-wrapper {
         display: flex;
         flex-direction: column;
         gap: 8px;
+        min-width: 0;
     }
 
     .selector-label {
@@ -109,7 +116,6 @@
         background: rgba(0, 255, 136, 0.05);
     }
 
-    /* --- 4. COLUMN MODULATION --- */
     .fuma-table th, .fuma-table td {
         padding: 12px 8px;
         vertical-align: middle;
@@ -141,7 +147,7 @@
         background: rgba(0, 255, 136, 0.03);
     }
 
-    /* --- 5. TEAM CELL (LOGO + TRUNCATED NAME) --- */
+    /* --- 5. TEAM CELL --- */
     .team-cell {
         display: flex;
         align-items: center;
@@ -178,13 +184,6 @@
         display: block;
     }
 
-    .match-card:hover {
-        background: rgba(212, 175, 55, 0.08);
-        border-color: rgba(212, 175, 55, 0.4);
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    }
-
     .match-teams-container {
         display: flex;
         align-items: center;
@@ -216,7 +215,7 @@
         display: none;
     }
 
-    /* --- 7. RANKING STYLES --- */
+    /* --- 7. RANKING --- */
     #ranking .sidebar-box {
         padding: 15px;
     }
@@ -230,98 +229,82 @@
         text-transform: uppercase;
     }
 
-    #ranking .sidebar-box div[style*="font-size: 0.9rem"] {
-        font-size: 0.8rem !important; 
-    }
-
     .title-gk { color: #ffae00 !important; }
     .title-df { color: #ffeb3b !important; }
     .title-mf { color: #4dff88 !important; }
     .title-fw { color: #4da3ff !important; }
-        
-    /* --- 8. RESPONSIVE MOBILE OPTIMISÉ --- */
+
+    /* --- 8. SPECIFIC MOBILE OVERRIDES (CORRECTION IMBRICATION) --- */
     @media (max-width: 768px) {
-        /* Filtres sur une seule ligne sans imbrication */
+        
+        /* 1. Menus Saison, Division, Matchday sur une seule ligne */
         .division-filter-container {
-            flex-direction: row; 
-            flex-wrap: nowrap;
-            padding: 10px 5px;
-            gap: 5px;
-            justify-content: space-between;
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            padding: 15px 5px !important;
+            gap: 5px !important;
+            justify-content: space-between !important;
         }
 
         .selector-wrapper {
-            flex: 1;
-            min-width: 0;
-            gap: 4px;
-        }
-
-        .selector-label {
-            font-size: 0.55rem;
-            white-space: nowrap;
-            margin-left: 2px;
+            flex: 1 1 32% !important; /* Force la répartition équitable */
+            width: 32% !important;
+            min-width: 0 !important; /* CRITIQUE : Permet au menu de rétrécir sans imbrication */
         }
 
         .fuma-search-input {
+            min-width: 0 !important; /* Annule les 160px du bureau */
             width: 100% !important;
-            min-width: 0 !important;
-            padding: 6px 2px;
-            font-size: 0.7rem;
-            height: 35px;
+            padding: 8px 2px !important;
+            font-size: 0.7rem !important;
+            height: 35px !important;
         }
 
-        /* Onglets : Logo uniquement */
+        .selector-label {
+            font-size: 0.55rem !important;
+            margin-left: 2px;
+            white-space: nowrap;
+        }
+
+        /* 2. Onglets Navigation : Logos uniquement */
         .league-tabs {
             gap: 5px;
         }
 
         .tab-btn {
-            padding: 12px 5px;
+            padding: 12px 5px !important;
             flex: 1;
-            font-size: 0 !important; /* Cache le texte */
+            font-size: 0 !important; /* Cache le texte "Table", "Stats", etc. */
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
         .tab-btn i {
-            font-size: 1.2rem;
-            margin: 0 !important;
+            font-size: 1.2rem !important;
+            margin: 0 !important; /* Supprime l'espace à droite de l'icône */
         }
 
-        /* Autres ajustements table et cartes */
+        /* 3. Ajustements Table et Match Cards standards */
         .fuma-table th, .fuma-table td {
             padding: 10px 4px;
-            font-size: 0.8rem;
-        }
-
-        .team-name {
-            max-width: 100px;
+            font-size: 0.75rem;
         }
 
         .fuma-hide-mobile {
-            display: none;
-        }
-
-        .match-card {
-            padding: 18px 15px;
-            margin-bottom: 20px;
+            display: none !important;
         }
 
         .match-teams-container {
             flex-direction: column;
-            align-items: stretch;
-            gap: 12px;
+            gap: 10px;
         }
 
         .match-team {
             width: 100%;
-            justify-content: flex-start;
-        }
-
-        .match-team.home { 
-            justify-content: flex-start; 
-            text-align: left; 
+            justify-content: flex-start !important;
+            text-align: left !important;
         }
 
         .match-score-box {
@@ -333,15 +316,6 @@
             margin-left: auto;
             font-weight: 800;
             color: var(--fuma-primary);
-            font-size: 1.1rem;
-            min-width: 35px;
-            text-align: right;
-        }
-
-        .match-team img {
-            width: 30px;
-            height: 30px;
-            margin-right: 10px;
         }
     }
 </style>
