@@ -10,8 +10,8 @@
     
     <link rel="stylesheet" href="style.css">
     
-<style>
-    /* --- 1. FILTERS AND DIVISION FILTER (DESKTOP) --- */
+ <style>
+    /* --- 1. FILTERS AND DIVISION FILTER --- */
     .division-filter-container {
         display: flex;
         flex-wrap: wrap;
@@ -23,14 +23,12 @@
         background: rgba(255, 255, 255, 0.03);
         border-radius: 15px;
         border: 1px solid rgba(255, 255, 255, 0.05);
-        box-sizing: border-box;
     }
 
     .selector-wrapper {
         display: flex;
         flex-direction: column;
         gap: 8px;
-        min-width: 0;
     }
 
     .selector-label {
@@ -111,6 +109,7 @@
         background: rgba(0, 255, 136, 0.05);
     }
 
+    /* --- 4. COLUMN MODULATION --- */
     .fuma-table th, .fuma-table td {
         padding: 12px 8px;
         vertical-align: middle;
@@ -142,7 +141,7 @@
         background: rgba(0, 255, 136, 0.03);
     }
 
-    /* --- 5. TEAM CELL --- */
+    /* --- 5. TEAM CELL (LOGO + TRUNCATED NAME) --- */
     .team-cell {
         display: flex;
         align-items: center;
@@ -179,6 +178,13 @@
         display: block;
     }
 
+    .match-card:hover {
+        background: rgba(212, 175, 55, 0.08);
+        border-color: rgba(212, 175, 55, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
     .match-teams-container {
         display: flex;
         align-items: center;
@@ -200,6 +206,7 @@
     .match-team.away { justify-content: flex-start; text-align: left; }
 
     .match-score-box {
+      
         font-weight: 800;
         color: var(--fuma-primary);
         min-width: 70px;
@@ -209,25 +216,6 @@
     .mobile-score {
         display: none;
     }
-
-    /* --- 7. RANKING --- */
-    #ranking .sidebar-box {
-        padding: 15px;
-    }
-
-    #ranking h3 {
-        font-size: 0.8rem;
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        text-transform: uppercase;
-    }
-
-    .title-gk { color: #ffae00 !important; }
-    .title-df { color: #ffeb3b !important; }
-    .title-mf { color: #4dff88 !important; }
-    .title-fw { color: #4da3ff !important; }
 
     /* --- 8. SPECIFIC MOBILE OVERRIDES (CORRECTION IMBRICATION) --- */
   @media (max-width: 768px) {
