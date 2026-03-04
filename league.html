@@ -230,37 +230,53 @@
     .title-fw { color: #4da3ff !important; }
 
     /* --- 8. SPECIFIC MOBILE OVERRIDES (CORRECTION IMBRICATION) --- */
-    @media (max-width: 768px) {
-        
-        /* 1. Menus Saison, Division, Matchday sur une seule ligne */
+  @media (max-width: 768px) {
+        .tab-btn {
+            padding: 12px 5px !important;
+            flex: 1;
+            font-size: 0 !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .tab-btn i { font-size: 1.2rem !important; margin: 0 !important; }
+
+        /* --- 3. GESTION DES POURCENTAGES DIFFÉRENTS --- */
         .division-filter-container {
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: nowrap !important;
-            padding: 15px 5px !important;
-            gap: 5px !important;
-            justify-content: space-between !important;
+            gap: 2% !important; /* Espacement entre les blocs */
+            padding: 10px 5px !important;
         }
 
-        .selector-wrapper {
-            flex: 1 !important; /* Force les 3 menus à avoir la même largeur (1/3 chacun) */
-            width: 33% !important;
-            
+        /* Réglage précis par menu (Total doit faire environ 96% avec les gaps) */
+        
+        /* 1er menu : Season */
+        .selector-wrapper:nth-child(1) { 
+            width: 20% !important; 
         }
 
+        /* 2ème menu : Division */
+        .selector-wrapper:nth-child(2) { 
+            width: 38% !important; 
+        }
+
+        /* 3ème menu : Matchday */
+        .selector-wrapper:nth-child(3) { 
+            width: 38% !important; 
+        }
+
+        /* Sécurité pour les inputs */
+        .selector-wrapper { min-width: 0 !important; flex: none !important; }
         .fuma-search-input {
-            min-width: 0 !important; /* Annule les 160px du bureau */
-            
-            padding: 8px 2px !important;
+            width: 100% !important;
+            min-width: 0 !important;
             font-size: 0.7rem !important;
-            height: 35px !important;
+            padding: 8px 2px !important;
         }
-
-        .selector-label {
-            font-size: 0.55rem !important;
-            margin-left: 2px;
-            white-space: nowrap;
-        }
+        .selector-label { font-size: 0.55rem !important; white-space: nowrap; }
+    }
 
         /* 2. Onglets Navigation : Logos uniquement */
         .league-tabs {
