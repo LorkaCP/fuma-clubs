@@ -95,13 +95,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function fetchAndProcessStats(gid) {
-    const containers = ['top-scorers-list', 'top-assists-list', 'top-ratings-list'];
+   async function fetchAndProcessStats(gid) {
+    const statContainers = ['top-scorers-list', 'top-assists-list', 'top-ratings-list'];
+    const rankContainers = ['rank-gk', 'rank-df', 'rank-mf', 'rank-fw'];
     
-    // 1. Afficher le spinner dans chaque conteneur de stats
-    containers.forEach(id => {
+    // Afficher les spinners
+    [...statContainers, ...rankContainers].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.innerHTML = '<div class="fuma-spinner" style="margin: 20px auto;"></div>';
+        if (el) el.innerHTML = '<div class="fuma-spinner" style="margin: 20px auto; width:30px; height:30px;"></div>';
     });
 
     try {
@@ -111,40 +112,43 @@ document.addEventListener('DOMContentLoaded', () => {
         const headers = rows[0].map(h => h.trim());
         const players = rows.slice(1);
 
+        // Index des colonnes (Assurez-vous que ces noms correspondent EXACTEMENT à votre Google Sheet)
         const c = {
             name: headers.indexOf('GAME_TAG'), 
             team: headers.indexOf('CURRENT_TEAM'),
             avatar: headers.indexOf('AVATAR'),
             goals: headers.indexOf('GOALS'),
             assists: headers.indexOf('ASSISTS'),
-            rating: headers.indexOf('RATING')
+            rating: headers.indexOf('RATING'),
+            // Colonnes spécifiques par position
+            ratingGK: headers.indexOf('RATING_GK'),
+            ratingDF: headers.indexOf('RATING_DF'),
+            ratingMF: headers.indexOf('RATING_MF'),
+            ratingFW: headers.indexOf('RATING_FW')
         };
 
-        // --- CORRECTION : Récupération des équipes Home ET Away ---
-        // On récupère tous les noms d'équipes présents dans les deux colonnes de la division
+        // Filtrage par division (équipe)
         const teamsInDiv = [...new Set([
             ...currentMatchesData.map(r => r[col.h] ? r[col.h].trim() : ""),
             ...currentMatchesData.map(r => r[col.a] ? r[col.a].trim() : "")
         ])].filter(name => name !== "");
 
-        // Filtrage des joueurs : on compare le nom nettoyé du joueur avec la liste de la division
-        const filteredPlayers = players.filter(p => {
-            const playerTeam = p[c.team] ? p[c.team].trim() : "";
-            return teamsInDiv.includes(playerTeam);
-        });
-        // ---------------------------------------------------------
+        const filteredPlayers = players.filter(p => teamsInDiv.includes(p[c.team] ? p[c.team].trim() : ""));
 
-        // 2. Le rendu final
+        // --- RENDU SECTION STATS (Top 5 Global) ---
         renderTopList(filteredPlayers, c.goals, 'top-scorers-list', c, 'Goals');
         renderTopList(filteredPlayers, c.assists, 'top-assists-list', c, 'Assists');
         renderTopList(filteredPlayers, c.rating, 'top-ratings-list', c, 'Rating', true);
+
+        // --- RENDU SECTION RANKING (Top par Position) ---
+        // On utilise l'index de colonne spécifique pour chaque bloc
+        renderTopList(filteredPlayers, c.ratingGK, 'rank-gk', c, 'RTG GK', true);
+        renderTopList(filteredPlayers, c.ratingDF, 'rank-df', c, 'RTG DF', true);
+        renderTopList(filteredPlayers, c.ratingMF, 'rank-mf', c, 'RTG MF', true);
+        renderTopList(filteredPlayers, c.ratingFW, 'rank-fw', c, 'RTG FW', true);
         
     } catch (e) { 
-        console.error("Erreur Stats:", e);
-        containers.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.innerHTML = "<p style='color:red; font-size:0.8rem;'>Erreur de chargement</p>";
-        });
+        console.error("Erreur Stats/Ranking:", e);
     }
 }
     function renderTopList(players, colIdx, containerId, c, label, isFloat = false) {
