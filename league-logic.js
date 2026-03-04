@@ -96,10 +96,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function fetchAndProcessStats(gid) {
-    const containers = ['top-scorers-list', 'top-assists-list', 'top-ratings-list'];
+    // 1. On regroupe TOUS les IDs (Stats + Ranking)
+    const allContainers = [
+        'top-scorers-list', 'top-assists-list', 'top-ratings-list',
+        'rank-gk', 'rank-df', 'rank-mf', 'rank-fw'
+    ];
     
-    // 1. Afficher le spinner dans chaque conteneur de stats
-    containers.forEach(id => {
+    // Afficher le spinner partout au début
+    allContainers.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = '<div class="fuma-spinner" style="margin: 20px auto;"></div>';
     });
@@ -111,43 +115,60 @@ document.addEventListener('DOMContentLoaded', () => {
         const headers = rows[0].map(h => h.trim());
         const players = rows.slice(1);
 
-        // Dans fetchAndProcessStats, modifiez l'objet 'c' :
-const c = {
-    name: headers.indexOf('GAME_TAG'), 
-    team: headers.indexOf('CURRENT_TEAM'),
-    avatar: headers.indexOf('AVATAR'),
-    goals: headers.indexOf('GOALS'),
-    assists: headers.indexOf('ASSISTS'),
-    rating: headers.indexOf('RATING'),
-    position: headers.indexOf('POSITION') // <--- Assurez-vous que ce nom correspond à votre colonne
-};
-        // --- CORRECTION : Récupération des équipes Home ET Away ---
-        // On récupère tous les noms d'équipes présents dans les deux colonnes de la division
+        const c = {
+            name: headers.indexOf('GAME_TAG'), 
+            team: headers.indexOf('CURRENT_TEAM'),
+            avatar: headers.indexOf('AVATAR'),
+            goals: headers.indexOf('GOALS'),
+            assists: headers.indexOf('ASSISTS'),
+            rating: headers.indexOf('RATING'),
+            position: headers.indexOf('POSITION') // <--- Vérifiez bien ce nom dans votre Sheet
+        };
+
         const teamsInDiv = [...new Set([
             ...currentMatchesData.map(r => r[col.h] ? r[col.h].trim() : ""),
             ...currentMatchesData.map(r => r[col.a] ? r[col.a].trim() : "")
         ])].filter(name => name !== "");
 
-        // Filtrage des joueurs : on compare le nom nettoyé du joueur avec la liste de la division
         const filteredPlayers = players.filter(p => {
             const playerTeam = p[c.team] ? p[c.team].trim() : "";
             return teamsInDiv.includes(playerTeam);
         });
-        // ---------------------------------------------------------
 
-        // 2. Le rendu final
+        // 2. Rendu des Stats Globales
         renderTopList(filteredPlayers, c.goals, 'top-scorers-list', c, 'Goals');
         renderTopList(filteredPlayers, c.assists, 'top-assists-list', c, 'Assists');
         renderTopList(filteredPlayers, c.rating, 'top-ratings-list', c, 'Rating', true);
+
+        // 3. Rendu du Ranking par Position
+        renderRankingByPos(filteredPlayers, 'GK', 'rank-gk', c);
+        renderRankingByPos(filteredPlayers, 'DF', 'rank-df', c);
+        renderRankingByPos(filteredPlayers, 'MF', 'rank-mf', c);
+        renderRankingByPos(filteredPlayers, 'FW', 'rank-fw', c);
         
     } catch (e) { 
-        console.error("Erreur Stats:", e);
-        containers.forEach(id => {
+        console.error("Erreur Stats/Ranking:", e);
+        // En cas d'erreur, on avertit sur tous les tableaux
+        allContainers.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.innerHTML = "<p style='color:red; font-size:0.8rem;'>Erreur de chargement</p>";
         });
     }
 }
+
+function renderRankingByPos(players, posCode, containerId, c) {
+    // 1. Filtrer les joueurs par le code de position (ex: 'GK', 'DF', 'MF', 'FW')
+    const filteredByPos = players.filter(p => {
+        const playerPos = p[c.position] ? p[c.position].toUpperCase() : "";
+        return playerPos.includes(posCode); 
+    });
+
+    // 2. Envoyer la liste filtrée à votre fonction renderTopList existante
+    // On utilise l'index c.rating puisque c'est votre seule colonne de note
+    renderTopList(filteredByPos, c.rating, containerId, c, 'Rating', true);
+}
+
+    
     function renderTopList(players, colIdx, containerId, c, label, isFloat = false) {
     const container = document.getElementById(containerId);
     if (!container) return;
