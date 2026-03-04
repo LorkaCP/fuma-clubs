@@ -304,6 +304,24 @@
             padding: 15px;
             gap: 10px;
         }
+
+  /* Réglage précis par menu (Total doit faire environ 96% avec les gaps) */
+        
+        /* 1er menu : Season */
+        .selector-wrapper:nth-child(1) { 
+            width: 34% !important; 
+        }
+
+        /* 2ème menu : Division */
+        .selector-wrapper:nth-child(2) { 
+            width: 34% !important; 
+        }
+
+        /* 3ème menu : Matchday */
+        .selector-wrapper:nth-child(3) { 
+            width: 30% !important; 
+        }
+
         
         .fuma-search-input {
             min-width: 120px;
@@ -337,11 +355,20 @@
         </div>
 
 <div class="league-tabs">
-            <button class="tab-btn active" onclick="openTab(event, 'standings')"><i class="fas fa-list-ol"></i> Table</button>
-            <button class="tab-btn" onclick="openTab(event, 'fixtures')"><i class="fas fa-calendar-alt"></i> Fixtures</button>
-            <button class="tab-btn" onclick="openTab(event, 'stats')"><i class="fas fa-chart-bar"></i> Stats</button>
-            <button class="tab-btn" onclick="openTab(event, 'ranking')"><i class="fas fa-trophy"></i> Ranking</button>
-        </div> <div id="standings" class="league-content active">
+    <button class="tab-btn active" onclick="openTab(event, 'standings')">
+        <i class="fas fa-list-ol"></i> <span>Table</span>
+    </button>
+    <button class="tab-btn" onclick="openTab(event, 'fixtures')">
+        <i class="fas fa-calendar-alt"></i> <span>Fixtures</span>
+    </button>
+    <button class="tab-btn" onclick="openTab(event, 'stats')">
+        <i class="fas fa-chart-bar"></i> <span>Stats</span>
+    </button>
+    <button class="tab-btn" onclick="openTab(event, 'ranking')">
+        <i class="fas fa-trophy"></i> <span>Ranking</span>
+    </button>
+</div>
+        <div id="standings" class="league-content active">
             <div style="overflow-x: auto;">
                 <table class="fuma-table">
                     <thead>
