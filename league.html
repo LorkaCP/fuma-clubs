@@ -260,6 +260,26 @@
             margin-right: 10px;
         }
     }
+
+#ranking .sidebar-box {
+    padding: 15px; /* Plus compact pour tenir à 4 sur une ligne */
+}
+
+#ranking h3 {
+    font-size: 0.8rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+}
+
+/* Ajustement de la taille de police pour les petites colonnes */
+#ranking .sidebar-box div[style*="font-size: 0.9rem"] {
+    font-size: 0.8rem !important; 
+}
+
+        
     /* --- 7. RESPONSIVE MOBILE --- */
     @media (max-width: 768px) {
         .fuma-table th, .fuma-table td {
