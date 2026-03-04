@@ -157,14 +157,16 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 function renderRankingByPos(players, posCode, containerId, c) {
-    // 1. Filtrer les joueurs par le code de position (ex: 'GK', 'DF', 'MF', 'FW')
+    // 1. On s'assure que la comparaison n'est pas sensible à la casse (tout en majuscules)
+    const searchCode = posCode.toUpperCase();
+
     const filteredByPos = players.filter(p => {
         const playerPos = p[c.position] ? p[c.position].toUpperCase() : "";
-        return playerPos.includes(posCode); 
+        // On vérifie si le code (ex: GK) est inclus dans la position (ex: GOALKEEPER)
+        return playerPos.includes(searchCode); 
     });
 
-    // 2. Envoyer la liste filtrée à votre fonction renderTopList existante
-    // On utilise l'index c.rating puisque c'est votre seule colonne de note
+    // 2. Rendu via la fonction existante
     renderTopList(filteredByPos, c.rating, containerId, c, 'Rating', true);
 }
 
