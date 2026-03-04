@@ -288,8 +288,6 @@
         }
     }
 
-        
-
 #ranking .sidebar-box {
     padding: 15px; /* Plus compact pour tenir à 4 sur une ligne */
 }
@@ -329,35 +327,15 @@
             display: none;
         }
 
-      .division-filter-container {
-        display: flex;
-        flex-direction: row; /* Force l'alignement horizontal */
-        flex-wrap: nowrap;   /* Empêche le retour à la ligne */
-        padding: 10px 5px;
-        gap: 5px;            /* Espacement minimal entre les éléments */
-        justify-content: space-between;
+        .division-filter-container {
+            padding: 15px;
+            gap: 10px;
+        }
+        
+        .fuma-search-input {
+            min-width: 120px;
+        }
     }
-
-    .selector-wrapper {
-        flex: 1;             /* Chaque menu prend une part égale de la largeur */
-        min-width: 0;        /* Permet aux éléments de rétrécir sous leur taille de contenu */
-        gap: 4px;
-    }
-
-    .selector-label {
-        font-size: 0.6rem;   /* Texte plus petit pour gagner de la place */
-        margin-left: 2px;
-        white-space: nowrap;
-    }
-
-    .fuma-search-input {
-        width: 100% !important;
-        min-width: 0;        /* Annule le min-width de 120px/160px */
-        padding: 6px 4px;    /* Réduit le rembourrage interne */
-        font-size: 0.75rem;  /* Police adaptée pour mobile */
-        height: 35px;        /* Hauteur fixe pour l'uniformité */
-    }
-}
 
    
 </style>
