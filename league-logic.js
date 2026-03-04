@@ -239,7 +239,7 @@ function renderRankingByPos(players, posCode, containerId, c) {
                         .sort((a, b) => parseInt(a) - parseInt(b));
         
         if (days.length === 0) return;
-        mSel.innerHTML = days.map(d => `<option value="${d}">Matchday ${d}</option>`).join('');
+        mSel.innerHTML = days.map(d => `<option value="${d}">Day ${d}</option>`).join('');
 
         const now = new Date();
         now.setHours(0,0,0,0);
