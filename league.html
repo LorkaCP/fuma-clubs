@@ -449,17 +449,17 @@ function openTab(evt, tabName) {
 
     // --- LOGIQUE POUR CACHER/AFFICHER LE SELECTEUR MATCHDAY ---
     // On cherche le sélecteur ET son label (le parent) pour tout cacher proprement
-    const matchdaySelect = document.getElementById('matchday-select');
-    if (matchdaySelect) {
-        const container = matchdaySelect.closest('.selector-wrapper') || matchdaySelect;
-        // On cache si on est sur 'stats' OU 'ranking'
-        if (tabName === 'stats' || tabName === 'ranking') {
-            container.style.display = 'none';
-        } else {
-            container.style.display = 'flex';
-        }
+   const matchdaySelect = document.getElementById('matchday-select');
+if (matchdaySelect) {
+    const container = matchdaySelect.closest('.selector-wrapper') || matchdaySelect;
+    
+    // Ajout de la condition 'ranking' pour cacher le menu
+    if (tabName === 'stats' || tabName === 'ranking') {
+        container.style.display = 'none';
+    } else {
+        container.style.display = 'flex';
     }
-
+}
     // 4. Mise à jour des stats si la fonction existe
     if (typeof updateStatsUI === "function") {
         updateStatsUI(tabName === 'stats');
