@@ -141,10 +141,10 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTopList(filteredPlayers, c.rating, 'top-ratings-list', c, 'Rating', true);
 
         // 3. Rendu du Ranking par Position
-        renderRankingByPos(filteredPlayers, 'GK', 'rank-gk', c);
-        renderRankingByPos(filteredPlayers, 'DF', 'rank-df', c);
-        renderRankingByPos(filteredPlayers, 'MF', 'rank-mf', c);
-        renderRankingByPos(filteredPlayers, 'FW', 'rank-fw', c);
+        renderRankingByPos(filteredPlayers, 'goalkeeper', 'rank-gk', c);
+        renderRankingByPos(filteredPlayers, 'defender', 'rank-df', c);
+        renderRankingByPos(filteredPlayers, 'midfielder', 'rank-mf', c);
+        renderRankingByPos(filteredPlayers, 'forward', 'rank-fw', c);
         
     } catch (e) { 
         console.error("Erreur Stats/Ranking:", e);
