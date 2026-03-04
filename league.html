@@ -206,7 +206,6 @@
     .match-team.away { justify-content: flex-start; text-align: left; }
 
     .match-score-box {
-      
         font-weight: 800;
         color: var(--fuma-primary);
         min-width: 70px;
@@ -217,35 +216,93 @@
         display: none;
     }
 
-    /* --- RESPONSIVE MOBILE --- */
-    @media (max-width: 600px) {
-
- .league-tabs {
-        gap: 5px; /* Réduit l'espace entre les boutons */
+    /* --- 7. RANKING STYLES --- */
+    #ranking .sidebar-box {
+        padding: 15px;
     }
 
-    .tab-btn {
-        padding: 10px 15px; /* Ajuste le padding pour des boutons plus carrés */
-        font-size: 1.2rem;   /* Agrandit légèrement l'icône pour le confort tactile */
+    #ranking h3 {
+        font-size: 0.8rem;
+        margin-bottom: 15px;
         display: flex;
-        justify-content: center;
         align-items: center;
-        flex: 1;             /* Permet aux boutons de s'étaler uniformément */
+        gap: 8px;
+        text-transform: uppercase;
     }
 
-    /* Masque le texte à l'intérieur du bouton en gardant l'icône */
-    .tab-btn {
-        font-size: 0; /* Cache le texte direct */
+    #ranking .sidebar-box div[style*="font-size: 0.9rem"] {
+        font-size: 0.8rem !important; 
     }
 
-    .tab-btn i {
-        font-size: 1.2rem; /* Réaffiche l'icône à la bonne taille */
-        margin-right: 0;   /* Supprime la marge de l'icône */
-    }
-}
-
-
+    .title-gk { color: #ffae00 !important; }
+    .title-df { color: #ffeb3b !important; }
+    .title-mf { color: #4dff88 !important; }
+    .title-fw { color: #4da3ff !important; }
         
+    /* --- 8. RESPONSIVE MOBILE OPTIMISÉ --- */
+    @media (max-width: 768px) {
+        /* Filtres sur une seule ligne sans imbrication */
+        .division-filter-container {
+            flex-direction: row; 
+            flex-wrap: nowrap;
+            padding: 10px 5px;
+            gap: 5px;
+            justify-content: space-between;
+        }
+
+        .selector-wrapper {
+            flex: 1;
+            min-width: 0;
+            gap: 4px;
+        }
+
+        .selector-label {
+            font-size: 0.55rem;
+            white-space: nowrap;
+            margin-left: 2px;
+        }
+
+        .fuma-search-input {
+            width: 100% !important;
+            min-width: 0 !important;
+            padding: 6px 2px;
+            font-size: 0.7rem;
+            height: 35px;
+        }
+
+        /* Onglets : Logo uniquement */
+        .league-tabs {
+            gap: 5px;
+        }
+
+        .tab-btn {
+            padding: 12px 5px;
+            flex: 1;
+            font-size: 0 !important; /* Cache le texte */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .tab-btn i {
+            font-size: 1.2rem;
+            margin: 0 !important;
+        }
+
+        /* Autres ajustements table et cartes */
+        .fuma-table th, .fuma-table td {
+            padding: 10px 4px;
+            font-size: 0.8rem;
+        }
+
+        .team-name {
+            max-width: 100px;
+        }
+
+        .fuma-hide-mobile {
+            display: none;
+        }
+
         .match-card {
             padding: 18px 15px;
             margin-bottom: 20px;
@@ -287,66 +344,6 @@
             margin-right: 10px;
         }
     }
-
-        
-
-#ranking .sidebar-box {
-    padding: 15px; /* Plus compact pour tenir à 4 sur une ligne */
-}
-
-#ranking h3 {
-    font-size: 0.8rem;
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-transform: uppercase;
-}
-
-/* Ajustement de la taille de police pour les petites colonnes */
-#ranking .sidebar-box div[style*="font-size: 0.9rem"] {
-    font-size: 0.8rem !important; 
-}
-
-
-        .title-gk { color: #ffae00 !important; } /* Orange */
-.title-df { color: #ffeb3b !important; } /* Jaune */
-.title-mf { color: #4dff88 !important; } /* Vert */
-.title-fw { color: #4da3ff !important; } /* Bleu */
-        
-    /* --- 7. RESPONSIVE MOBILE --- */
-    @media (max-width: 768px) {
-.division-filter-container {
-        display: flex;
-        flex-direction: row; /* Force l'alignement horizontal */
-        flex-wrap: nowrap;   /* Empêche le retour à la ligne */
-        padding: 10px 5px;
-        gap: 5px;            /* Espacement minimal entre les éléments */
-        justify-content: space-between;
-    }
-
-    .selector-wrapper {
-        flex: 1;             /* Chaque menu prend une part égale de la largeur */
-        min-width: 0;        /* Permet aux éléments de rétrécir sous leur taille de contenu */
-        gap: 4px;
-    }
-
-    .selector-label {
-        font-size: 0.6rem;   /* Texte plus petit pour gagner de la place */
-        margin-left: 2px;
-        white-space: nowrap;
-    }
-
-    .fuma-search-input {
-        width: 100% !important;
-        min-width: 0;        /* Annule le min-width de 120px/160px */
-        padding: 6px 4px;    /* Réduit le rembourrage interne */
-        font-size: 0.75rem;  /* Police adaptée pour mobile */
-        height: 35px;        /* Hauteur fixe pour l'uniformité */
-    }
-}
-
-   
 </style>
 </head>
 <body>
