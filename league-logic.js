@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
             goals: headers.indexOf('GOALS'),
             assists: headers.indexOf('ASSISTS'),
             rating: headers.indexOf('RATING'),
-            position: headers.indexOf('POSITION') // <--- Vérifiez bien ce nom dans votre Sheet
+            position: headers.indexOf('MAIN_POSITION') // <--- Vérifiez bien ce nom dans votre Sheet
         };
 
         const teamsInDiv = [...new Set([
