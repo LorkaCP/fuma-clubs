@@ -60,9 +60,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Gère la visibilité du selecteur de journée
-    window.updateStatsUI = function(isStatsTab) {
+    window.updateStatsUI = function(currentTab) {
         const mSel = document.getElementById('matchday-select');
-        if (mSel) mSel.style.display = isStatsTab ? 'none' : 'block';
+        if (mSel) {
+            // On cache si c'est 'stats' OU si c'est 'ranking'
+            // Note: vous devrez peut-être ajuster l'appel dans league.html pour passer le nom de l'onglet
+            const shouldHide = (currentTab === true || currentTab === 'stats' || currentTab === 'ranking');
+            mSel.style.display = shouldHide ? 'none' : 'block';
+        }
     };
 
     async function fetchAndProcess(gid) {
