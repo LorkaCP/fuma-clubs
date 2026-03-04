@@ -217,93 +217,27 @@
         display: none;
     }
 
-    /* --- 8. SPECIFIC MOBILE OVERRIDES (CORRECTION IMBRICATION) --- */
-  @media (max-width: 768px) {
-        .tab-btn {
-            padding: 12px 5px !important;
-            flex: 1;
-            font-size: 0 !important;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .tab-btn i { font-size: 1.2rem !important; margin: 0 !important; }
-
-        /* --- 3. GESTION DES POURCENTAGES DIFFÉRENTS --- */
-        .division-filter-container {
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: nowrap !important;
-            gap: 2% !important; /* Espacement entre les blocs */
-            padding: 10px 5px !important;
-        }
-
-        /* Réglage précis par menu (Total doit faire environ 96% avec les gaps) */
-        
-        /* 1er menu : Season */
-        .selector-wrapper:nth-child(1) { 
-            width: 34% !important; 
-        }
-
-        /* 2ème menu : Division */
-        .selector-wrapper:nth-child(2) { 
-            width: 34% !important; 
-        }
-
-        /* 3ème menu : Matchday */
-        .selector-wrapper:nth-child(3) { 
-            width: 30% !important; 
-        }
-
-        /* Sécurité pour les inputs */
-        .selector-wrapper { min-width: 0 !important; flex: none !important; }
-        .fuma-search-input {
-            width: 100% !important;
-            min-width: 0 !important;
-            font-size: 0.7rem !important;
-            padding: 8px 2px !important;
-        }
-        .selector-label { font-size: 0.55rem !important; white-space: nowrap; }
-    }
-
-        /* 2. Onglets Navigation : Logos uniquement */
-        .league-tabs {
-            gap: 5px;
-        }
-
-        .tab-btn {
-            padding: 12px 5px !important;
-            flex: 1;
-            font-size: 0 !important; /* Cache le texte "Table", "Stats", etc. */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .tab-btn i {
-            font-size: 1.2rem !important;
-            margin: 0 !important; /* Supprime l'espace à droite de l'icône */
-        }
-
-        /* 3. Ajustements Table et Match Cards standards */
-        .fuma-table th, .fuma-table td {
-            padding: 10px 4px;
-            font-size: 0.75rem;
-        }
-
-        .fuma-hide-mobile {
-            display: none !important;
+    /* --- RESPONSIVE MOBILE --- */
+    @media (max-width: 768px) {
+        .match-card {
+            padding: 18px 15px;
+            margin-bottom: 20px;
         }
 
         .match-teams-container {
             flex-direction: column;
-            gap: 10px;
+            align-items: stretch;
+            gap: 12px;
         }
 
         .match-team {
             width: 100%;
-            justify-content: flex-start !important;
-            text-align: left !important;
+            justify-content: flex-start;
+        }
+
+        .match-team.home { 
+            justify-content: flex-start; 
+            text-align: left; 
         }
 
         .match-score-box {
@@ -315,8 +249,90 @@
             margin-left: auto;
             font-weight: 800;
             color: var(--fuma-primary);
+            font-size: 1.1rem;
+            min-width: 35px;
+            text-align: right;
+        }
+
+        .match-team img {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
         }
     }
+
+#ranking .sidebar-box {
+    padding: 15px; /* Plus compact pour tenir à 4 sur une ligne */
+}
+
+#ranking h3 {
+    font-size: 0.8rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+}
+
+/* Ajustement de la taille de police pour les petites colonnes */
+#ranking .sidebar-box div[style*="font-size: 0.9rem"] {
+    font-size: 0.8rem !important; 
+}
+
+
+        .title-gk { color: #ffae00 !important; } /* Orange */
+.title-df { color: #ffeb3b !important; } /* Jaune */
+.title-mf { color: #4dff88 !important; } /* Vert */
+.title-fw { color: #4da3ff !important; } /* Bleu */
+        
+    /* --- 7. RESPONSIVE MOBILE --- */
+    @media (max-width: 768px) {
+        .fuma-table th, .fuma-table td {
+            padding: 10px 4px;
+            font-size: 0.8rem;
+        }
+
+        .team-name {
+            max-width: 100px;
+        }
+
+        .fuma-hide-mobile {
+            display: none;
+        }
+
+        .division-filter-container {
+            padding: 15px;
+            gap: 10px;
+        }
+        
+        .fuma-search-input {
+            min-width: 120px;
+        }
+    }
+
+    .league-tabs {
+        gap: 5px; /* Réduit l'espace entre les boutons */
+    }
+
+    .tab-btn {
+        padding: 10px 15px; /* Ajuste le padding pour des boutons plus carrés */
+        font-size: 1.2rem;   /* Agrandit légèrement l'icône pour le confort tactile */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex: 1;             /* Permet aux boutons de s'étaler uniformément */
+    }
+
+    /* Masque le texte à l'intérieur du bouton en gardant l'icône */
+    .tab-btn {
+        font-size: 0; /* Cache le texte direct */
+    }
+
+    .tab-btn i {
+        font-size: 1.2rem; /* Réaffiche l'icône à la bonne taille */
+        margin-right: 0;   /* Supprime la marge de l'icône */
+    }
+}
 </style>
 </head>
 <body>
