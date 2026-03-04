@@ -111,15 +111,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const headers = rows[0].map(h => h.trim());
         const players = rows.slice(1);
 
-        const c = {
-            name: headers.indexOf('GAME_TAG'), 
-            team: headers.indexOf('CURRENT_TEAM'),
-            avatar: headers.indexOf('AVATAR'),
-            goals: headers.indexOf('GOALS'),
-            assists: headers.indexOf('ASSISTS'),
-            rating: headers.indexOf('RATING')
-        };
-
+        // Dans fetchAndProcessStats, modifiez l'objet 'c' :
+const c = {
+    name: headers.indexOf('GAME_TAG'), 
+    team: headers.indexOf('CURRENT_TEAM'),
+    avatar: headers.indexOf('AVATAR'),
+    goals: headers.indexOf('GOALS'),
+    assists: headers.indexOf('ASSISTS'),
+    rating: headers.indexOf('RATING'),
+    position: headers.indexOf('POSITION') // <--- Assurez-vous que ce nom correspond à votre colonne
+};
         // --- CORRECTION : Récupération des équipes Home ET Away ---
         // On récupère tous les noms d'équipes présents dans les deux colonnes de la division
         const teamsInDiv = [...new Set([
