@@ -63,13 +63,15 @@ document.addEventListener('DOMContentLoaded', () => {
     window.updateStatsUI = function(currentTab) {
     const mSel = document.getElementById('matchday-select');
     if (mSel) {
-        const container = mSel.closest('.selector-wrapper') || mSel;
-        // On vérifie si l'onglet actuel est stats ou ranking
-        const shouldHide = (currentTab === true || currentTab === 'stats' || currentTab === 'ranking');
-        container.style.display = shouldHide ? 'none' : 'flex';
+        // On remonte au parent .selector-wrapper pour tout cacher (label + select)
+        const container = mSel.closest('.selector-wrapper');
+        const shouldHide = (currentTab === 'stats' || currentTab === 'ranking');
+        
+        if (container) {
+            container.style.setProperty('display', shouldHide ? 'none' : 'flex', 'important');
+        }
     }
 };
-
     async function fetchAndProcess(gid) {
         const fixturesList = document.getElementById('fixtures-list');
         fixturesList.innerHTML = '<div class="fuma-spinner"></div>';
