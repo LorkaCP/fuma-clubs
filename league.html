@@ -218,7 +218,34 @@
     }
 
     /* --- RESPONSIVE MOBILE --- */
-    @media (max-width: 768px) {
+    @media (max-width: 600px) {
+
+ .league-tabs {
+        gap: 5px; /* Réduit l'espace entre les boutons */
+    }
+
+    .tab-btn {
+        padding: 10px 15px; /* Ajuste le padding pour des boutons plus carrés */
+        font-size: 1.2rem;   /* Agrandit légèrement l'icône pour le confort tactile */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex: 1;             /* Permet aux boutons de s'étaler uniformément */
+    }
+
+    /* Masque le texte à l'intérieur du bouton en gardant l'icône */
+    .tab-btn {
+        font-size: 0; /* Cache le texte direct */
+    }
+
+    .tab-btn i {
+        font-size: 1.2rem; /* Réaffiche l'icône à la bonne taille */
+        margin-right: 0;   /* Supprime la marge de l'icône */
+    }
+}
+
+
+        
         .match-card {
             padding: 18px 15px;
             margin-bottom: 20px;
@@ -261,6 +288,8 @@
         }
     }
 
+        
+
 #ranking .sidebar-box {
     padding: 15px; /* Plus compact pour tenir à 4 sur une ligne */
 }
@@ -300,39 +329,37 @@
             display: none;
         }
 
-        .division-filter-container {
-            padding: 15px;
-            gap: 10px;
-        }
-        
-        .fuma-search-input {
-            min-width: 120px;
-        }
-    }
-
-    .league-tabs {
-        gap: 5px; /* Réduit l'espace entre les boutons */
-    }
-
-    .tab-btn {
-        padding: 10px 15px; /* Ajuste le padding pour des boutons plus carrés */
-        font-size: 1.2rem;   /* Agrandit légèrement l'icône pour le confort tactile */
+      .division-filter-container {
         display: flex;
-        justify-content: center;
-        align-items: center;
-        flex: 1;             /* Permet aux boutons de s'étaler uniformément */
+        flex-direction: row; /* Force l'alignement horizontal */
+        flex-wrap: nowrap;   /* Empêche le retour à la ligne */
+        padding: 10px 5px;
+        gap: 5px;            /* Espacement minimal entre les éléments */
+        justify-content: space-between;
     }
 
-    /* Masque le texte à l'intérieur du bouton en gardant l'icône */
-    .tab-btn {
-        font-size: 0; /* Cache le texte direct */
+    .selector-wrapper {
+        flex: 1;             /* Chaque menu prend une part égale de la largeur */
+        min-width: 0;        /* Permet aux éléments de rétrécir sous leur taille de contenu */
+        gap: 4px;
     }
 
-    .tab-btn i {
-        font-size: 1.2rem; /* Réaffiche l'icône à la bonne taille */
-        margin-right: 0;   /* Supprime la marge de l'icône */
+    .selector-label {
+        font-size: 0.6rem;   /* Texte plus petit pour gagner de la place */
+        margin-left: 2px;
+        white-space: nowrap;
+    }
+
+    .fuma-search-input {
+        width: 100% !important;
+        min-width: 0;        /* Annule le min-width de 120px/160px */
+        padding: 6px 4px;    /* Réduit le rembourrage interne */
+        font-size: 0.75rem;  /* Police adaptée pour mobile */
+        height: 35px;        /* Hauteur fixe pour l'uniformité */
     }
 }
+
+   
 </style>
 </head>
 <body>
