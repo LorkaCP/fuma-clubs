@@ -157,25 +157,25 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 function renderRankingByPos(players, posCode, containerId, c) {
-    // 1. On s'assure que la comparaison n'est pas sensible à la casse (tout en majuscules)
-    const searchCode = posCode.toUpperCase();
-
     const filteredByPos = players.filter(p => {
-        const playerPos = p[c.position] ? p[c.position].toUpperCase() : "";
-        // On vérifie si le code (ex: GK) est inclus dans la position (ex: GOALKEEPER)
-        return playerPos.includes(searchCode); 
+        // Correction de la colonne (MAIN_POSITION) et de la casse
+        const playerPos = p[c.position] ? p[c.position].toLowerCase() : "";
+        return playerPos.includes(posCode.toLowerCase()); 
     });
 
-    // 2. Rendu via la fonction existante
-    renderTopList(filteredByPos, c.rating, containerId, c, 'Rating', true);
+    // On passe "20" comme dernier argument pour le ranking
+    renderTopList(filteredByPos, c.rating, containerId, c, 'Rating', true, 20);
 }
 
     
-    function renderTopList(players, colIdx, containerId, c, label, isFloat = false) {
+
+    
+    
+    function renderTopList(players, colIdx, containerId, c, label, isFloat = false, limit = 5) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    const top5 = players
+    const topPlayers = players
         .map(p => ({
             name: p[c.name],
             team: p[c.team],
@@ -185,9 +185,9 @@ function renderRankingByPos(players, posCode, containerId, c) {
         }))
         .filter(p => !isNaN(p.value) && p.value > 0)
         .sort((a, b) => b.value - a.value)
-        .slice(0, 5);
+        .slice(0, limit); // <--- On utilise maintenant la variable limit ici
 
-    container.innerHTML = top5.map((p, i) => `
+    container.innerHTML = topPlayers.map((p, i) => `
         <a href="player.html?id=${encodeURIComponent(p.id)}" style="text-decoration: none; color: inherit; display: block; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
             <div style="display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); overflow: hidden;">
                 
