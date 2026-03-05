@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. CONFIGURATION & URLS ---
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?gid=252630071&single=true&output=csv';
     const PLAYERS_SHEET_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjnFfFWUPpHaWofmJ6UUEfw9VzAaaqTnS2WGm4pDSZxfs7FfEOOEfMprH60QrnWgROdrZU-s5VI9rR/pub?single=true&output=csv&gid=';
-    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyaRmZTmo2YOtKU-pM5r4LMA-vZUBf9os_ANHWi7BrHi7q4jX1Gky7gzOdISezd7EnBHA/exec?action=profile';
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw30f4oLuMUOFGdgj82cBnNhoMJb807JzS1G9EIdLgr6hICed4qSk9YJZSBpbgoSZelKg/exec?action=profile';
     const CLIENT_ID = '1473807551329079408'; 
     const REDIRECT_URI = encodeURIComponent('https://fuma-clubs.com/api/auth/callback');
     const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20guilds`;
@@ -1005,6 +1005,7 @@ if (heroRegisterBtn) {
 }
 
 }); // Fermeture unique du DOMContentLoaded
+
 
 
 
